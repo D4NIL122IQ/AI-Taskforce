@@ -1,0 +1,73 @@
+{
+  "id": "flow_1",
+  "version": 1,
+
+  "input": {
+    "prompt": "Ecrire l'algorithme pour ..."
+  },
+
+  "nodes": [
+    {
+      "id": "supervisor",
+      "type": "supervisor",
+      "data": {
+        "model": "claude",
+        "temperature": 0,
+        "max_tokens": 2000,
+        "system_prompt": "Tu es un superviseur. Tu dois découper la tâche en sous-tâches et assigner chaque tâche à l'agent le plus adapté.",
+        "strategy": "task_decomposition"
+      }
+    },
+
+    {
+      "id": "dev",
+      "type": "agent",
+      "data": {
+        "role": "developer",
+        "model": "claude",
+        "system_prompt": "Tu es développeur senior"
+      }
+    },
+
+    {
+      "id": "debug",
+      "type": "agent",
+      "data": {
+        "role": "debugger",
+        "model": "claude",
+        "system_prompt": "Tu es debugger"
+      }
+    },
+
+    {
+      "id": "tester",
+      "type": "agent",
+      "data": {
+        "role": "tester",
+        "model": "gpt",
+        "system_prompt": "Tu es testeur"
+      }
+    }
+  ],
+
+  "edges": [
+    {
+      "source": "supervisor",
+      "target": "dev"
+    },
+    {
+      "source": "supervisor",
+      "target": "debug"
+    },
+    {
+      "source": "supervisor",
+      "target": "tester"
+    }
+  ],
+
+  "orchestration": {
+    "mode": "supervisor-driven",
+    "parallel_execution": true,
+    "aggregation": "merge_results"
+  }
+}
