@@ -4,6 +4,12 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from back.database import Base, engine
+from back.models.agent import Agent
+from back.models.document import Document
+from back.models.etape import Etape
+from back.models.execution import Execution
+from back.models.workflow import Workflow
+
 from back.models.message import Message
 
 def init():

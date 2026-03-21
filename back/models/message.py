@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, CheckConstraint
-#from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
+from sqlalchemy.orm import relationship
 from back.database import Base
 
 TYPES_VALIDES = {"user_input", "agent_response", "system"}
@@ -9,13 +9,12 @@ TYPES_VALIDES = {"user_input", "agent_response", "system"}
 class Message(Base):
     __tablename__ = "message"
 
-    id            = Column(Integer,      primary_key=True, autoincrement=True)
-    contenu       = Column(Text,         nullable=False)   # Text au lieu de String
-    date_creation = Column(DateTime,     default=lambda: datetime.now(timezone.utc))
-    type          = Column(String(30),   nullable=False)
-    expediteur    = Column(String(100),  nullable=False)
-   # execution_id  = Column(Integer,      ForeignKey("execution.id_execution"), nullable=False)
-    execution_id = Column(Integer, nullable=True)
+    id            = Column(Integer,     primary_key=True, autoincrement=True)
+    contenu       = Column(Text,        nullable=False)
+    date_creation = Column(DateTime,    default=lambda: datetime.now(timezone.utc))
+    type          = Column(String(30),  nullable=False)
+    expediteur    = Column(String(100), nullable=False)
+    execution_id  = Column(Integer, ForeignKey("execution.id_execution"), nullable=True)
 
     __table_args__ = (
         CheckConstraint(
@@ -23,8 +22,7 @@ class Message(Base):
             name="ck_message_type"
         ),
     )
-
-    #execution = relationship("Execution", back_populates="messages")
+    execution = relationship("Execution", back_populates="messages")
 
     def __init__(self, contenu: str, type: str, expediteur: str,
                  date_creation: datetime = None):
@@ -52,7 +50,7 @@ class Message(Base):
             "date_creation": str(self.date_creation),
             "type"         : self.type,
             "expediteur"   : self.expediteur,
-            "execution_id" : self.execution_id
+            "execution_id" : self.execution_id,
         }
 
     def __repr__(self):
