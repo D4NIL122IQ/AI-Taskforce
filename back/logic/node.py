@@ -1,4 +1,4 @@
-
+import modeles.Agent
 
 class NodeAgent(Agent ag):
     num = 0
