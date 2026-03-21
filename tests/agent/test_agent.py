@@ -1,5 +1,5 @@
 import pytest
-from back.modeles.Agent import Agent
+from back.logic.Agent import Agent
 
 
 #  Test création agent

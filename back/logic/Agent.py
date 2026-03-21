@@ -7,7 +7,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_ollama import OllamaLLM, ChatOllama
 from langchain_mistralai.chat_models import ChatMistralAI
 
-from back.modeles.Message import Message, MessageType
+from back.logic.Message import Message, MessageType
 
 load_dotenv()
 
