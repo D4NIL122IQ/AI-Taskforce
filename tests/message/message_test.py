@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime
-from back.modeles.Message import Message, MessageType
+from back.logic.Message import Message, MessageType
 
 
 class FakeAgent:
