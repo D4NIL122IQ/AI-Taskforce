@@ -78,3 +78,10 @@ uvicorn==0.42.0
 websockets==16.0
 xxhash==3.6.0
 zstandard==0.25.0
+sqlalchemy
+langchain_google_genai
+langchain_deepseek
+langchain_mistralai
+langchain_ollama
+langchain-anthropic
+psycopg2-binary  
