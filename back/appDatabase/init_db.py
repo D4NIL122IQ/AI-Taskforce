@@ -5,12 +5,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from back.appDatabase.database import Base, engine
 from back.models.agent_model import AgentModel
-from back.models.document import Document
-from back.models.etape import Etape
-from back.models.execution import Execution
-from back.models.workflow import Workflow
+from back.models.document_model import Document
+from back.models.etape_model import Etape
+from back.models.execution_model import Execution
+from back.models.workflow_model import Workflow
 
-from back.models.message import Message
+from back.models.message_model import Message
 
 def init():
     print("Création des tables...")
