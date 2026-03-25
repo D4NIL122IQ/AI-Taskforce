@@ -97,8 +97,8 @@ class llmFactory:
             )
 
         elif type_modele == "mistral":
-            return ChatMistralAI(
-                model="mistral-medium",
+            return ChatOllama(
+                model="mistral",
                 temperature=config.temperature,
                 max_tokens=config.max_token
             )

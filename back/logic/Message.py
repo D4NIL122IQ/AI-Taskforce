@@ -102,6 +102,10 @@ class Message:
             "metadata": self.metadata
         }
 
+    def getContenuMsg(self):
+        """Retourne la reponse du llm uniquement"""
+        return self.content
+
     def is_user_message(self):
         """
         Vérifie si le message provient d’un utilisateur.
