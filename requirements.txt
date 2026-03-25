@@ -84,8 +84,6 @@ langchain_deepseek
 langchain_mistralai
 langchain_ollama
 langchain-anthropic
-<<<<<<< HEAD
 psycopg2-binary  
-=======
-psycopg2-binary 
->>>>>>> 1710949dccc59e0e735002dc711f8e3936485e3a
+pdoc
+

@@ -12,10 +12,45 @@ class Agent:
     """
     Représente un agent intelligent basé sur un modèle de langage (LLM).
 
-    L'agent permet de :
-    - générer des réponses à partir d'un prompt
-    - configurer dynamiquement un modèle (LLM, température, tokens)
-    - enrichir son contexte via des documents
+    L'agent encapsule un modèle de langage configuré dynamiquement et expose
+    une interface simple pour interagir avec lui via des messages texte.
+    Il peut également enrichir son contexte avec des documents externes.
+
+    Attributes:
+        ID (int): Identifiant unique auto-incrémenté de l'agent.
+        nom (str): Nom de l'agent, utilisé dans le template de prompt.
+        prompt (str): Rôle ou instruction principale transmise au LLM.
+        date_creation (datetime): Horodatage de la création de l'instance.
+        documents (list): Liste des chemins de documents ajoutés à l'agent.
+        llm: Instance du modèle LLM initialisée via `llmFactory`.
+        template (ChatPromptTemplate): Template LangChain utilisé pour structurer les échanges.
+        modele (str): Modèle LLM sélectionné (propriété avec setter).
+        temperature (float): Niveau de créativité du modèle (propriété avec setter).
+        max_token (int): Limite de tokens par réponse (propriété avec setter).
+
+    Note:
+        Chaque modification de `modele`, `temperature` ou `max_token` via leurs setters
+        déclenche automatiquement une réinitialisation du modèle LLM sous-jacent.
+
+    Example:
+        ```python
+        agent = Agent(
+            nom="Assistant",
+            modele="Openai",
+            prompt="Tu es un assistant spécialisé en finance.",
+            max_token=1024,
+            temperature=0.7
+        )
+
+        reponse = agent.executer_prompt("Explique-moi les ETF en 3 lignes.")
+        print(reponse)
+
+        # Enrichir avec un document
+        agent.ajouter_document("rapport_annuel.pdf")
+
+        # Changer dynamiquement le modèle
+        agent.modele = "Mistral"
+        ```
     """
 
     ctr = 0  # Compteur global pour générer des identifiants uniques
@@ -24,11 +59,36 @@ class Agent:
         """
         Initialise un agent avec ses paramètres principaux.
 
-        :param nom: nom de l'agent
-        :param modele: type de modèle LLM à utiliser
-        :param prompt: rôle ou instruction principale de l'agent
-        :param max_token: nombre maximal de tokens générés
-        :param temperature: niveau de créativité du modèle (0 à 1)
+        Valide les paramètres, instancie le modèle LLM via `llmFactory`,
+        et configure le template de prompt LangChain.
+
+        Args:
+            nom (str): Nom de l'agent (non vide).
+            modele (str): Identifiant du fournisseur LLM. Valeurs acceptées :
+                `"Openai"`, `"Ollama"`, `"Mistral"`, `"DeepSeek"`, `"Anthropic"`, `"Gemini"`.
+            prompt (str): Instruction principale définissant le rôle de l'agent (non vide).
+            max_token (int): Nombre maximum de tokens générés par réponse.
+                Doit être un entier compris entre 1 et 8192.
+            temperature (float): Niveau de créativité du modèle.
+                Valeur comprise entre 0 (déterministe) et 1 (créatif).
+
+        Raises:
+            ValueError: Si `nom` est vide ou n'est pas une chaîne.
+            ValueError: Si `modele` n'est pas dans la liste des fournisseurs supportés.
+            ValueError: Si `prompt` est vide ou n'est pas une chaîne.
+            ValueError: Si `max_token` n'est pas un entier positif ≤ 8192.
+            ValueError: Si `temperature` n'est pas un nombre entre 0 et 1.
+
+        Example:
+            ```python
+            agent = Agent(
+                nom="Analyste",
+                modele="Mistral",
+                prompt="Tu es un expert en cybersécurité.",
+                max_token=2048,
+                temperature=0.3
+            )
+            ```
         """
 
         self.valider_parametres(nom, modele, prompt, max_token, temperature)
@@ -67,7 +127,22 @@ class Agent:
         """
         Vérifie la validité des paramètres fournis lors de l'initialisation.
 
-        :raises ValueError: si un des paramètres est invalide
+        Cette méthode est appelée automatiquement dans `__init__` et n'a pas
+        vocation à être utilisée directement.
+
+        Args:
+            nom (str): Nom de l'agent.
+            modele (str): Identifiant du fournisseur LLM.
+            prompt (str): Instruction principale de l'agent.
+            max_token (int): Limite de tokens (entre 1 et 8192).
+            temperature (float): Créativité du modèle (entre 0 et 1).
+
+        Raises:
+            ValueError: Si `nom` est vide ou n'est pas une chaîne.
+            ValueError: Si `modele` n'est pas dans la liste des fournisseurs supportés.
+            ValueError: Si `prompt` est vide ou n'est pas une chaîne.
+            ValueError: Si `max_token` n'est pas un entier positif ≤ 8192.
+            ValueError: Si `temperature` n'est pas un nombre entre 0 et 1.
         """
 
         if not nom or not isinstance(nom, str):
@@ -87,11 +162,26 @@ class Agent:
 
     def executer_prompt(self, message):
         """
-        Exécute un message utilisateur via le modèle LLM.
+        Envoie un message à l'agent et retourne la réponse du LLM.
 
-        :param message: texte à envoyer à l'agent
-        :return: réponse générée par le LLM
-        :raises ValueError: si le message est vide
+        Compose un pipeline LangChain `template | llm` et l'invoque avec
+        le nom, le rôle et le message de l'utilisateur.
+
+        Args:
+            message (str): Texte à envoyer à l'agent. Ne doit pas être vide.
+
+        Returns:
+            AIMessage: Réponse générée par le LLM (objet LangChain).
+                Accéder au texte via `.content`.
+
+        Raises:
+            ValueError: Si `message` est vide ou ne contient que des espaces.
+
+        Example:
+            ```python
+            reponse = agent.executer_prompt("Quels sont les risques du cloud ?")
+            print(reponse.content)
+            ```
         """
 
         if not message.strip():
@@ -110,14 +200,33 @@ class Agent:
 
     def ajouter_document(self, filepath):
         """
-        Ajoute le contenu d’un document au prompt de l’agent.
+        Enrichit le contexte de l'agent avec le contenu d'un fichier externe.
+
+        Le contenu extrait est concaténé au `prompt` de l'agent, ce qui permet
+        au LLM de s'appuyer sur ce document lors des prochains appels à
+        `executer_prompt`.
 
         Formats supportés :
-        - .txt
-        - .pdf
-        - .csv
 
-        :param filepath: chemin vers le fichier à charger
+        | Extension | Librairie utilisée |
+        |-----------|-------------------|
+        | `.txt`    | built-in Python   |
+        | `.pdf`    | PyPDF2            |
+        | `.csv`    | pandas            |
+
+        Args:
+            filepath (str): Chemin absolu ou relatif vers le fichier à charger.
+
+        Warning:
+            Les formats non listés ci-dessus sont silencieusement ignorés
+            (aucune exception n'est levée, le prompt reste inchangé).
+
+        Example:
+            ```python
+            agent.ajouter_document("data/contrat.pdf")
+            agent.ajouter_document("data/clients.csv")
+            agent.ajouter_document("notes.txt")
+            ```
         """
 
         extension = os.path.splitext(filepath)[1].lower()
@@ -142,7 +251,19 @@ class Agent:
     @property
     def modele(self):
         """
-        Retourne le modèle LLM actuel.
+        Modèle LLM actuel de l'agent.
+
+        Returns:
+            str: Identifiant du fournisseur LLM (ex: `"Openai"`, `"Mistral"`).
+
+        Note:
+            Modifier cette propriété réinitialise automatiquement `self.llm`.
+
+        Example:
+            ```python
+            print(agent.modele)   # "Openai"
+            agent.modele = "Mistral"  # réinitialise le LLM
+            ```
         """
         return self._modele
 
@@ -159,7 +280,19 @@ class Agent:
     @property
     def temperature(self):
         """
-        Retourne la température actuelle du modèle.
+        Température (créativité) actuelle du modèle.
+
+        Returns:
+            float: Valeur entre 0 (déterministe) et 1 (très créatif).
+
+        Note:
+            Modifier cette propriété réinitialise automatiquement `self.llm`.
+
+        Example:
+            ```python
+            print(agent.temperature)   # 0.7
+            agent.temperature = 0.2    # réinitialise le LLM
+            ```
         """
         return self._temperature
 
@@ -176,7 +309,19 @@ class Agent:
     @property
     def max_token(self):
         """
-        Retourne le nombre maximal de tokens.
+        Limite maximale de tokens par réponse.
+
+        Returns:
+            int: Nombre de tokens maximum (entre 1 et 8192).
+
+        Note:
+            Modifier cette propriété réinitialise automatiquement `self.llm`.
+
+        Example:
+            ```python
+            print(agent.max_token)   # 1024
+            agent.max_token = 4096   # réinitialise le LLM
+            ```
         """
         return self._max_token
 
