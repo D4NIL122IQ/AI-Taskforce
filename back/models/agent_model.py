@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, String, Float, Text, DateTime, CheckConstraint
+﻿from sqlalchemy import Column, Integer, String, Float, Text, DateTime, CheckConstraint, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
-from back.database import Base
+from back.appDatabase.database import Base
 
 
 class Agent(Base):
@@ -16,12 +16,15 @@ class Agent(Base):
     system_prompt = Column(Text, nullable=True)
     date_creation = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     statut        = Column(String(20), default="ACTIF")
+    utilisateur_id = Column(Integer, ForeignKey("utilisateur.id_utilisateur"), nullable=True)
+
 
     __table_args__ = (
         CheckConstraint(
-            "modele IN ('Openai','Ollama','Mistral')",
+            "modele IN ('Openai','Ollama','Mistral','DeepSeek','Anthropic','Gemini')",
             name="ck_agent_modele",
         ),
+
         CheckConstraint(
             "temperature >= 0.0 AND temperature <= 1.0",
             name="ck_agent_temperature",
@@ -36,6 +39,7 @@ class Agent(Base):
         ),
     )
 
+    utilisateur = relationship("Utilisateur", back_populates="agents")
     documents      = relationship("Document", back_populates="agent", cascade="all, delete-orphan")
     etapes         = relationship("Etape",    back_populates="agent")
     superviseur_de = relationship(
@@ -44,22 +48,3 @@ class Agent(Base):
         back_populates="superviseur"
     )
 
-    def ajouterDocument(self, doc) -> None:
-        if doc in self.documents:
-            raise ValueError("Document déjà attaché à cet agent")
-        self.documents.append(doc)
-
-    def modifierParametre(self, champ: str, valeur) -> None:
-        champs_autorises = {"nom", "role", "modele", "temperature", "max_tokens", "system_prompt"}
-        if champ not in champs_autorises:
-            raise ValueError(f"Champ inconnu : {champ}")
-        setattr(self, champ, valeur)
-
-    def killProcess(self) -> None:
-        if hasattr(self, "_execution_task") and self._execution_task:
-            self._execution_task.cancel()
-            self._execution_task = None
-        self.statut = "INTERROMPU"
-
-    def __repr__(self):
-        return f"<Agent id={self.id_agent} nom={self.nom} modele={self.modele}>"
