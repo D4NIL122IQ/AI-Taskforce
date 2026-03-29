@@ -91,7 +91,7 @@ class llmFactory:
 
         elif type_modele == "ollama":
             return ChatOllama(
-                model="llama3.2",
+                model="mistral",
                 temperature=config.temperature,
                 max_tokens=config.max_token
             )
