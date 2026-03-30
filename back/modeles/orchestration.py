@@ -1,5 +1,5 @@
-from back.logic.graphBuilder import build_orchestration_graph
-from back.logic.Agent import Agent
+from back.modeles.graphBuilder import build_orchestration_graph
+from back.modeles.Agent import Agent
 
 
 class Orchestration:
