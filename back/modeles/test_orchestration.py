@@ -1,5 +1,5 @@
-from back.logic.Agent import Agent
-from back.logic.orchestration import Orchestration
+from back.modeles.Agent import Agent
+from back.modeles.orchestration import Orchestration
 
 # ── Prompts système ───────────────────────────────────────────────────────────
 

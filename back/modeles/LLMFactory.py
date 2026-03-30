@@ -5,7 +5,7 @@ from langchain_deepseek.chat_models import ChatDeepSeek
 from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
 from langchain.tools import tool
-from back.logic.Message import Message
+from back.modeles.Message import Message
 from datetime import datetime as dt
 
 from dataclasses import dataclass

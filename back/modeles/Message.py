@@ -3,7 +3,7 @@ from datetime import datetime as dt
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from back.logic.Agent import Agent
+    from back.modeles.Agent import Agent
 
 
 class MessageType(Enum):

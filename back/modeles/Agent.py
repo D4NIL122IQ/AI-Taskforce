@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from back.logic.LLMFactory import llmFactory, LLMConfig 
+from back.logic.LLMFactory import llmFactory, LLMConfig
 
 load_dotenv()
 
@@ -187,8 +187,6 @@ class Agent:
         if not message.strip():
             raise ValueError("prompt vide")
 
-        print(f"  [LLM] {self.nom} ({self._modele}) — appel en cours...")
-
         # Composition du pipeline LangChain (template + modèle)
         agent = self.template | self.llm
 
@@ -197,8 +195,6 @@ class Agent:
             "role": self.prompt,
             "messages": [("human", message)]
         })
-
-        print(f"  [LLM] {self.nom} — réponse reçue ({len(response.content)} caractères)")
 
         return response
 
