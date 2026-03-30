@@ -1,6 +1,7 @@
 // src/components/home/HeroSection.jsx
 
 import Button from '../ui/Button';
+import PageBackground from '../layout/PageBackground';
 
 const BotIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -22,29 +23,9 @@ const WorkflowSvg = () => (
   </svg>
 );
 
-const GradientBlob = () => (
-  <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-    <div className="absolute rounded-full"
-      style={{
-        width: '520px', height: '420px',
-        background: 'radial-gradient(circle, rgba(124,58,237,0.55) 0%, transparent 68%)',
-        filter: 'blur(72px)', top: '38%', left: '50%',
-        transform: 'translate(-50%, -18%)',
-      }}
-    />
-    <div className="absolute rounded-full"
-      style={{
-        width: '340px', height: '300px',
-        background: 'radial-gradient(circle, rgba(249,115,22,0.42) 0%, transparent 68%)',
-        filter: 'blur(68px)', bottom: '12%', left: '28%',
-      }}
-    />
-  </div>
-);
-
 const HeroSection = () => (
   <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-[68px] pb-16 overflow-hidden">
-    <GradientBlob />
+    <PageBackground />
     <div className="relative z-10 flex flex-col items-center max-w-5xl mx-auto">
 
       {/* Titre — Inter Bold 96px comme sur la maquette Figma */}
@@ -69,7 +50,7 @@ const HeroSection = () => (
       {/* Boutons CTA — fidèles à la maquette */}
       <div className="flex flex-col sm:flex-row items-center gap-4">
         {/* Bouton 1 : Créer un agent → /agents */}
-        <Button to="/agents" variant="primary" icon={<BotIcon />}>
+        <Button to="/agents/create" variant="primary" icon={<BotIcon />}>
           Créer un agent
         </Button>
 
