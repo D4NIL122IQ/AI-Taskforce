@@ -1,0 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@700;800&family=Syne:wght@700;800&family=Figtree:wght@400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Figtree', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+}
+
+@layer utilities {
+  .card-hover-glow:hover {
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 8px 32px rgba(0,0,0,0.4);
+  }
+}

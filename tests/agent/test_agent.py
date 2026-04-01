@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 import requests
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, MessagesState, START, END
+=======
+import pytest
+from backend.modeles.Agent import Agent
+>>>>>>> e2627ce3cc0265d58ec20149260718ceb174b63b
 
 # 1. Authentification
 auth = requests.post(
