@@ -31,20 +31,17 @@ import { Link } from 'react-router-dom';
 
 const VARIANT_CLASSES = {
   primary: [
-    'bg-white/10',
-    'border border-white/20',
-    'text-white',
-    'hover:bg-white/15',
-    'hover:border-white/30',
+    'bg-gray-900/8 border border-gray-900/15 text-gray-900',
+    'hover:bg-gray-900/12 hover:border-gray-900/25',
+    'dark:bg-white/10 dark:border-white/20 dark:text-white',
+    'dark:hover:bg-white/15 dark:hover:border-white/30',
   ].join(' '),
 
   secondary: [
-    'bg-transparent',
-    'border border-white/20',
-    'text-white/80',
-    'hover:bg-white/5',
-    'hover:text-white',
-    'hover:border-white/30',
+    'bg-transparent border border-gray-400/40 text-gray-600',
+    'hover:bg-gray-100 hover:text-gray-900 hover:border-gray-400/60',
+    'dark:border-white/20 dark:text-white/80',
+    'dark:hover:bg-white/5 dark:hover:text-white dark:hover:border-white/30',
   ].join(' '),
 };
 
