@@ -20,7 +20,7 @@ const GoogleIcon = () => (
 
 const InputField = ({ icon: Icon, type, placeholder, value, onChange, rightElement }) => (
   <div className="relative">
-    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40">
+    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/40">
       <Icon size={17} />
     </div>
     <input
@@ -28,7 +28,7 @@ const InputField = ({ icon: Icon, type, placeholder, value, onChange, rightEleme
       placeholder={placeholder}
       value={value}
       onChange={onChange}
-      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pl-11 pr-11 text-white placeholder-white/30 text-sm focus:outline-none focus:border-white/30 focus:bg-white/[0.08] transition-all duration-200"
+      className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 pl-11 pr-11 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 text-sm focus:outline-none focus:border-violet-400 dark:focus:border-white/30 focus:bg-white dark:focus:bg-white/[0.08] transition-all duration-200"
     />
     {rightElement && (
       <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -42,7 +42,7 @@ const OAuthButton = ({ icon: Icon, label, onClick }) => (
   <button
     type="button"
     onClick={onClick}
-    className="flex items-center justify-center gap-3 w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white/70 text-sm hover:bg-white/10 hover:border-white/20 hover:text-white transition-all duration-200"
+    className="flex items-center justify-center gap-3 w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-gray-600 dark:text-white/70 text-sm hover:bg-gray-100 dark:hover:bg-white/10 hover:border-gray-300 dark:hover:border-white/20 hover:text-gray-900 dark:hover:text-white transition-all duration-200"
   >
     <Icon />
     <span>{label}</span>
@@ -50,7 +50,7 @@ const OAuthButton = ({ icon: Icon, label, onClick }) => (
 )
 
 export default function FormPage() {
-  const [mode, setMode] = useState('login') // 'login' | 'register'
+  const [mode, setMode] = useState('login')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
@@ -59,55 +59,54 @@ export default function FormPage() {
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '', confirm: '' })
 
-  const handleLoginSubmit = (e) => {
-    e.preventDefault()
-    // backend à intégrer
-  }
+  const handleLoginSubmit = (e) => { e.preventDefault() }
+  const handleRegisterSubmit = (e) => { e.preventDefault() }
 
-  const handleRegisterSubmit = (e) => {
-    e.preventDefault()
-    // backend à intégrer
-  }
+  const eyeBtn = (show, setShow) => (
+    <button
+      type="button"
+      onClick={() => setShow(!show)}
+      className="text-gray-400 dark:text-white/30 hover:text-gray-600 dark:hover:text-white/60 transition-colors"
+    >
+      {show ? <EyeOff size={16} /> : <Eye size={16} />}
+    </button>
+  )
 
   return (
-    <div className="min-h-screen bg-[#080808] flex items-center justify-center px-4" style={{ fontFamily: 'Figtree, sans-serif' }}>
+    <div className="min-h-screen bg-gray-50 dark:bg-[#080808] flex items-center justify-center px-4 transition-colors duration-300 font-body">
 
       <PageBackground />
 
       <div className="relative w-full max-w-md">
 
-        {/* Bouton retour */}
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-white/40 hover:text-white/80 text-sm transition-colors duration-200 mb-6"
+          className="flex items-center gap-2 text-gray-400 dark:text-white/40 hover:text-gray-700 dark:hover:text-white/80 text-sm transition-colors duration-200 mb-6"
         >
           <ArrowLeft size={16} />
           Retour
         </button>
 
-        {/* Logo / titre */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-white mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
             AI Taskforce
           </h1>
-          <p className="text-white/40 text-sm">
+          <p className="text-gray-400 dark:text-white/40 text-sm">
             {mode === 'login' ? 'Content de te revoir' : 'Crée ton compte'}
           </p>
         </div>
 
-        {/* Carte principale */}
-        <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-8 backdrop-blur-sm">
+        <div className="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl p-8 backdrop-blur-sm">
 
-          {/* Toggle login / register */}
-          <div className="flex bg-white/5 rounded-xl p-1 mb-7">
+          <div className="flex bg-gray-100 dark:bg-white/5 rounded-xl p-1 mb-7">
             {['login', 'register'].map((m) => (
               <button
-                key={m}
-                type="button"
-                onClick={() => setMode(m)}
+                key={m} type="button" onClick={() => setMode(m)}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  mode === m ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/60'
+                  mode === m
+                    ? 'bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-400 dark:text-white/40 hover:text-gray-600 dark:hover:text-white/60'
                 }`}
               >
                 {m === 'login' ? 'Connexion' : 'Inscription'}
@@ -115,37 +114,18 @@ export default function FormPage() {
             ))}
           </div>
 
-          {/* ─── Formulaire Connexion ─── */}
           {mode === 'login' && (
             <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
 
-              <InputField
-                icon={Mail}
-                type="email"
-                placeholder="Adresse email"
-                value={loginForm.email}
-                onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-              />
+              <InputField icon={Mail} type="email" placeholder="Adresse email"
+                value={loginForm.email} onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })} />
 
-              <InputField
-                icon={Lock}
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Mot de passe"
-                value={loginForm.password}
-                onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                rightElement={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-white/30 hover:text-white/60 transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                }
-              />
+              <InputField icon={Lock} type={showPassword ? 'text' : 'password'} placeholder="Mot de passe"
+                value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                rightElement={eyeBtn(showPassword, setShowPassword)} />
 
               <div className="text-right -mt-1">
-                <button type="button" className="text-xs text-white/40 hover:text-white/70 transition-colors">
+                <button type="button" className="text-xs text-gray-400 dark:text-white/40 hover:text-gray-600 dark:hover:text-white/70 transition-colors">
                   Mot de passe oublié ?
                 </button>
               </div>
@@ -160,9 +140,9 @@ export default function FormPage() {
               </button>
 
               <div className="flex items-center gap-3 my-1">
-                <div className="flex-1 h-px bg-white/10" />
-                <span className="text-white/30 text-xs">ou continuer avec</span>
-                <div className="flex-1 h-px bg-white/10" />
+                <div className="flex-1 h-px bg-gray-200 dark:bg-white/10" />
+                <span className="text-gray-400 dark:text-white/30 text-xs">ou continuer avec</span>
+                <div className="flex-1 h-px bg-gray-200 dark:bg-white/10" />
               </div>
 
               <div className="flex flex-col gap-3">
@@ -173,59 +153,22 @@ export default function FormPage() {
             </form>
           )}
 
-          {/* ─── Formulaire Inscription ─── */}
           {mode === 'register' && (
             <form onSubmit={handleRegisterSubmit} className="flex flex-col gap-4">
 
-              <InputField
-                icon={User}
-                type="text"
-                placeholder="Nom complet"
-                value={registerForm.name}
-                onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
-              />
+              <InputField icon={User} type="text" placeholder="Nom complet"
+                value={registerForm.name} onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })} />
 
-              <InputField
-                icon={Mail}
-                type="email"
-                placeholder="Adresse email"
-                value={registerForm.email}
-                onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-              />
+              <InputField icon={Mail} type="email" placeholder="Adresse email"
+                value={registerForm.email} onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })} />
 
-              <InputField
-                icon={Lock}
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Mot de passe"
-                value={registerForm.password}
-                onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                rightElement={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-white/30 hover:text-white/60 transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                }
-              />
+              <InputField icon={Lock} type={showPassword ? 'text' : 'password'} placeholder="Mot de passe"
+                value={registerForm.password} onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
+                rightElement={eyeBtn(showPassword, setShowPassword)} />
 
-              <InputField
-                icon={Lock}
-                type={showConfirm ? 'text' : 'password'}
-                placeholder="Confirmer le mot de passe"
-                value={registerForm.confirm}
-                onChange={(e) => setRegisterForm({ ...registerForm, confirm: e.target.value })}
-                rightElement={
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirm(!showConfirm)}
-                    className="text-white/30 hover:text-white/60 transition-colors"
-                  >
-                    {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                }
-              />
+              <InputField icon={Lock} type={showConfirm ? 'text' : 'password'} placeholder="Confirmer le mot de passe"
+                value={registerForm.confirm} onChange={(e) => setRegisterForm({ ...registerForm, confirm: e.target.value })}
+                rightElement={eyeBtn(showConfirm, setShowConfirm)} />
 
               <button
                 type="submit"
@@ -237,9 +180,9 @@ export default function FormPage() {
               </button>
 
               <div className="flex items-center gap-3 my-1">
-                <div className="flex-1 h-px bg-white/10" />
-                <span className="text-white/30 text-xs">ou continuer avec</span>
-                <div className="flex-1 h-px bg-white/10" />
+                <div className="flex-1 h-px bg-gray-200 dark:bg-white/10" />
+                <span className="text-gray-400 dark:text-white/30 text-xs">ou continuer avec</span>
+                <div className="flex-1 h-px bg-gray-200 dark:bg-white/10" />
               </div>
 
               <div className="flex flex-col gap-3">

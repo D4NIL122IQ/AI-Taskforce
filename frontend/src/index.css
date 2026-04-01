@@ -11,10 +11,32 @@
   *, *::before, *::after {
     box-sizing: border-box;
   }
+  body {
+    background-color: #f9fafb;
+    transition: background-color 0.3s;
+  }
+  html.dark body {
+    background-color: #080808;
+  }
 }
 
 @layer utilities {
   .card-hover-glow:hover {
     box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 8px 32px rgba(0,0,0,0.4);
   }
+}
+
+/* ReactFlow — empêche Tailwind d'écraser les marqueurs SVG */
+.react-flow__edge-path,
+.react-flow__connection-path {
+  stroke: #8b5cf6;
+  stroke-width: 2;
+}
+.react-flow__arrowhead path {
+  fill: #8b5cf6 !important;
+  stroke: none !important;
+}
+.react-flow__marker path {
+  fill: #8b5cf6 !important;
+  stroke: none !important;
 }
