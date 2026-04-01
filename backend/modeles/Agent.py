@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from back.logic.LLMFactory import llmFactory, LLMConfig
+from backend.modeles.LLMFactory import llmFactory, LLMConfig
 
 load_dotenv()
 
@@ -119,6 +119,7 @@ class Agent:
                 "Tu dois fournir des réponses claires, précises et utiles. "
                 "Si une information est incertaine, indique-le explicitement. "
                 "Adapte ton niveau de détail en fonction de la demande."
+                "Repond dans la meme langue que la langue du prompt"
             ),
             MessagesPlaceholder(variable_name="messages"),
         ])

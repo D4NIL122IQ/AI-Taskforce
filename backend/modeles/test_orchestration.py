@@ -1,5 +1,5 @@
-from back.modeles.Agent import Agent
-from back.modeles.orchestration import Orchestration
+from backend.modeles.Agent import Agent
+from backend.modeles.orchestration import Orchestration
 
 # ── Prompts système ───────────────────────────────────────────────────────────
 
