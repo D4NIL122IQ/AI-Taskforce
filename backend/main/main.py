@@ -1,4 +1,4 @@
-from back.logic.Agent import Agent
+from back.modeles.Agent import Agent
 
 agent = Agent("poly", "Mistral", " est de repondre des question sur les maths", 512, 0.2)
 

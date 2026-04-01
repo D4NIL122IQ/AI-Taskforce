@@ -1,5 +1,5 @@
-from back.models.agent_model import agents
-from back.appDatabase.init_db import init
+from backend.models.agent_model import agents
+from backend.appDatabase.init_db import init
 from sqlalchemy.orm import Session
 
 class AgentService:

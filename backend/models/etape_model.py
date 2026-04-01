@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, CheckConstraint
 from sqlalchemy.orm import relationship
-from back.appDatabase.database import Base
+from backend.appDatabase.database import Base
 
 STATUTS_VALIDES = {"EN_ATTENTE", "EN_COURS", "TERMINE", "ERREUR"}
 

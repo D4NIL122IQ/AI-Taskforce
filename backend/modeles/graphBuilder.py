@@ -101,7 +101,7 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
         prompt_rec = (
             f"Demande initiale : {state['user_input']}\n"
             f"Données brutes des spécialistes : {state['results']}\n\n"
-            "Rédige la réponse finale complète et formatée pour l'utilisateur."
+            "Structurise la réponse finale pour une bonne mise en forme"
         )
         response = agent_reconstructeur.executer_prompt(prompt_rec)
         print(f"[RECONSTRUCTEUR] Réponse finale générée ({len(response.content)} caractères)")
