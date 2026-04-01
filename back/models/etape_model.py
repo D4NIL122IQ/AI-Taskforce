@@ -34,7 +34,7 @@ class Etape(Base):
         ),
     )
 
-    agent    = relationship("Agent",    back_populates="etapes")
+    agent    = relationship("AgentModel",    back_populates="etapes")
     workflow = relationship("Workflow", back_populates="etapes")
 
     def __init__(self, ordre_execution: int, workflow_id: int,

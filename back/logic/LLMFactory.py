@@ -97,8 +97,8 @@ class llmFactory:
             )
 
         elif type_modele == "mistral":
-            return ChatMistralAI(
-                model="mistral-medium",
+            return ChatOllama(
+                model="mistral",
                 temperature=config.temperature,
                 max_tokens=config.max_token
             )
@@ -118,6 +118,22 @@ class llmFactory:
                 temperature=config.temperature,
                 max_tokens=config.max_token
             )
+        
+        #elif type_modele="ufr"
+
+           # auth = requests.post(
+           #     "https://pleiade.mi.parisdescartes.fr/api/v1/auths/signin",
+           #     json={
+           #         "email":"laye-fode.keita@etu.u-paris.fr",
+           #         "password": "."
+           #     }
+           # )
+
+           # return llm = ChatOpenAI(
+           #     model="athene-v2:latest",
+           #     base_url="https://pleiade.mi.parisdescartes.fr/api/v1",
+           #     api_key=token
+           # )
 
         else:
             raise ValueError(f"Modèle non supporté : {type_modele}")

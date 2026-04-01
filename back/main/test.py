@@ -6,15 +6,11 @@ from langgraph.graph import StateGraph, MessagesState, START, END
 auth = requests.post(
     "https://pleiade.mi.parisdescartes.fr/api/v1/auths/signin",
     json={
-        "email": "ton.email@parisdescartes.fr",
-        "password": "ton-mot-de-passe"
+        "email":"laye-fode.keita@etu.u-paris.fr",
+        "password": ""
     }
 )
 
-token = auth.json()["token"]
-print("✅ Connecté ! Token récupéré.")
-
-# 2. Connexion LangGraph
 llm = ChatOpenAI(
     model="athene-v2:latest",
     base_url="https://pleiade.mi.parisdescartes.fr/api/v1",
