@@ -1,16 +1,16 @@
-# back/appDatabase/init_db.py
+# backend/appDatabase/init_db.py
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from back.appDatabase.database import Base, engine
-from back.models.agent_model import AgentModel
-from back.models.document_model import Document
-from back.models.etape_model import Etape
-from back.models.execution_model import Execution
-from back.models.workflow_model import Workflow
+from backend.appDatabase.database import Base, engine
+from backend.models.agent_model import AgentModel
+from backend.models.document_model import Document
+from backend.models.etape_model import Etape
+from backend.models.execution_model import Execution
+from backend.models.workflow_model import Workflow
 
-from back.models.message_model import Message
+from backend.models.message_model import Message
 
 def init():
     print("Création des tables...")
