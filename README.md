@@ -1,6 +1,6 @@
 # 🧠 AI Workflow Builder (Système Multi-Agents)
 
-Un projet simple de création de workflows IA basé sur un **graphe**, utilisant un **agent superviseur** pour orchestrer des agents spécialisés.
+Un projet de création de workflows IA basé sur un **graphe**, utilisant un **agent superviseur** pour orchestrer des agents spécialisés.
 
 Ce système permet de construire et exécuter des workflows où un superviseur découpe une tâche en sous-tâches et les assigne automatiquement aux agents les plus adaptés.
 
@@ -26,6 +26,15 @@ Ce système permet de construire et exécuter des workflows où un superviseur d
 * FastAPI
 * LangGraph
 * LangChain
+
+### Frontend
+
+* React 19
+* Vite
+* Tailwind CSS
+* React Router DOM
+* Axios
+
 ---
 
 ## 📦 Installation
@@ -59,14 +68,42 @@ pip install -r requirements.txt
 
 ## ▶️ Lancer le projet
 
+### Backend
+
 ```bash id="run"
 uvicorn app.main:app --reload
 ```
 
 Documentation API disponible sur :
 
-```id="docs"
+```
 http://localhost:8000/docs
+```
+
+### Frontend
+
+#### 1. Aller dans le dossier frontend
+
+```bash
+cd frontend
+```
+
+#### 2. Installer les dépendances
+
+```bash
+npm install
+```
+
+#### 3. Lancer le serveur de développement
+
+```bash
+npm run dev
+```
+
+L'application est disponible sur :
+
+```
+http://localhost:5173
 ```
 ---
 
@@ -130,7 +167,6 @@ app/
 
 ## 🛠️ Améliorations futures
 
-* Ajouter un frontend (React + ReactFlow)
 * Ajouter une base de données (PostgreSQL)
 * Ajouter l’authentification
 * Versioning des workflows
