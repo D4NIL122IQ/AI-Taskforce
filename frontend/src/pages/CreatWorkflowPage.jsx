@@ -330,6 +330,11 @@ function FlowCanvas({ agents, dark }) {
 
           <button
             onClick={() => {
+              const agentNodes = nodes.filter(n => n.type === 'agent')
+              if (agentNodes.length < 2) {
+                showToast('Ajoutez au moins 2 agents spécialisés avant d\'exécuter.')
+                return
+              }
               localStorage.setItem('workflow_execution', JSON.stringify({ nodes, edges }))
               navigate('/workflow/execute')
             }}
