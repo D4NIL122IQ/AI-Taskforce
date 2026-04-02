@@ -1,5 +1,5 @@
 """
-Tests unitaires pour back/modeles/graphBuilder.py
+Tests unitaires pour backendend/modeles/graphBuilder.py
 
 Modules testés :
   - extraire_json()             : extraction JSON depuis une reponse LLM brute
@@ -10,7 +10,7 @@ Modules testés :
 import json
 import pytest
 from unittest.mock import MagicMock
-from back.modeles.graphBuilder import extraire_json, update_results, build_orchestration_graph
+from backend.modeles.graphBuilder import extraire_json, update_results, build_orchestration_graph
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -130,14 +130,14 @@ class TestBuildOrchestrationGraph:
         assert result["final_response"] == "synthese complete"
         sp.executer_prompt.assert_called_once_with("ecris le code")
 
-    def test_fallback_json_invalide(self):
+    def test_fallbackendend_json_invalide(self):
         sup = make_agent("superviseur", "je sais pas")
         sp  = make_agent("developpeur", "code")
-        rec = make_agent("reconstructeur", "reponse fallback")
+        rec = make_agent("reconstructeur", "reponse fallbackendend")
         graph = build_orchestration_graph(sup, [sp], rec)
         state = {"user_input": "test", "results": {}, "next_agent": "", "task_for_agent": "", "final_response": ""}
         result = graph.invoke(state, config={"recursion_limit": 10})
-        assert result["final_response"] == "reponse fallback"
+        assert result["final_response"] == "reponse fallbackendend"
 
     def test_plusieurs_specialistes(self):
         sup = make_agent("superviseur", '{"next_agent": "reconstructeur", "prompt": ""}')

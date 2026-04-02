@@ -1,6 +1,6 @@
 # tests/test_parser_data.py
 """
-Tests unitaires pour back/modeles/parserData.py
+Tests unitaires pour backend/modeles/parserData.py
 
 Ce qu on teste :
   - parser()        : lit un JSON valide et retourne (superviseur, specialistes, prompt)
@@ -82,14 +82,14 @@ WORKFLOW_SANS_PROMPT = {
 
 class TestParser:
 
-    @patch("back.modeles.parserData.Agent")
+    @patch("backend.modeles.parserData.Agent")
     def test_retourne_superviseur_specialistes_prompt(self, MockAgent, tmp_path):
         filepath = tmp_path / "workflow.json"
         filepath.write_text(json.dumps(WORKFLOW_VALIDE), encoding="utf-8")
 
         MockAgent.side_effect = lambda **kw: MagicMock(nom=kw["nom"])
 
-        from back.modeles.parserData import parser
+        from backend.modeles.parserData import parser
         superviseur, specialistes, prompt = parser(str(filepath))
 
         assert superviseur.nom == "superviseur"
@@ -98,44 +98,44 @@ class TestParser:
         assert "developpeur" in noms
         assert "testeur" in noms
 
-    @patch("back.modeles.parserData.Agent")
+    @patch("backend.modeles.parserData.Agent")
     def test_prompt_correctement_extrait(self, MockAgent, tmp_path):
         filepath = tmp_path / "workflow.json"
         filepath.write_text(json.dumps(WORKFLOW_VALIDE), encoding="utf-8")
         MockAgent.side_effect = lambda **kw: MagicMock(nom=kw["nom"])
 
-        from back.modeles.parserData import parser
+        from backend.modeles.parserData import parser
         _, _, prompt = parser(str(filepath))
 
         assert prompt == "Cree une API REST en Python"
 
-    @patch("back.modeles.parserData.Agent")
+    @patch("backend.modeles.parserData.Agent")
     def test_prompt_vide_si_absent(self, MockAgent, tmp_path):
         filepath = tmp_path / "workflow.json"
         filepath.write_text(json.dumps(WORKFLOW_SANS_PROMPT), encoding="utf-8")
         MockAgent.side_effect = lambda **kw: MagicMock(nom=kw["nom"])
 
-        from back.modeles.parserData import parser
+        from backend.modeles.parserData import parser
         _, _, prompt = parser(str(filepath))
 
         assert prompt == ""
 
-    @patch("back.modeles.parserData.Agent")
+    @patch("backend.modeles.parserData.Agent")
     def test_superviseur_absent_leve_value_error(self, MockAgent, tmp_path):
         filepath = tmp_path / "workflow.json"
         filepath.write_text(json.dumps(WORKFLOW_SANS_SUPERVISEUR), encoding="utf-8")
         MockAgent.side_effect = lambda **kw: MagicMock(nom=kw["nom"])
 
-        from back.modeles.parserData import parser
+        from backend.modeles.parserData import parser
         with pytest.raises(ValueError, match="supervisor"):
             parser(str(filepath))
 
     def test_fichier_inexistant_leve_erreur(self):
-        from back.modeles.parserData import parser
+        from backend.modeles.parserData import parser
         with pytest.raises(FileNotFoundError):
             parser("/chemin/inexistant/workflow.json")
 
-    @patch("back.modeles.parserData.Agent")
+    @patch("backend.modeles.parserData.Agent")
     def test_agent_cree_avec_bons_parametres(self, MockAgent, tmp_path):
         filepath = tmp_path / "workflow.json"
         filepath.write_text(json.dumps(WORKFLOW_VALIDE), encoding="utf-8")
@@ -146,7 +146,7 @@ class TestParser:
             return m
         MockAgent.side_effect = capture
 
-        from back.modeles.parserData import parser
+        from backend.modeles.parserData import parser
         parser(str(filepath))
 
         # Verifier les parametres du superviseur
@@ -155,7 +155,7 @@ class TestParser:
         assert sup_call["max_token"] == 2000
         assert sup_call["temperature"] == 0.0
 
-    @patch("back.modeles.parserData.Agent")
+    @patch("backend.modeles.parserData.Agent")
     def test_valeurs_par_defaut_si_max_tokens_absent(self, MockAgent, tmp_path):
         workflow = {
             "nodes": [{
@@ -174,14 +174,14 @@ class TestParser:
             return MagicMock(nom=kw["nom"])
         MockAgent.side_effect = capture
 
-        from back.modeles.parserData import parser
+        from backend.modeles.parserData import parser
         parser(str(filepath))
 
         sup_call = created[0]
         assert sup_call["max_token"] == 1000   # DEFAULT_MAX_TOKENS
         assert sup_call["temperature"] == 0.3  # DEFAULT_TEMPERATURE
 
-    @patch("back.modeles.parserData.Agent")
+    @patch("backend.modeles.parserData.Agent")
     def test_aucun_specialiste_liste_vide(self, MockAgent, tmp_path):
         workflow = {
             "nodes": [{
@@ -195,7 +195,7 @@ class TestParser:
         filepath.write_text(json.dumps(workflow), encoding="utf-8")
         MockAgent.side_effect = lambda **kw: MagicMock(nom=kw["nom"])
 
-        from back.modeles.parserData import parser
+        from backend.modeles.parserData import parser
         _, specialistes, _ = parser(str(filepath))
 
         assert specialistes == []

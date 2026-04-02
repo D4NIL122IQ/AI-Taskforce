@@ -1,6 +1,6 @@
 # tests/test_orchestration.py
 """
-Tests unitaires pour back/modeles/orchestration.py
+Tests unitaires pour backend/modeles/orchestration.py
 
 Ce qu on teste :
   - __init__ : cree bien le reconstructeur + compile le graph
@@ -26,14 +26,14 @@ def make_agent_mock(nom="superviseur", modele="gemini", temperature=0.3, max_tok
 
 class TestOrchestrationInit:
 
-    @patch("back.modeles.orchestration.build_orchestration_graph")
-    @patch("back.modeles.orchestration.Agent")
+    @patch("backend.modeles.orchestration.build_orchestration_graph")
+    @patch("backend.modeles.orchestration.Agent")
     def test_reconstructeur_cree_avec_params_superviseur(self, MockAgent, mock_build):
         mock_build.return_value = MagicMock()
         sup = make_agent_mock(nom="superviseur", modele="gemini", temperature=0.3, max_token=2000)
         sp  = make_agent_mock(nom="developpeur")
 
-        from back.modeles.orchestration import Orchestration
+        from backend.modeles.orchestration import Orchestration
         orche = Orchestration(superviseur=sup, specialistes=[sp])
 
         MockAgent.assert_called_once()
@@ -43,26 +43,26 @@ class TestOrchestrationInit:
         assert call_kwargs["max_token"] == 2000
         assert call_kwargs["temperature"] == 0.5
 
-    @patch("back.modeles.orchestration.build_orchestration_graph")
-    @patch("back.modeles.orchestration.Agent")
+    @patch("backend.modeles.orchestration.build_orchestration_graph")
+    @patch("backend.modeles.orchestration.Agent")
     def test_graph_compile_appele(self, MockAgent, mock_build):
         mock_build.return_value = MagicMock()
         sup = make_agent_mock()
         sp  = make_agent_mock(nom="sp")
 
-        from back.modeles.orchestration import Orchestration
+        from backend.modeles.orchestration import Orchestration
         Orchestration(superviseur=sup, specialistes=[sp])
 
         mock_build.assert_called_once()
 
-    @patch("back.modeles.orchestration.build_orchestration_graph")
-    @patch("back.modeles.orchestration.Agent")
+    @patch("backend.modeles.orchestration.build_orchestration_graph")
+    @patch("backend.modeles.orchestration.Agent")
     def test_attributs_assignes(self, MockAgent, mock_build):
         mock_build.return_value = MagicMock()
         sup = make_agent_mock(nom="superviseur")
         sp  = make_agent_mock(nom="sp")
 
-        from back.modeles.orchestration import Orchestration
+        from backend.modeles.orchestration import Orchestration
         orche = Orchestration(superviseur=sup, specialistes=[sp])
 
         assert orche.superviseur is sup
@@ -75,8 +75,8 @@ class TestOrchestrationInit:
 class TestOrchestrationExecuter:
 
     def _make_orchestration(self, final_response="reponse finale"):
-        with patch("back.modeles.orchestration.build_orchestration_graph") as mock_build, \
-             patch("back.modeles.orchestration.Agent"):
+        with patch("backend.modeles.orchestration.build_orchestration_graph") as mock_build, \
+             patch("backend.modeles.orchestration.Agent"):
 
             mock_graph = MagicMock()
             mock_graph.invoke.return_value = {
@@ -88,7 +88,7 @@ class TestOrchestrationExecuter:
             }
             mock_build.return_value = mock_graph
 
-            from back.modeles.orchestration import Orchestration
+            from backend.modeles.orchestration import Orchestration
             sup = make_agent_mock()
             sp  = make_agent_mock(nom="sp")
             orche = Orchestration(superviseur=sup, specialistes=[sp])
@@ -115,13 +115,13 @@ class TestOrchestrationExecuter:
         assert call_kwargs["config"]["recursion_limit"] == 50
 
     def test_final_response_absente_retourne_message_erreur(self):
-        with patch("back.modeles.orchestration.build_orchestration_graph") as mock_build, \
-             patch("back.modeles.orchestration.Agent"):
+        with patch("backend.modeles.orchestration.build_orchestration_graph") as mock_build, \
+             patch("backend.modeles.orchestration.Agent"):
             mock_graph = MagicMock()
             mock_graph.invoke.return_value = {}
             mock_build.return_value = mock_graph
 
-            from back.modeles.orchestration import Orchestration
+            from backend.modeles.orchestration import Orchestration
             orche = Orchestration(superviseur=make_agent_mock(), specialistes=[make_agent_mock(nom="sp")])
             orche.graph = mock_graph
 
@@ -134,10 +134,10 @@ class TestOrchestrationExecuter:
 class TestOrchestrationAfficherGraphe:
 
     def _make_orche(self):
-        with patch("back.modeles.orchestration.build_orchestration_graph") as mock_build, \
-             patch("back.modeles.orchestration.Agent"):
+        with patch("backend.modeles.orchestration.build_orchestration_graph") as mock_build, \
+             patch("backend.modeles.orchestration.Agent"):
             mock_build.return_value = MagicMock()
-            from back.modeles.orchestration import Orchestration
+            from backend.modeles.orchestration import Orchestration
             return Orchestration(superviseur=make_agent_mock(), specialistes=[make_agent_mock(nom="sp")])
 
     def test_sauvegarde_image(self, tmp_path):

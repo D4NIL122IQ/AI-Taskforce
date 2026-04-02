@@ -1,5 +1,5 @@
 """
-Tests unitaires pour back/modeles/LLMFactory.py
+Tests unitaires pour backend/modeles/LLMFactory.py
 
 Stratégie : on mocke les constructeurs LangChain pour éviter
 tout appel réseau réel. On vérifie uniquement que :
@@ -10,7 +10,7 @@ tout appel réseau réel. On vérifie uniquement que :
 
 import pytest
 from unittest.mock import patch, MagicMock
-from back.modeles.LLMFactory import llmFactory, LLMConfig
+from backend.modeles.LLMFactory import llmFactory, LLMConfig
 
 def make_config(modele: str, temperature: float = 0.5, max_token: int = 500) -> LLMConfig:
     return LLMConfig(temperature=temperature, max_token=max_token, modele=modele)
@@ -18,7 +18,7 @@ def make_config(modele: str, temperature: float = 0.5, max_token: int = 500) -> 
 
 class TestLLMFactoryModelesSupported:
 
-    @patch("back.modeles.LLMFactory.ChatGoogleGenerativeAI")
+    @patch("backend.modeles.LLMFactory.ChatGoogleGenerativeAI")
     def test_gemini_instancie_correctement(self, mock_cls):
         mock_cls.return_value = MagicMock()
         result = llmFactory.initialise_llm(make_config("gemini"))
@@ -29,7 +29,7 @@ class TestLLMFactoryModelesSupported:
         )
         assert result is mock_cls.return_value
 
-    @patch("back.modeles.LLMFactory.ChatOpenAI")
+    @patch("backend.modeles.LLMFactory.ChatOpenAI")
     def test_openai_instancie_correctement(self, mock_cls):
         mock_cls.return_value = MagicMock()
         result = llmFactory.initialise_llm(make_config("openai"))
@@ -40,19 +40,19 @@ class TestLLMFactoryModelesSupported:
         )
         assert result is mock_cls.return_value
 
-    @patch("back.modeles.LLMFactory.ChatOllama")
+    @patch("backend.modeles.LLMFactory.ChatOllama")
     def test_ollama_instancie_correctement(self, mock_cls):
         mock_cls.return_value = MagicMock()
         llmFactory.initialise_llm(make_config("ollama"))
         mock_cls.assert_called_once()
 
-    @patch("back.modeles.LLMFactory.ChatOllama")
+    @patch("backend.modeles.LLMFactory.ChatOllama")
     def test_mistral_utilise_chatollama(self, mock_cls):
         mock_cls.return_value = MagicMock()
         llmFactory.initialise_llm(make_config("mistral"))
         mock_cls.assert_called_once()
 
-    @patch("back.modeles.LLMFactory.ChatDeepSeek")
+    @patch("backend.modeles.LLMFactory.ChatDeepSeek")
     def test_deepseek_instancie_correctement(self, mock_cls):
         mock_cls.return_value = MagicMock()
         result = llmFactory.initialise_llm(make_config("deepseek"))
@@ -65,7 +65,7 @@ class TestLLMFactoryModelesSupported:
         )
         assert result is mock_cls.return_value
 
-    @patch("back.modeles.LLMFactory.ChatAnthropic")
+    @patch("backend.modeles.LLMFactory.ChatAnthropic")
     def test_anthropic_instancie_correctement(self, mock_cls):
         mock_cls.return_value = MagicMock()
         result = llmFactory.initialise_llm(make_config("anthropic"))
@@ -79,13 +79,13 @@ class TestLLMFactoryModelesSupported:
 
 class TestLLMFactoryCaseInsensitive:
 
-    @patch("back.modeles.LLMFactory.ChatOpenAI")
+    @patch("backend.modeles.LLMFactory.ChatOpenAI")
     def test_openai_majuscules_accepte(self, mock_cls):
         mock_cls.return_value = MagicMock()
         llmFactory.initialise_llm(make_config("OPENAI"))
         mock_cls.assert_called_once()
 
-    @patch("back.modeles.LLMFactory.ChatGoogleGenerativeAI")
+    @patch("backend.modeles.LLMFactory.ChatGoogleGenerativeAI")
     def test_gemini_mixte_accepte(self, mock_cls):
         mock_cls.return_value = MagicMock()
         llmFactory.initialise_llm(make_config("Gemini"))
