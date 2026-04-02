@@ -5,17 +5,18 @@ import PageBackground from '../components/layout/PageBackground'
 import { UploadCloud, X, FileText } from 'lucide-react'
 
 const MODELS = [
-  'llama3.3', 'llama3.2', 'llama3.2:1b', 'llama3.1', 'llama3.1:70b', 'llama3.1:405b', 'llama3',
-  'mistral', 'mistral-large', 'mistral-nemo', 'mistral-openorca', 'mixtral', 'mixtral:8x22b',
-  'gemma3', 'gemma3:27b', 'gemma2', 'gemma2:27b', 'gemma',
-  'phi4', 'phi4-mini', 'phi3', 'phi3:medium', 'phi3.5',
-  'qwen2.5', 'qwen2.5:72b', 'qwen2.5-coder', 'qwen2', 'qwen2:72b',
-  'deepseek-r1', 'deepseek-r1:70b', 'deepseek-r1:671b', 'deepseek-v3', 'deepseek-coder-v2',
-  'command-r', 'command-r-plus',
-  'codellama', 'codellama:70b', 'starcoder2', 'starcoder2:15b', 'granite-code',
-  'nous-hermes2', 'openchat', 'solar', 'vicuna', 'orca-mini',
-  'wizardlm2', 'yi', 'stablelm2', 'tinyllama', 'dolphin-mistral',
-  'llava', 'llava:13b', 'llava:34b', 'moondream', 'bakllava',
+  //'llama3.3', 'llama3.2', 'llama3.2:1b', 'llama3.1', 'llama3.1:70b', 'llama3.1:405b', 'llama3',
+  'athene-v2:latest',
+  'mathstral:latest',
+  'qwq:latest',
+  'tulu3:70b',
+  'deepseek-r1:70b',
+  'gemma3:12b', 'gemma3:27b',
+  'ibm/granite3.3-vision:2b',
+  'minicpm-v:latest',
+  'mistral-small3.1:latest',
+  'phi4:latest',
+  'qwen3:30b', 
 ]
 
 const SUPERVISOR_PROMPT =
