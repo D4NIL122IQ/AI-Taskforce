@@ -1,6 +1,6 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
-from back.models.etape_model import Etape, TRANSITIONS_VALIDES, STATUTS_VALIDES
+from backend.models.etape_model import Etape, TRANSITIONS_VALIDES, STATUTS_VALIDES
 
 
 class TestEtapeCreation:

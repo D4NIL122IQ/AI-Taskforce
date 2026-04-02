@@ -1,7 +1,7 @@
 ﻿from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, CheckConstraint
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
-from backend.appDatabase import Base
+from backend.appDatabase.database import Base
 
 TYPES_VALIDES = {"pdf", "txt", "docx", "md"}
 

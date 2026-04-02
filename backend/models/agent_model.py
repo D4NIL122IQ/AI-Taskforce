@@ -1,7 +1,7 @@
 ﻿from sqlalchemy import Column, Integer, String, Float, Text, DateTime, CheckConstraint, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
-from backend.appDatabase import Base
+from backend.appDatabase.database import Base
 
 
 class Agent(Base):

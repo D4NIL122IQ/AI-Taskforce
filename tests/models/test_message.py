@@ -1,6 +1,6 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
-from back.models.message_model import Message
+from backend.models.message_model import Message
 
 
 class TestMessageCreation:

@@ -1,6 +1,6 @@
 ﻿import pytest
 from sqlalchemy.exc import IntegrityError
-from back.models.agent_model import Agent
+from backend.models.agent_model import Agent
 
 
 class TestAgentCreation:
@@ -130,7 +130,7 @@ class TestAgentRelations:
     """VÃ©rifie les relations cascade."""
 
     def test_suppression_cascade_documents(self, session, agent_actif):
-        from back.models.document_model import Document
+        from backend.models.document_model import Document
         doc = Document(nom_fichier="fichier.pdf", type_fichier="pdf",
                        chemin="/tmp/fichier.pdf", agent_id=agent_actif.id_agent)
         session.add(doc)
@@ -142,7 +142,7 @@ class TestAgentRelations:
         assert session.query(Document).count() == 0
 
     def test_suppression_cascade_messages(self, session, agent_actif, execution_en_cours):
-        from back.models.message_model import Message
+        from backend.models.message_model import Message
         msg = Message(contenu="Hello", type="user_input",
                       expediteur="user", execution_id=execution_en_cours.id_execution)
         session.add(msg)

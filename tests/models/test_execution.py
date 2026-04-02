@@ -1,6 +1,6 @@
 ﻿import pytest
 from sqlalchemy.exc import IntegrityError
-from back.models.execution_model import Execution, Resultat
+from backend.models.execution_model import Execution, Resultat
 
 
 class TestExecutionCreation:
@@ -82,7 +82,7 @@ class TestExecutionRelations:
         assert exec_.workflow.nom == workflow_simple.nom
 
     def test_cascade_messages(self, session, execution_en_cours):
-        from back.models.message_model import Message
+        from backend.models.message_model import Message
         msg = Message(contenu="Test", type="system", expediteur="system",
                       execution_id=execution_en_cours.id_execution)
         session.add(msg)

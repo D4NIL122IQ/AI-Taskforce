@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
-from back.models.document_model import Document
-from back.models.agent_model import Agent
+from backend.models.document_model import Document
+from backend.models.agent_model import Agent
 
 
 class TestDocumentCreation:

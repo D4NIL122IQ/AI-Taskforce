@@ -2,7 +2,7 @@
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime, timezone
-from backend.appDatabase import Base
+from backend.appDatabase.database import Base
 
 STATUTS_VALIDES = {"EN_COURS", "TERMINE", "ERREUR"}
 
