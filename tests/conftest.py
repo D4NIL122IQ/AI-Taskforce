@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 from urllib.parse import quote_plus
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
