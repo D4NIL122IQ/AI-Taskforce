@@ -1,6 +1,6 @@
 # tests/test_writer_data.py
 """
-Tests unitaires pour back/modeles/writerData.py
+Tests unitaires pour backend/modeles/writerData.py
 
 Note : les fonctions writeAgent(), writeRespons() et writePrompt()
 sont actuellement des stubs (retournent ""). Les tests documentent
@@ -17,36 +17,36 @@ import pytest
 class TestWriteAgent:
 
     def test_retourne_chaine(self):
-        from back.modeles.writerData import writeAgent
+        from backend.modeles.writerData import writeAgent
         result = writeAgent()
         assert isinstance(result, str)
 
     def test_retourne_valeur_vide_actuellement(self):
-        from back.modeles.writerData import writeAgent
+        from backend.modeles.writerData import writeAgent
         assert writeAgent() == ""
 
 
 class TestWriteRespons:
 
     def test_retourne_chaine(self):
-        from back.modeles.writerData import writeRespons
+        from backend.modeles.writerData import writeRespons
         result = writeRespons()
         assert isinstance(result, str)
 
     def test_retourne_valeur_vide_actuellement(self):
-        from back.modeles.writerData import writeRespons
+        from backend.modeles.writerData import writeRespons
         assert writeRespons() == ""
 
 
 class TestWritePrompt:
 
     def test_retourne_chaine(self):
-        from back.modeles.writerData import writePrompt
+        from backend.modeles.writerData import writePrompt
         result = writePrompt()
         assert isinstance(result, str)
 
     def test_retourne_valeur_vide_actuellement(self):
-        from back.modeles.writerData import writePrompt
+        from backend.modeles.writerData import writePrompt
         assert writePrompt() == ""
 
 
@@ -62,7 +62,7 @@ class TestWriteFile:
         Ce test passera une fois que writeFile() sera implementee.
         Comportement attendu : cree un fichier au chemin donne.
         """
-        from back.modeles.writerData import writeFile
+        from backend.modeles.writerData import writeFile
         filepath = str(tmp_path / "output.json")
         writeFile(filepath)
         import os
