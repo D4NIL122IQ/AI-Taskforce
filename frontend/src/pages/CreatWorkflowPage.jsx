@@ -16,7 +16,8 @@ import {
 import '@xyflow/react/dist/style.css'
 import NavBar from '../components/layout/NavBar'
 import { useTheme } from '../context/ThemeContext'
-import { Bot, Crown, Trash2, Plus, Save, AlertCircle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Bot, Crown, Trash2, Plus, Save, AlertCircle,Play  } from 'lucide-react'
 
 /* ─────────────────────────── helpers ────────────────────────────── */
 
@@ -191,7 +192,7 @@ function FlowCanvas({ agents, dark }) {
   const nodeCounter = useRef(1)
 
   const nodeTypes = dark ? darkNodeTypes : lightNodeTypes
-
+  const navigate = useNavigate()
   useEffect(() => {
     const sup = agents.find(a => a.role === 'Superviseur' || a.role === 'supervisor')
     if (sup) {
@@ -326,6 +327,18 @@ function FlowCanvas({ agents, dark }) {
             <Save size={13} />
             Sauvegarder
           </button>
+
+          <button
+            onClick={() => {
+              localStorage.setItem('workflow_execution', JSON.stringify({ nodes, edges }))
+              navigate('/workflow/execute')
+            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-green-600 hover:bg-green-500 transition-all duration-200"
+          >
+            <Play size={13} />
+            Exécuter
+          </button>
+
         </div>
 
         {/* toast */}
