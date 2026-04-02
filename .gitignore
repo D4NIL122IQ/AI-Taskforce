@@ -9,9 +9,12 @@ __pycache__/
 #Mac 
 ./env
 /.env
+./idea
+/.venv
 /DS_Store
 /.venv
 /.idea
 
 
+/*/__pycache__
 /frontend/node_modules/
