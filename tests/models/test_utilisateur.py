@@ -1,6 +1,6 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
-from back.models.utilisateur_model import Utilisateur
+from backend.models.utilisateur_model import Utilisateur
 
 
 class TestUtilisateurCreation:
@@ -55,7 +55,7 @@ class TestUtilisateurCreation:
 class TestUtilisateurRelations:
 
     def test_relation_agents(self, session):
-        from back.models.agent_model import Agent
+        from backend.models.agent_model import Agent
         u = Utilisateur(nom="Carol", email="carol@example.com", mot_de_passe="h")
         session.add(u)
         session.commit()
@@ -68,7 +68,7 @@ class TestUtilisateurRelations:
         assert u.agents[0].nom == "MonAgent"
 
     def test_relation_workflows(self, session):
-        from back.models.workflow_model import Workflow
+        from backend.models.workflow_model import Workflow
         u = Utilisateur(nom="Dan", email="dan@example.com", mot_de_passe="h")
         session.add(u)
         session.commit()
@@ -81,7 +81,7 @@ class TestUtilisateurRelations:
         assert u.workflows[0].nom == "MonWorkflow"
 
     def test_cascade_suppression_agents(self, session):
-        from back.models.agent_model import Agent
+        from backend.models.agent_model import Agent
         u = Utilisateur(nom="Eve", email="eve2@example.com", mot_de_passe="h")
         session.add(u)
         session.commit()
@@ -96,7 +96,7 @@ class TestUtilisateurRelations:
         assert session.query(Agent).filter_by(utilisateur_id=u.id_utilisateur).count() == 0
 
     def test_cascade_suppression_workflows(self, session):
-        from back.models.workflow_model import Workflow
+        from backend.models.workflow_model import Workflow
         u = Utilisateur(nom="Frank", email="frank@example.com", mot_de_passe="h")
         session.add(u)
         session.commit()

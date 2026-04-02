@@ -1,9 +1,9 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
-from back.models.workflow_model import Workflow
-from back.models.agent_model import Agent
-from back.models.etape_model import Etape
-from back.models.execution_model import Execution
+from backend.models.workflow_model import Workflow
+from backend.models.agent_model import Agent
+from backend.models.etape_model import Etape
+from backend.models.execution_model import Execution
 
 
 class TestWorkflowCreation:

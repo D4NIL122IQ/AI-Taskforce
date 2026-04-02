@@ -1,4 +1,7 @@
 import pytest
+pytest.importorskip("langchain_google_genai")
+pytest.importorskip("langchain_ollama")
+pytest.importorskip("langchain_openai")
 from backend.modeles.Agent import Agent
 
 

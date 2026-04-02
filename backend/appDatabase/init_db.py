@@ -1,22 +1,18 @@
-﻿# back/init_db.py
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from backend.appDatabase.database import Base, engine
-from back.models.utilisateur_model import Utilisateur
-from back.models.agent_model import Agent
-from back.models.document_model import Document
-from back.models.etape_model import Etape
-from back.models.execution_model import Execution
-from back.models.workflow_model import Workflow
+from backend.models.agent_model import Agent
+from backend.models.document_model import Document
+from backend.models.etape_model import Etape
+from backend.models.execution_model import Execution, Resultat
+from backend.models.message_model import Message
+from backend.models.utilisateur_model import Utilisateur
+from backend.models.workflow_model import Workflow
 
-from back.models.message_model import Message
 
 def init():
-    print("CrÃ©ation des tables...")
+    print("Creation des tables...")
     Base.metadata.create_all(bind=engine)
-    print("Tables crÃ©Ã©es avec succÃ¨s !")
+    print("Tables creees avec succes !")
+
 
 if __name__ == "__main__":
     init()

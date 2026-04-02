@@ -1,6 +1,11 @@
 from datetime import datetime as dt
-from dotenv import load_dotenv
 import os
+
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    def load_dotenv():
+        return False
 
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from backend.modeles.LLMFactory import llmFactory, LLMConfig
