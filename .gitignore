@@ -1,4 +1,17 @@
+# windows
+env/
+venv/
+__pycache__/
+*.pyc
+.env
+.pytest_cache/
+
+#Mac 
+./env
 /.env
 /DS_Store
 /.venv
 /.idea
+
+
+/frontend/node_modules/

@@ -1,7 +1,7 @@
 ﻿from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, CheckConstraint
 from datetime import datetime, timezone
 from sqlalchemy.orm import relationship
-from back.appDatabase.database import Base
+from backend.appDatabase import Base
 
 TYPES_VALIDES = {"user_input", "agent_response", "system"}
 

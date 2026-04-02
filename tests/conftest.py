@@ -1,10 +1,8 @@
-﻿import os
-import sys
-import pytest
+﻿import pytest
 from urllib.parse import quote_plus
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from back.appDatabase.database import Base
+from backend.appDatabase import Base
 from back.models.utilisateur_model import Utilisateur
 
 

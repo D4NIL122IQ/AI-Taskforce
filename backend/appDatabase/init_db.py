@@ -3,7 +3,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from back.appDatabase.database import Base, engine
+from backend.appDatabase.database import Base, engine
 from back.models.utilisateur_model import Utilisateur
 from back.models.agent_model import Agent
 from back.models.document_model import Document
