@@ -4,6 +4,7 @@ import GestionAgentPage from './pages/GestionAgentPage'
 import CreatAgentPage from './pages/CreatAgentPage'
 import FormPage from './pages/FormPage'
 import CreatWorkflowPage from './pages/CreatWorkflowPage'
+import ExecuteWorkflowPage from './pages/ExecuteWorkflowPage'
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
       <Route path="/agents/create" element={<CreatAgentPage />} />
       <Route path="/auth" element={<FormPage />} />
       <Route path="/workflow" element={<CreatWorkflowPage />} />
+      <Route path="/workflow/execute" element={<ExecuteWorkflowPage />} />
     </Routes>
   )
 }
