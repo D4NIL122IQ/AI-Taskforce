@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
-from back.appDatabase.database  import Base
+from backend.appDatabase import Base
 import bcrypt
 
 

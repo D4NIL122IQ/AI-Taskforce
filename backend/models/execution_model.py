@@ -2,7 +2,7 @@
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime, timezone
-from back.appDatabase.database import Base
+from backend.appDatabase import Base
 
 STATUTS_VALIDES = {"EN_COURS", "TERMINE", "ERREUR"}
 
@@ -39,7 +39,7 @@ class Execution(Base):
 # Classe Resultat
 # ------------------------------------------------------------------
 
-from sqlalchemy import Text, UniqueConstraint
+from sqlalchemy import Text
 
 
 class Resultat(Base):
