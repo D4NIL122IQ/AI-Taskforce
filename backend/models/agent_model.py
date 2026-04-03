@@ -1,11 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float, Text, DateTime, CheckConstraint, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
-<<<<<<< HEAD:back/models/agent_model.py
-from back.appDatabase.database import Base
-=======
-from backend.appDatabase import Base
->>>>>>> e2627ce3cc0265d58ec20149260718ceb174b63b:backend/models/agent_model.py
+from backend.appDatabase.database import Base
 
 
 class AgentModel(Base):

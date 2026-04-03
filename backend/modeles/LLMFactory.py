@@ -91,7 +91,7 @@ class llmFactory:
 
         elif type_modele == "ollama":
             return ChatOllama(
-                model="mistral",
+                model="llama3.2",
                 temperature=config.temperature,
                 max_tokens=config.max_token
             )
@@ -104,8 +104,8 @@ class llmFactory:
             )
         
         elif type_modele == "deepseek":
-            return ChatDeepSeek(
-                model="deepseek-chat",
+            return ChatOllama(
+                model="deepseek-r1",
                 temperature=config.temperature,
                 max_tokens=config.max_token,
                 timeout=None,

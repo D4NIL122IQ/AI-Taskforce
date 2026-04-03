@@ -1,7 +1,8 @@
 from backend.models.agent_model import AgentModel
-from backend.appDatabase.init_db import init
->>>>>>> e2627ce3cc0265d58ec20149260718ceb174b63b:backend/services/agent_service.py
 from sqlalchemy.orm import Session
+from backend.modeles.Agent import Agent
+from backend.appDatabase.init_db import init
+from backend.appDatabase.database import get_db
 from sqlalchemy import (insert, delete, update)
 from pydantic import BaseModel
 
@@ -34,8 +35,10 @@ class AgentService:
                                               max_token=agent.max_token,
                                               system_prompt=agent.prompt,
                                               user_id=user_id)
-            self.db.execute(stmt)
+            result = self.db.execute(stmt)
             self.db.commit()
+            
+            return result.inserted_primary_key[0]  # Retourne l'ID de l'agent créé
 
         
         except Exception as e:

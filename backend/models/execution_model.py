@@ -2,11 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, CheckConst
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime, timezone
-<<<<<<< HEAD:back/models/execution_model.py
-from back.appDatabase.database import Base
-=======
-from backend.database import Base
->>>>>>> e2627ce3cc0265d58ec20149260718ceb174b63b:backend/models/execution_model.py
+from backend.appDatabase.database import Base
 
 STATUTS_VALIDES = {"EN_COURS", "TERMINE", "ERREUR"}
 
