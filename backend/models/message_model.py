@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, CheckConstraint
 from datetime import datetime, timezone
 from sqlalchemy.orm import relationship
-<<<<<<< HEAD:back/models/message_model.py
 from backend.appDatabase.database import Base
 TYPES_VALIDES = {"user_input", "agent_response", "system"}
 
