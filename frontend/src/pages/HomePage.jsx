@@ -1,11 +1,9 @@
-// src/pages/HomePage.jsx
+import NavBar from '../components/layout/NavBar'
+import HeroSection from '../components/home/HeroSection'
+import FeatureCard from '../components/home/FeatureCard'
+import { Bot, Network, Workflow as WorkflowIcon, Sparkles } from 'lucide-react'
 
-import NavBar      from '../components/layout/NavBar';
-import HeroSection from '../components/home/HeroSection';
-import FeatureCard from '../components/home/FeatureCard';
-import { Bot, Network, Workflow as WorkflowIcon, Sparkles } from 'lucide-react';
-
-const ICON_PROPS = { size: 26, strokeWidth: 1.6 };
+const ICON_PROPS = { size: 26, strokeWidth: 1.6 }
 
 const FEATURE_CARDS = [
   {
@@ -33,31 +31,23 @@ const FEATURE_CARDS = [
     title: 'Gestion Agents',
     description: "Gérez le cycle de vie de vos agents, attachez des documents pour le RAG et consultez les historiques d'exécution.",
   },
-];
+]
 
-const HomePage = () => {
-  return (
-    <div className="min-h-screen bg-[#080808] text-white font-body">
-      <NavBar />
-      <main>
-        <HeroSection />
-        <section className="relative z-10 max-w-7xl mx-auto px-6 pb-24">
-          <h2 className="sr-only">Fonctionnalités principales</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {FEATURE_CARDS.map(({ id, icon, title, description, highlighted }) => (
-              <FeatureCard
-                key={id}
-                icon={icon}
-                title={title}
-                description={description}
-                highlighted={highlighted}
-              />
-            ))}
-          </div>
-        </section>
-      </main>
-    </div>
-  );
-};
+const HomePage = () => (
+  <div className="min-h-screen bg-gray-50 dark:bg-[#080808] text-gray-900 dark:text-white font-body transition-colors duration-300">
+    <NavBar />
+    <main>
+      <HeroSection />
+      <section className="relative z-10 max-w-7xl mx-auto px-6 pb-24">
+        <h2 className="sr-only">Fonctionnalités principales</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {FEATURE_CARDS.map(({ id, icon, title, description, highlighted }) => (
+            <FeatureCard key={id} icon={icon} title={title} description={description} highlighted={highlighted} />
+          ))}
+        </div>
+      </section>
+    </main>
+  </div>
+)
 
-export default HomePage;
+export default HomePage
