@@ -23,7 +23,7 @@ class Orchestration:
         ```
     """
 
-    def __init__(self, superviseur: Agent, specialistes: list):
+    def __init__(self, superviseur: Agent, specialistes: list, niveau_recherche: int = 1):
         """
         Initialise l'orchestration et compile le graphe LangGraph.
 
@@ -34,9 +34,15 @@ class Orchestration:
             superviseur (Agent): Agent chargé de décomposer les tâches et de router
                 vers les spécialistes.
             specialistes (list[Agent]): Liste des agents spécialisés disponibles.
+            niveau_recherche (int): Nombre max d'appels LLM par sous-tâche (1, 2 ou 3).
+                1 = rapide (défaut), 3 = meilleure qualité avec raffinement.
         """
+        if niveau_recherche not in (1, 2, 3):
+            raise ValueError("niveau_recherche doit être 1, 2 ou 3")
+
         self.superviseur = superviseur
         self.specialistes = specialistes
+        self.niveau_recherche = niveau_recherche
 
         # Création automatique du reconstructeur avec les paramètres du superviseur
         self.reconstructeur = Agent(
@@ -55,7 +61,8 @@ class Orchestration:
         self.graph = build_orchestration_graph(
             agent_superviseur=self.superviseur,
             agents_specialistes=self.specialistes,
-            agent_reconstructeur=self.reconstructeur
+            agent_reconstructeur=self.reconstructeur,
+            niveau_recherche=self.niveau_recherche
         )
 
     def executer(self, prompt: str) -> str:
@@ -79,10 +86,14 @@ class Orchestration:
             "results": {},
             "next_agent": "",
             "task_for_agent": "",
-            "final_response": ""
+            "final_response": "",
+            "niveau_recherche": self.niveau_recherche,
+            "current_task_calls": 0,
+            "current_task_agent": "",
         }
 
-        final_state = self.graph.invoke(initial_state, config={"recursion_limit": 50})
+        recursion_limit = 25 + (self.niveau_recherche - 1) * 25  # 25 / 50 / 75
+        final_state = self.graph.invoke(initial_state, config={"recursion_limit": recursion_limit})
 
         return final_state.get("final_response", "Erreur : Aucune réponse finale générée.")
 
