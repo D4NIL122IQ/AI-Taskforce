@@ -6,6 +6,7 @@ const NAV_LINKS = [
   { label: 'Accueil',        to: '/' },
   { label: 'Gestion Agents', to: '/agents' },
   { label: 'Workflow',       to: '/workflow' },
+  { label:'Dashboard',        to: '/dashboard' },
 ]
 
 const NavItem = ({ label, to }) => (
