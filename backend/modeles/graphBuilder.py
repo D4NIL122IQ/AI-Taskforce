@@ -38,10 +38,13 @@ class OrchestrationState(TypedDict):
     next_agent: str  # Le nom du prochain agent à appeler, ou "reconstructeur"
     task_for_agent: str  # Le prompt spécifique généré par le superviseur pour ce spécialiste
     final_response: str  # La réponse finale pour l'utilisateur
+    niveau_recherche: int   # 1, 2 ou 3 — nombre max d'appels LLM par sous-tâche
+    current_task_calls: int # nombre d'appels faits pour la sous-tâche en cours
+    current_task_agent: str # nom du spécialiste en cours de raffinement
 
 
 # --- 2. Fonction de construction ---
-def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agent_reconstructeur):
+def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agent_reconstructeur, niveau_recherche: int = 1):
     """
     Construit le graphe LangGraph.
     Hypothèse: tes agents ont un attribut 'nom' et une méthode 'executer_prompt'.
@@ -52,17 +55,40 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
     def superviseur_node(state: OrchestrationState):
         noms_specialistes = [a.nom for a in agents_specialistes]
         resultats_actuels = state.get('results', {})
+        niveau = state.get('niveau_recherche', niveau_recherche)
+        task_calls = state.get('current_task_calls', 0)
+        task_agent = state.get('current_task_agent', '')
         print(f"\n[SUPERVISEUR] Analyse en cours... résultats déjà obtenus : {list(resultats_actuels.keys())}")
 
-        prompt_sup = (
-            f"Tâche initiale de l'utilisateur : {state['user_input']}\n"
-            f"Résultats obtenus jusqu'à présent : {resultats_actuels}\n"
-            f"Agents disponibles : {noms_specialistes}\n\n"
-            "Analyse ce qui manque. Si tu as besoin d'un spécialiste, réponds STRICTEMENT avec un JSON : "
-            '{"next_agent": "nom_du_specialiste", "prompt": "instructions_pour_lui"}. '
-            "Si toutes les sous-tâches sont finies, réponds : "
-            '{"next_agent": "reconstructeur", "prompt": ""}.'
+        en_mode_raffinement = (
+            niveau > 1
+            and task_calls >= 1
+            and task_agent in resultats_actuels
+            and task_calls < niveau
         )
+
+        if en_mode_raffinement:
+            prompt_sup = (
+                f"Tâche initiale de l'utilisateur : {state['user_input']}\n"
+                f"Résultats obtenus jusqu'à présent : {resultats_actuels}\n"
+                f"Agents disponibles : {noms_specialistes}\n\n"
+                f"CONTEXTE DE RAFFINEMENT — agent actuel : {task_agent}\n"
+                f"Appels utilisés pour cette sous-tâche : {task_calls}/{niveau}\n"
+                f"Si le résultat de '{task_agent}' est satisfaisant, passe à la prochaine sous-tâche ou route vers 'reconstructeur'. "
+                f"Si le résultat est insuffisant, renvoie un prompt amélioré au MÊME agent '{task_agent}'. "
+                "Réponds STRICTEMENT avec un JSON : "
+                '{"next_agent": "nom_du_specialiste_ou_reconstructeur", "prompt": "instructions"}.'
+            )
+        else:
+            prompt_sup = (
+                f"Tâche initiale de l'utilisateur : {state['user_input']}\n"
+                f"Résultats obtenus jusqu'à présent : {resultats_actuels}\n"
+                f"Agents disponibles : {noms_specialistes}\n\n"
+                "Analyse ce qui manque. Si tu as besoin d'un spécialiste, réponds STRICTEMENT avec un JSON : "
+                '{"next_agent": "nom_du_specialiste", "prompt": "instructions_pour_lui"}. '
+                "Si toutes les sous-tâches sont finies, réponds : "
+                '{"next_agent": "reconstructeur", "prompt": ""}.'
+            )
 
         response = agent_superviseur.executer_prompt(prompt_sup)
         print(f"[SUPERVISEUR] Décision brute : {response.content[:200]}")
@@ -70,14 +96,36 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
         # Parse la réponse JSON du superviseur
         try:
             decision = extraire_json(response.content)
-            print(f"[SUPERVISEUR] → Route vers : {decision['next_agent']}")
+            chosen_agent = decision['next_agent']
+
+            # Hard-cap : le LLM ignore le plafond → forcer reconstructeur
+            if chosen_agent == task_agent and task_calls >= niveau:
+                print(f"[SUPERVISEUR] ⚠ Hard-cap atteint ({task_calls}/{niveau}) → forcé vers reconstructeur")
+                chosen_agent = "reconstructeur"
+                decision['next_agent'] = "reconstructeur"
+                decision['prompt'] = ""
+
+            # Gestion du compteur
+            if chosen_agent == "reconstructeur":
+                new_calls = 0
+                new_agent = ""
+            elif chosen_agent == task_agent:
+                new_calls = task_calls + 1
+                new_agent = task_agent
+            else:
+                new_calls = 1
+                new_agent = chosen_agent
+
+            print(f"[SUPERVISEUR] → Route vers : {chosen_agent} (appels sous-tâche : {new_calls}/{niveau})")
             return {
-                "next_agent": decision["next_agent"],
-                "task_for_agent": decision["prompt"]
+                "next_agent": chosen_agent,
+                "task_for_agent": decision["prompt"],
+                "current_task_calls": new_calls,
+                "current_task_agent": new_agent,
             }
         except (json.JSONDecodeError, KeyError) as e:
             print(f"[SUPERVISEUR] ⚠ Parsing JSON échoué ({e}) → fallback reconstructeur")
-            return {"next_agent": "reconstructeur", "task_for_agent": ""}
+            return {"next_agent": "reconstructeur", "task_for_agent": "", "current_task_calls": 0, "current_task_agent": ""}
 
     workflow.add_node("superviseur", superviseur_node)
 
@@ -101,7 +149,8 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
         prompt_rec = (
             f"Demande initiale : {state['user_input']}\n"
             f"Données brutes des spécialistes : {state['results']}\n\n"
-            "Structurise la réponse finale pour une bonne mise en forme"
+            "Structurise la réponse finale pour une bonne mise en forme. "
+            "IMPORTANT : tu dois répondre OBLIGATOIREMENT dans la même langue que la demande initiale de l'utilisateur."
         )
         response = agent_reconstructeur.executer_prompt(prompt_rec)
         print(f"[RECONSTRUCTEUR] Réponse finale générée ({len(response.content)} caractères)")
