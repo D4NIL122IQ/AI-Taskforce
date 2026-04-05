@@ -17,7 +17,7 @@ import '@xyflow/react/dist/style.css'
 import NavBar from '../components/layout/NavBar'
 import { useTheme } from '../context/ThemeContext'
 import { useNavigate } from 'react-router-dom'
-import { Bot, Crown, Trash2, Plus, Save, AlertCircle,Play  } from 'lucide-react'
+import { Bot, Crown, Trash2, Plus, Save, AlertCircle,Play, Workflow   } from 'lucide-react'
 
 /* ─────────────────────────── helpers ────────────────────────────── */
 
@@ -182,7 +182,7 @@ const initialSupervisorNode = {
   deletable: false,
 }
 
-function FlowCanvas({ agents, dark }) {
+function FlowCanvas({ agents, dark, workflowName  }) {
   const reactFlowWrapper = useRef(null)
   const { screenToFlowPosition } = useReactFlow()
 
@@ -247,7 +247,7 @@ function FlowCanvas({ agents, dark }) {
   }, [setNodes, setEdges])
 
   const saveWorkflow = () => {
-    localStorage.setItem('workflow_draft', JSON.stringify({ nodes, edges, savedAt: new Date().toISOString() }))
+    localStorage.setItem('workflow_draft', JSON.stringify({ name: workflowName, nodes, edges, savedAt: new Date().toISOString() }))
     showToast('Workflow sauvegardé !')
   }
 
@@ -307,6 +307,26 @@ function FlowCanvas({ agents, dark }) {
 
       {/* ── Main canvas ── */}
       <div className="flex-1 relative" ref={reactFlowWrapper}>
+
+        {/* nom workflow */}
+        <div className="absolute top-4 left-4 z-10">
+          {workflowName && (
+            <div style={{
+              background: dark ? 'rgba(139,92,246,0.12)' : 'rgba(139,92,246,0.08)',
+              border: '1px solid rgba(139,92,246,0.3)',
+              borderRadius: 10,
+              padding: '6px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}>
+              <Workflow size={13} style={{ color: '#8b5cf6' }} />
+              <span style={{ color: dark ? 'rgba(167,139,250,0.9)' : '#7c3aed', fontSize: 13, fontWeight: 600 }}>
+                {workflowName}
+              </span>
+            </div>
+          )}
+        </div>
 
         {/* toolbar */}
         <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
@@ -398,19 +418,106 @@ function FlowCanvas({ agents, dark }) {
     </div>
   )
 }
+function WorkflowNameModal({ dark, onConfirm }) {
+  const [name, setName] = useState('')
+  const [error, setError] = useState(false)
+
+  const handleConfirm = () => {
+    if (!name.trim()) {
+      setError(true)
+      return
+    }
+    onConfirm(name.trim())
+  }
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 50,
+      background: 'rgba(0,0,0,0.7)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      backdropFilter: 'blur(4px)',
+    }}>
+      <div style={{
+        background: dark ? '#111' : '#fff',
+        border: `1px solid ${dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+        borderRadius: 16,
+        padding: '32px',
+        width: '100%',
+        maxWidth: 420,
+      }}>
+        <h2 style={{ color: dark ? 'white' : '#111', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
+          Nommer le workflow
+        </h2>
+        <p style={{ color: dark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.45)', fontSize: 13, marginBottom: 20 }}>
+          Donnez un nom avant de commencer.
+        </p>
+        <input
+          autoFocus
+          type="text"
+          placeholder="Ex: Workflow analyse de données"
+          value={name}
+          onChange={e => { setName(e.target.value); setError(false) }}
+          onKeyDown={e => e.key === 'Enter' && handleConfirm()}
+          style={{
+            width: '100%', padding: '10px 14px', borderRadius: 10,
+            background: dark ? 'rgba(255,255,255,0.05)' : '#f9f9f9',
+            border: error ? '1px solid #ef4444' : `1px solid ${dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.15)'}`,
+            color: dark ? 'white' : '#111',
+            fontSize: 14, outline: 'none', boxSizing: 'border-box',
+            marginBottom: error ? 6 : 20,
+          }}
+        />
+        {error && (
+          <p style={{ color: '#ef4444', fontSize: 12, marginBottom: 16 }}>
+            Veuillez entrer un nom.
+          </p>
+        )}
+        <button
+          onClick={() => window.history.back()}
+          style={{
+            width: '100%', padding: '11px', borderRadius: 10,
+            background: 'transparent',
+            color: dark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)',
+            fontWeight: 500, fontSize: 14,
+            border: `1px solid ${dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+            cursor: 'pointer', marginBottom: 8,
+          }}
+        >
+          Annuler
+        </button>
+
+        <button
+          onClick={handleConfirm}
+          style={{
+            width: '100%', padding: '11px', borderRadius: 10,
+            background: '#7c3aed', color: 'white', fontWeight: 600,
+            fontSize: 14, border: 'none', cursor: 'pointer',
+          }}
+        >
+          Créer le workflow
+        </button>
+      </div>
+    </div>
+  )
+}
 
 /* ─────────────────────────── page wrapper ───────────────────────── */
 
 export default function CreatWorkflowPage() {
   const agents = loadAgents()
   const { dark } = useTheme()
+  const [workflowName, setWorkflowName] = useState(null)
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#080808] text-gray-900 dark:text-white font-body transition-colors duration-300">
       <NavBar />
+        {!workflowName && (
+          <WorkflowNameModal dark={dark} onConfirm={(name) => setWorkflowName(name)} />
+        )}
+
       <div style={{ paddingTop: 68 }}>
         <ReactFlowProvider>
-          <FlowCanvas agents={agents} dark={dark} />
+          <FlowCanvas agents={agents} dark={dark} workflowName={workflowName || ''} />
         </ReactFlowProvider>
       </div>
     </div>
