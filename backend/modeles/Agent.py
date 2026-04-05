@@ -8,7 +8,7 @@ except ImportError:
         return False
 
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from backend.modeles.LLMFactory import llmFactory, LLMConfig
+from backend.modeles.requestLLM import chat, MODEL as PLEIADE_MODEL
 
 load_dotenv()
 
@@ -107,12 +107,6 @@ class Agent:
         self.date_creation = dt.now()
         self.documents = []
 
-        # Initialisation du modèle via la factory
-        self.llm = llmFactory.initialise_llm(
-            LLMConfig(self.temperature,
-                      self.max_token,
-                      self.modele)
-        )
 
         self.ctr += 1
 
@@ -154,7 +148,7 @@ class Agent:
         if not nom or not isinstance(nom, str):
             raise ValueError("Nom invalide")
 
-        if modele not in ["Openai", "Ollama", "Mistral", "DeepSeek", "Anthropic", "Gemini"]:
+        if not modele or not isinstance(modele, str):
             raise ValueError("Modèle invalide")
 
         if not prompt or not isinstance(prompt, str):
@@ -166,43 +160,47 @@ class Agent:
         if not isinstance(temperature, (int, float)) or not (0 <= temperature <= 1):
             raise ValueError("temperature invalide")
 
-    def executer_prompt(self, message):
-        """
-        Envoie un message à l'agent et retourne la réponse du LLM.
+    # def executer_prompt(self, message):
+    #     """Version LangChain — conservée en commentaire pour référence."""
+    #     if not message.strip():
+    #         raise ValueError("prompt vide")
+    #     agent = self.template | self.llm
+    #     return agent.invoke({
+    #         "name": self.nom,
+    #         "role": self.prompt,
+    #         "messages": [("human", message)]
+    #     })
 
-        Compose un pipeline LangChain `template | llm` et l'invoque avec
-        le nom, le rôle et le message de l'utilisateur.
+    def executer_prompt(self, message, model=None):
+        """
+        Envoie un message à l'agent via l'API Pléiade et retourne la réponse.
 
         Args:
             message (str): Texte à envoyer à l'agent. Ne doit pas être vide.
+            model (str | None): Modèle Pléiade à utiliser. Si None, utilise le
+                modèle par défaut défini dans requestLLM (PLEIADE_MODEL).
 
         Returns:
-            AIMessage: Réponse générée par le LLM (objet LangChain).
-                Accéder au texte via `.content`.
-
-        Raises:
-            ValueError: Si `message` est vide ou ne contient que des espaces.
-
-        Example:
-            ```python
-            reponse = agent.executer_prompt("Quels sont les risques du cloud ?")
-            print(reponse.content)
-            ```
+            Objet avec attribut `.content` (str).
         """
-
         if not message.strip():
             raise ValueError("prompt vide")
 
-        # Composition du pipeline LangChain (template + modèle)
-        agent = self.template | self.llm
+        if model is None:
+            model = PLEIADE_MODEL
 
-        response = agent.invoke({
-            "name": self.nom,
-            "role": self.prompt,
-            "messages": [("human", message)]
-        })
+        prompt_text = (
+            f"system: Tu es {self.nom}, un agent intelligent dont le rôle est : {self.prompt}. "
+            "Tu dois fournir des réponses claires, précises et utiles. "
+            "Si une information est incertaine, indique-le explicitement. "
+            "Réponds dans la même langue que le prompt suivant : "
+            + message
+        )
+        from types import SimpleNamespace
+        result = chat(prompt_text, model)
+        return SimpleNamespace(content=result)
+        
 
-        return response
 
     def ajouter_document(self, filepath):
         """
@@ -275,13 +273,7 @@ class Agent:
 
     @modele.setter
     def modele(self, value):
-        """
-        Met à jour le modèle LLM et réinitialise l'instance correspondante.
-        """
         self._modele = value
-        self.llm = llmFactory.initialise_llm(LLMConfig(self.temperature,
-                        self.max_token,
-                        self.modele))
 
     @property
     def temperature(self):
@@ -304,13 +296,7 @@ class Agent:
 
     @temperature.setter
     def temperature(self, value):
-        """
-        Met à jour la température et réinitialise le modèle LLM.
-        """
         self._temperature = value
-        self.llm = llmFactory.initialise_llm(LLMConfig(self.temperature,
-                        self.max_token,
-                        self.modele))
 
     @property
     def max_token(self):
@@ -333,10 +319,4 @@ class Agent:
 
     @max_token.setter
     def max_token(self, value):
-        """
-        Met à jour la limite de tokens et réinitialise le modèle LLM.
-        """
         self._max_token = value
-        self.llm = llmFactory.initialise_llm(LLMConfig(self.temperature,
-                        self.max_token,
-                        self.modele))
