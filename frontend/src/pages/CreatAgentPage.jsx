@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams  } from 'react-router-dom'
 import NavBar from '../components/layout/NavBar'
 import PageBackground from '../components/layout/PageBackground'
 import { UploadCloud, X, FileText } from 'lucide-react'
@@ -29,19 +29,22 @@ const FieldLabel = ({ children }) => (
 )
 
 const AgentPage = () => {
-  const [roleType, setRoleType] = useState('autre')
-  const [webSearch, setWebSearch] = useState(false)
+  const { id } = useParams()
+  const existing = id ? JSON.parse(localStorage.getItem('agents') || '[]').find(a => a.id === id) : null
+
+  const [roleType, setRoleType] = useState(existing?.role === 'Superviseur' ? 'superviseur' : 'autre')
+  const [webSearch, setWebSearch] = useState(existing?.webSearch || false)
   const [isDragging, setIsDragging] = useState(false)
   const [files, setFiles] = useState([])
   const fileInputRef = useRef(null)
 
   const [form, setForm] = useState({
-    name: '',
-    role: '',
-    model: MODELS[0],
-    temperature: 0.7,
-    maxTokens: 2048,
-    systemPrompt: '',
+    name: existing?.name || '',
+    role: existing?.role || '',
+    model: existing?.model || MODELS[0],
+    temperature: existing?.temperature || 0.7,
+    maxTokens: existing?.maxTokens || 2048,
+    systemPrompt: existing?.systemPrompt || '',
   })
 
   const handleRoleTypeChange = (type) => {
@@ -64,12 +67,17 @@ const AgentPage = () => {
   const navigate = useNavigate()
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    const newAgent = { ...form, webSearch, id: crypto.randomUUID() }
-    const existing = JSON.parse(localStorage.getItem('agents') || '[]')
-    localStorage.setItem('agents', JSON.stringify([...existing, newAgent]))
-    navigate('/agents')
-  }
+      e.preventDefault()
+      const agents = JSON.parse(localStorage.getItem('agents') || '[]')
+      if (id) {
+        const updated = agents.map(a => a.id === id ? { ...form, webSearch, id } : a)
+        localStorage.setItem('agents', JSON.stringify(updated))
+      } else {
+        const newAgent = { ...form, webSearch, id: crypto.randomUUID() }
+        localStorage.setItem('agents', JSON.stringify([...agents, newAgent]))
+      }
+      navigate('/agents')
+    }
 
   const addFiles = (incoming) => {
     const list = Array.from(incoming)
@@ -97,7 +105,7 @@ const AgentPage = () => {
       <NavBar />
 
       <main className="max-w-6xl mx-auto px-6 pt-[100px] pb-24">
-        <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Créer un agent</h1>
+        <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">{id ? 'Modifier un agent' : 'Créer un agent'}</h1>
         <p className="text-gray-500 dark:text-white/50 text-sm mb-10">
           Configurez un agent IA avec son rôle, son modèle LLM et son prompt système.
         </p>
@@ -278,8 +286,10 @@ const AgentPage = () => {
               type="submit"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors duration-200 cursor-pointer"
             >
-              Créer l'agent
+              {id ? 'Modifier l\'agent' : 'Créer l\'agent'}
+
             </button>
+
             <button
               type="button" onClick={() => navigate('/agents')}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20 text-gray-600 dark:text-white/70 hover:text-gray-900 dark:hover:text-white text-sm font-medium transition-all duration-200 cursor-pointer"
