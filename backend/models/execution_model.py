@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime, timezone
 from backend.appDatabase.database import Base
+from backend.models.message_model import Message
 
 STATUTS_VALIDES = {"EN_COURS", "TERMINE", "ERREUR"}
 

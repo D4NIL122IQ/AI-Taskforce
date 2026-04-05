@@ -1,7 +1,6 @@
 # windows
 env/
 venv/
-__pycache__/
 *.pyc
 .env
 .pytest_cache/

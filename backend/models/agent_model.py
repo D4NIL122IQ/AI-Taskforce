@@ -2,20 +2,25 @@ from sqlalchemy import Column, Integer, String, Float, Text, DateTime, CheckCons
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from backend.appDatabase.database import Base
+from backend.models.document_model import Document
+from backend.models.utilisateur_model import Utilisateur
+from backend.models.etape_model import Etape
+from backend.models.workflow_model import Workflow
 
 
-class AgentModel(Base):
+class Agent(Base):
     __tablename__ = "agent"
 
     id_agent      = Column(Integer, primary_key=True, autoincrement=True)
     nom           = Column(String(100), nullable=False)
+    role          = Column(Text, nullable=True)
     modele        = Column(String(50), nullable=False)
     temperature   = Column(Float, nullable=False, default=0.7)
     max_tokens    = Column(Integer, nullable=False, default=1024)
     system_prompt = Column(Text, nullable=True)
     date_creation = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     statut        = Column(String(20), default="ACTIF")
-    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)
+    utilisateur_id = Column(Integer, ForeignKey("utilisateur.id_utilisateur"), nullable=True)
 
 
     __table_args__ = (
@@ -33,12 +38,12 @@ class AgentModel(Base):
             name="ck_agent_max_tokens",
         ),
         CheckConstraint(
-            "statut IN ('ACTIF','INACTIF', 'INTERROMPU')",
+            "statut IN ('ACTIF','INTERROMPU')",
             name="ck_agent_statut",
         ),
     )
 
-    users = relationship("User", back_populates="agents")
+    utilisateur = relationship("Utilisateur", back_populates="agents")
     document      = relationship("Document", back_populates="agent", cascade="all, delete-orphan")
     etapes         = relationship("Etape",    back_populates="agent")
     superviseur_de = relationship(

@@ -63,12 +63,57 @@ const AgentPage = () => {
 
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    const newAgent = { ...form, webSearch, id: crypto.randomUUID() }
-    const existing = JSON.parse(localStorage.getItem('agents') || '[]')
-    localStorage.setItem('agents', JSON.stringify([...existing, newAgent]))
-    navigate('/agents')
+
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "null")
+
+      //if (!user || !user.user_id) {
+      // alert("")
+      //}
+
+      const payload = {
+        nom: form.name,
+        modele: form.model,
+        prompt: form.prompt,
+        max_token: parseInt(form.max_tokens),
+        temperature: parseFloat(form.temperature),
+        user_id: user.user_id
+      }
+
+      const res = await fetch(
+        `http://localhost:8000/agent/creation/${user.user_id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        }
+      )
+
+      if (!res.ok) {
+        throw new Error("Erreur lors de la création de l'agent")
+      }
+
+      const data = await res.json()
+
+      //garder l'agent dans le localStorage
+      const newAgent = {
+        ...payload,
+        id: data.agent_id || crypto.randomUUID()
+      }
+
+      const existing = JSON.parse(localStorage.getItem("agents") || "[]")
+      localStorage.setItem("agents", JSON.stringify([...existing, newAgent]))
+
+      navigate("/agents")
+
+    } catch (error) {
+      console.error(error)
+      alert("Erreur lors de la création de l'agent")
+    }
   }
 
   const addFiles = (incoming) => {
