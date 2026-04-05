@@ -1,5 +1,5 @@
 import json
-from back.modeles.Agent import Agent
+from backend.modeles.Agent import Agent
 
 DEFAULT_MAX_TOKENS  = 1000
 DEFAULT_TEMPERATURE = 0.3
