@@ -4,11 +4,10 @@ from datetime import datetime, timezone
 from backend.appDatabase.database import Base
 from backend.models.document_model import Document
 from backend.models.utilisateur_model import Utilisateur
-from backend.models.etape_model import Etape
 from backend.models.workflow_model import Workflow
 
 
-class AgentModel(Base):
+class Agent(Base):
     __tablename__ = "agent"
 
     id_agent      = Column(Integer, primary_key=True, autoincrement=True)
@@ -40,8 +39,7 @@ class AgentModel(Base):
     )
 
     utilisateur = relationship("Utilisateur", back_populates="agents")
-    document      = relationship("Document", back_populates="agent", cascade="all, delete-orphan")
-    etapes         = relationship("Etape",    back_populates="agent")
+    documents = relationship("Document", back_populates="agent", cascade="all, delete-orphan")
     superviseur_de = relationship(
         "Workflow",
         foreign_keys="[Workflow.superviseur_id]",
