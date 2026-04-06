@@ -8,6 +8,8 @@ from api.routers.execution_router import router as execution_router
 from backend.appDatabase.init_db import init
 from fastapi.middleware.cors import CORSMiddleware
 from backend.modeles.Agent import Agent
+from api.routers.document_router import router as document_router
+
 
 
 init()
@@ -29,5 +31,7 @@ app.include_router(agent_router)
 app.include_router(user_router)
 app.include_router(workflow_router)
 app.include_router(execution_router)
+app.include_router(document_router)
+
 
  
