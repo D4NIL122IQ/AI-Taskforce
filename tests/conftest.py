@@ -8,7 +8,6 @@ from backend.models.utilisateur_model import Utilisateur
 
 from backend.models.agent_model import Agent
 from backend.models.document_model import Document
-from backend.models.etape_model import Etape
 from backend.models.execution_model import Execution, Resultat
 from backend.models.message_model import Message
 from backend.models.workflow_model import Workflow
