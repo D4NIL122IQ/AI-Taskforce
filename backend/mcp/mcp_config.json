@@ -1,0 +1,53 @@
+{
+  "github": {
+    "name": "GitHub MCP",
+    "description": "Accès aux dépôts, issues, pull requests et utilisateurs GitHub",
+    "transport": "http",
+    "url": "https://api.githubcopilot.com/mcp/",
+    "auth": {
+      "type": "bearer",
+      "header": "Authorization",
+      "prefix": "Bearer"
+    },
+    "scopes": [
+      "repo",
+      "read:user",
+      "read:org",
+      "issues",
+      "pull_requests"
+    ],
+    "capabilities": [
+      "list_repos",
+      "get_repo",
+      "create_issue",
+      "list_issues",
+      "get_pull_request",
+      "list_commits",
+      "search_code"
+    ]
+  },
+  "gmail": {
+    "name": "Gmail MCP",
+    "description": "Lecture, envoi et gestion des emails Gmail via OAuth2",
+    "transport": "http",
+    "url": "https://gmail.googleapis.com/gmail/v1",
+    "auth": {
+      "type": "oauth2",
+      "header": "Authorization",
+      "prefix": "Bearer"
+    },
+    "scopes": [
+      "https://www.googleapis.com/auth/gmail.readonly",
+      "https://www.googleapis.com/auth/gmail.send",
+      "https://www.googleapis.com/auth/gmail.modify"
+    ],
+    "capabilities": [
+      "list_messages",
+      "get_message",
+      "send_message",
+      "search_messages",
+      "list_labels",
+      "get_thread"
+    ]
+  }
+}

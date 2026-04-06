@@ -1,7 +1,7 @@
 # backend/services/agent_service.py
 
 from sqlalchemy.orm import Session
-from backend.models.agent_model import AgentModel
+from backend.models.agent_model import Agent
 from backend.appDatabase.database import get_db
 from backend.appDatabase.init_db import init
 from api.schemas.agent_schema import AgentBase
@@ -18,12 +18,12 @@ class AgentService:
         init()
         self.db: Session = next(get_db())
 
-    def get_agents_by_user(self, user_id: int) -> List[AgentModel]:
+    def get_agents_by_user(self, user_id: int) -> List[Agent]:
         """
         Retourne la liste des agents d’un utilisateur.
         """
-        return self.db.query(AgentModel).filter(
-            AgentModel.utilisateur_id == user_id
+        return self.db.query(Agent).filter(
+            Agent.utilisateur_id == user_id
         ).all()
 
     def create_agent(self, data: AgentBase) -> int:
@@ -31,7 +31,7 @@ class AgentService:
         Crée un agent et retourne son identifiant.
         """
         try:
-            agent = AgentModel(
+            agent = Agent(
                 nom=data.nom,
                 modele=data.modele,
                 system_prompt=data.prompt,
@@ -56,8 +56,8 @@ class AgentService:
         Retourne True si succès, False sinon.
         """
         try:
-            agent: Optional[AgentModel] = self.db.query(AgentModel).filter(
-                AgentModel.id_agent == agent_id
+            agent: Optional[Agent] = self.db.query(Agent).filter(
+                Agent.id_agent == agent_id
             ).first()
 
             if not agent:
@@ -83,8 +83,8 @@ class AgentService:
         Retourne True si supprimé, False sinon.
         """
         try:
-            agent: Optional[AgentModel] = self.db.query(AgentModel).filter(
-                AgentModel.id_agent == agent_id
+            agent: Optional[Agent] = self.db.query(Agent).filter(
+                Agent.id_agent == agent_id
             ).first()
 
             if not agent:

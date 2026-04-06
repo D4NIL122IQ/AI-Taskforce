@@ -44,6 +44,7 @@ import json
 import requests
 from typing import List
 from dotenv import load_dotenv
+from pypdf import PdfReader
 
 load_dotenv()
 
@@ -121,7 +122,7 @@ class RAGService:
                 return f.read()
 
         elif ext == ".pdf":
-            from PyPDF2 import PdfReader
+            from pypdf import PdfReader
             reader = PdfReader(chemin)
             return "\n".join(page.extract_text() or "" for page in reader.pages)
 

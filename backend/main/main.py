@@ -7,6 +7,8 @@ from api.routers.execution_router import router as execution_router
 from backend.appDatabase.init_db import init
 from fastapi.middleware.cors import CORSMiddleware
 from backend.modeles.Agent import Agent
+from api.routers.document_router import router as document_router
+
 
 agent = Agent("assistant", "athene-v2:latest", "tu es un assistant qui repond à des questions diverses", 200, 0.3, use_web=True)
 
@@ -31,5 +33,7 @@ app.include_router(agent_router)
 app.include_router(user_router)
 app.include_router(workflow_router)
 app.include_router(execution_router)
+app.include_router(document_router)
+
 
  
