@@ -13,7 +13,7 @@ from backend.models.execution_model import Execution, Resultat
 from backend.models.message_model import Message
 from backend.models.workflow_model import Workflow
 
-mot_de_passe = quote_plus("passer123")
+mot_de_passe = quote_plus("passer")
 TEST_DB_URL = "postgresql+psycopg://postgres:" + mot_de_passe + "@localhost:5432/ai_taskforce"
 
 @pytest.fixture(scope="session")

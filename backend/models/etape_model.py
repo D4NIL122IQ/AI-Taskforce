@@ -1,14 +1,14 @@
-﻿from sqlalchemy import Column, Integer, String, Text, ForeignKey, CheckConstraint
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, CheckConstraint
 from sqlalchemy.orm import relationship
 from backend.appDatabase.database import Base
 
 STATUTS_VALIDES = {"EN_ATTENTE", "EN_COURS", "TERMINE", "ERREUR"}
 
-# Machine Ã  Ã©tats finie (conception v2 Â§3.5.3)
+# Machine à états finie (conception v2 §3.5.3)
 TRANSITIONS_VALIDES = {
     "EN_ATTENTE": ["EN_COURS"],
     "EN_COURS":   ["TERMINE", "ERREUR"],
-    "TERMINE":    [],               # Ã©tat terminal
+    "TERMINE":    [],               # état terminal
     "ERREUR":     ["EN_ATTENTE"]    # retry possible
 }
 
@@ -34,6 +34,6 @@ class Etape(Base):
         ),
     )
 
-    agent    = relationship("AgentModel",    back_populates="etapes")
+    agent    = relationship("Agent",    back_populates="etapes")
     workflow = relationship("Workflow", back_populates="etapes")
 

@@ -108,7 +108,7 @@ class TestExtraireTexte:
         mock_page.extract_text.return_value = "Contenu du PDF"
         mock_reader = MagicMock()
         mock_reader.pages = [mock_page]
-        with patch("backend.services.rag_service.PdfReader", return_value=mock_reader):
+        with patch("pypdf.PdfReader", return_value=mock_reader):
             result = rag_service._extraire_texte(str(f))
         assert result == "Contenu du PDF"
 
