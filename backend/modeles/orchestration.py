@@ -1,6 +1,9 @@
 from backend.modeles.graphBuilder import build_orchestration_graph
 from backend.modeles.Agent import Agent
 
+# Nombre max d'appels LLM par sous-tâche selon le niveau de recherche
+APPELS_PAR_NIVEAU = {1: 2, 2: 5, 3: 10}
+
 
 class Orchestration:
     """
@@ -87,12 +90,13 @@ class Orchestration:
             "next_agent": "",
             "task_for_agent": "",
             "final_response": "",
-            "niveau_recherche": self.niveau_recherche,
+            "niveau_recherche": APPELS_PAR_NIVEAU[self.niveau_recherche],
             "current_task_calls": 0,
             "current_task_agent": "",
         }
 
-        recursion_limit = 25 + (self.niveau_recherche - 1) * 25  # 25 / 50 / 75
+        # recursion_limit : ~10 transitions par appel max, avec marge pour le reconstructeur
+        recursion_limit = APPELS_PAR_NIVEAU[self.niveau_recherche] * 10 + 10
         final_state = self.graph.invoke(initial_state, config={"recursion_limit": recursion_limit})
 
         return final_state.get("final_response", "Erreur : Aucune réponse finale générée.")
