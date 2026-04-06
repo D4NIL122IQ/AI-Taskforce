@@ -10,8 +10,6 @@ except ImportError:
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from backend.modeles.requestLLM import chat, MODEL as PLEIADE_MODEL
 
-load_dotenv()
-
 
 class Agent:
     """
@@ -41,7 +39,7 @@ class Agent:
         ```python
         agent = Agent(
             nom="Assistant",
-            modele="Openai",
+            modele="athene:V2",
             prompt="Tu es un assistant spécialisé en finance.",
             max_token=1024,
             temperature=0.7
@@ -60,7 +58,7 @@ class Agent:
 
     ctr = 0  # Compteur global pour générer des identifiants uniques
 
-    def __init__(self, nom, modele, prompt, max_token,  temperature):
+    def __init__(self, nom, modele, prompt, max_token,  temperature, use_web=False):
         """
         Initialise un agent avec ses paramètres principaux.
 
@@ -76,6 +74,7 @@ class Agent:
                 Doit être un entier compris entre 1 et 8192.
             temperature (float): Niveau de créativité du modèle.
                 Valeur comprise entre 0 (déterministe) et 1 (créatif).
+            use_web (bool): Indique si l'agent a accès à Internet pour enrichir ses réponses.
 
         Raises:
             ValueError: Si `nom` est vide ou n'est pas une chaîne.
@@ -104,6 +103,7 @@ class Agent:
         self._temperature = temperature
         self._max_token = max_token
         self.prompt = prompt
+        self.use_web = use_web
         self.date_creation = dt.now()
         self.documents = []
 
@@ -196,8 +196,9 @@ class Agent:
             "Réponds dans la même langue que le prompt suivant : "
             + message
         )
+        
         from types import SimpleNamespace
-        result = chat(prompt_text, model)
+        result = chat(prompt_text, model, use_web=self.use_web, user_msg=message)
         return SimpleNamespace(content=result)
         
 
@@ -210,14 +211,7 @@ class Agent:
         au LLM de s'appuyer sur ce document lors des prochains appels à
         `executer_prompt`.
 
-        Formats supportés :
-
-        | Extension | Librairie utilisée |
-        |-----------|-------------------|
-        | `.txt`    | built-in Python   |
-        | `.pdf`    | PyPDF2            |
-        | `.csv`    | pandas            |
-
+        Formats supportés : pdf, txt, csv.
         Args:
             filepath (str): Chemin absolu ou relatif vers le fichier à charger.
 

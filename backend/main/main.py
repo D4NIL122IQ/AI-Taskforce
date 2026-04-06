@@ -9,6 +9,11 @@ from backend.appDatabase.init_db import init
 from fastapi.middleware.cors import CORSMiddleware
 from backend.modeles.Agent import Agent
 
+agent = Agent("assistant", "athene-v2:latest", "tu es un assistant qui repond à des questions diverses", 200, 0.3, use_web=True)
+
+print(agent.executer_prompt("qui etais le president de la France en 1990?"))
+
+exit()
 
 init()
 app = FastAPI()

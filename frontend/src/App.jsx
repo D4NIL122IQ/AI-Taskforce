@@ -12,7 +12,7 @@ export default function App() {
      <Routes>
        <Route path="/" element={<HomePage />} />
        <Route path="/agents" element={<GestionAgentPage />} />
-        <Route path="/agents/create" element={<CreatAgentPage />} />
+       <Route path="/agents/create" element={<CreatAgentPage />} />
         <Route path="/agents/edit/:id" element={<CreatAgentPage />} />
        <Route path="/auth" element={<FormPage />} />
        <Route path="/workflow" element={<CreatWorkflowPage />} />
