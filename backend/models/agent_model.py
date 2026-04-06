@@ -8,7 +8,7 @@ from backend.models.etape_model import Etape
 from backend.models.workflow_model import Workflow
 
 
-class AgentModel(Base):
+class Agent(Base):
     __tablename__ = "agent"
 
     id_agent      = Column(Integer, primary_key=True, autoincrement=True)
@@ -40,7 +40,7 @@ class AgentModel(Base):
     )
 
     utilisateur = relationship("Utilisateur", back_populates="agents")
-    document      = relationship("Document", back_populates="agent", cascade="all, delete-orphan")
+    documents = relationship("Document", back_populates="agent", cascade="all, delete-orphan")
     etapes         = relationship("Etape",    back_populates="agent")
     superviseur_de = relationship(
         "Workflow",

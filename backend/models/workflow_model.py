@@ -19,7 +19,7 @@ class Workflow(Base):
     utilisateur_id      = Column(Integer, ForeignKey("utilisateur.id_utilisateur"), nullable=True)
 
     utilisateur = relationship("Utilisateur", back_populates="workflows")
-    superviseur = relationship("AgentModel", foreign_keys=[superviseur_id])
+    superviseur = relationship("Agent", foreign_keys=[superviseur_id])
     etapes      = relationship("Etape",     back_populates="workflow",
                                cascade="all, delete-orphan")
     executions  = relationship("Execution", back_populates="workflow",
