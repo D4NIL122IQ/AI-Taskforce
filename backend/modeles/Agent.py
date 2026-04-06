@@ -171,7 +171,70 @@ class Agent:
     #         "messages": [("human", message)]
     #     })
 
+    # backend/modeles/Agent.py  — PATCH RAG
+    """
+    CHANGEMENT :
+      - Si l'agent a des documents indexés (RAGService),
+        le contexte pertinent est injecté automatiquement avant la question.
+      - Si aucun document → comportement identique à avant (aucune régression).
+    """
+
     def executer_prompt(self, message, model=None):
+        """
+        Envoie un message à l'agent via l'API Pléiade, enrichi du contexte RAG
+        si des documents ont été indexés pour cet agent.
+
+        Args:
+            message (str): Texte à envoyer. Ne doit pas être vide.
+            model (str | None): Modèle Pléiade. Si None → PLEIADE_MODEL.
+
+        Returns:
+            SimpleNamespace avec attribut .content (str).
+        """
+        if not message.strip():
+            raise ValueError("prompt vide")
+
+        if model is None:
+            from backend.modeles.requestLLM import MODEL as PLEIADE_MODEL
+            model = PLEIADE_MODEL
+
+        # ── Enrichissement RAG (optionnel) ───────────────────────────────────────
+        # Si l'agent a des documents indexés, on cherche les chunks pertinents
+        # et on les injecte avant la question dans le prompt système.
+        contexte_rag = ""
+        try:
+            from backend.services.rag_service import RAGService
+            rag = RAGService()
+            contexte_rag = rag.contexte_pour_prompt(
+                agent_id=self.ID,
+                question=message,
+                top_k=5
+            )
+        except Exception as e:
+            # Ne jamais bloquer executer_prompt si le RAG échoue
+            print(f"[Agent] ⚠ RAG indisponible : {e}")
+
+        # ── Construction du prompt final ─────────────────────────────────────────
+        from backend.modeles.requestLLM import chat
+
+        prompt_text = (
+            f"system: Tu es {self.nom}, un agent intelligent dont le rôle est : {self.prompt}. "
+            "Tu dois fournir des réponses claires, précises et utiles. "
+            "Si une information est incertaine, indique-le explicitement. "
+            "Réponds dans la même langue que le prompt suivant."
+        )
+
+        # Injecter le contexte RAG s'il existe
+        if contexte_rag:
+            prompt_text += f"\n\n{contexte_rag}"
+
+        prompt_text += f"\n\nQuestion : {message}"
+
+        from types import SimpleNamespace
+        result = chat(prompt_text, model)
+        return SimpleNamespace(content=result)
+
+    ##def executer_prompt(self, message, model=None):
         """
         Envoie un message à l'agent via l'API Pléiade et retourne la réponse.
 
@@ -200,7 +263,7 @@ class Agent:
         from types import SimpleNamespace
         result = chat(prompt_text, model, use_web=self.use_web, user_msg=message)
         return SimpleNamespace(content=result)
-        
+
 
 
     def ajouter_document(self, filepath):
