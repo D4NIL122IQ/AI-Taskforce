@@ -1,40 +1,27 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from backend.appDatabase.database import get_db
-from backend.models.utilisateur_model import Utilisateur
-from api.schemas.schema import UserData
+# api/routers/user_router.py
+
+from fastapi import APIRouter
+from api.schemas.user_schema import UserData, UserLogin
+from backend.services.users_service import UserService
 
 router = APIRouter(prefix="/user", tags=["Users"])
 
+service = UserService()
 
-# CREATE user
+
 @router.post("/")
-def create_user(data: UserData, db: Session = Depends(get_db)):
+def create_user(data: UserData):
     try:
-        new_user = Utilisateur(
-            nom=data.nom,
-            email=data.email,
-            mot_de_passe=data.mot_de_passe
-        )
-
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-
-        return {"user_id": new_user.id_utilisateur}
-
+        user_id = service.create_user(data)
+        return {"user_id": user_id}
     except Exception as e:
         return {"error": str(e)}
 
 
-# LOGIN user (POST)
 @router.post("/login")
-def login_user(data: UserData, db: Session = Depends(get_db)):
+def login_user(data: UserLogin):
     try:
-        user = db.query(Utilisateur).filter(
-            Utilisateur.email == data.email,
-            Utilisateur.mot_de_passe == data.mot_de_passe
-        ).first()
+        user = service.login_user(data.email, data.mot_de_passe)
 
         if not user:
             return {"error": "-1", "message": "Email ou mot de passe incorrect"}
@@ -49,13 +36,10 @@ def login_user(data: UserData, db: Session = Depends(get_db)):
         return {"error": str(e)}
 
 
-# GET user by id
 @router.get("/{user_id}")
-def get_user(user_id: int, db: Session = Depends(get_db)):
+def get_user(user_id: int):
     try:
-        user = db.query(Utilisateur).filter(
-            Utilisateur.id_utilisateur == user_id
-        ).first()
+        user = service.get_user_by_id(user_id)
 
         if not user:
             return {"error": "-1", "message": "Utilisateur non trouvé"}
@@ -70,22 +54,13 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
         return {"error": str(e)}
 
 
-# UPDATE user
 @router.put("/{user_id}")
-def update_user(user_id: int, data: UserData, db: Session = Depends(get_db)):
+def update_user(user_id: int, data: UserData):
     try:
-        user = db.query(Utilisateur).filter(
-            Utilisateur.id_utilisateur == user_id
-        ).first()
+        success = service.update_user(user_id, data)
 
-        if not user:
+        if not success:
             return {"error": "Utilisateur non trouvé"}
-
-        user.nom = data.nom
-        user.email = data.email
-        user.mot_de_passe = data.mot_de_passe
-
-        db.commit()
 
         return {"message": "Utilisateur mis à jour"}
 
@@ -93,19 +68,13 @@ def update_user(user_id: int, data: UserData, db: Session = Depends(get_db)):
         return {"error": str(e)}
 
 
-# DELETE user
 @router.delete("/{user_id}")
-def delete_user(user_id: int, db: Session = Depends(get_db)):
+def delete_user(user_id: int):
     try:
-        user = db.query(Utilisateur).filter(
-            Utilisateur.id_utilisateur == user_id
-        ).first()
+        success = service.delete_user(user_id)
 
-        if not user:
+        if not success:
             return {"error": "-1", "message": "Utilisateur non trouvé"}
-
-        db.delete(user)
-        db.commit()
 
         return {"message": "Utilisateur supprimé avec succès"}
 

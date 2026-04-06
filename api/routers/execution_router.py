@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from backend.appDatabase.database import get_db
 from backend.models.execution_model import Execution
-from api.schemas.schema import execitionData
+from api.schemas.execution_schema import ExecutionData
 
 router = APIRouter(prefix="/executions", tags=["Executions"])
 

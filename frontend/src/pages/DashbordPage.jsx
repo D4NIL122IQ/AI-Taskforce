@@ -1,13 +1,43 @@
+/**
+ * Dashboard Component
+ * -------------------
+ * Ce composant affiche :
+ * - Les statistiques (agents, workflows, exécutions, erreurs)
+ * - La liste des agents
+ * - Les workflows
+ * - Les documents
+ * - Le log d'activité
+ *
+ * Il récupère les données depuis l'API backend et gère :
+ * - Le chargement (loading)
+ * - L'ouverture des menus contextuels
+ */
+
 import NavBar from "../components/layout/NavBar"
 import { useState, useEffect } from "react"
-import { Bot, Workflow, Activity, AlertCircle, Play, Settings } from "lucide-react"
-import { Rocket, BarChart3 } from "lucide-react"
-import { FileText, Image, File, FileSpreadsheet } from "lucide-react"
-import { MoreVertical, Trash, Edit, Eye } from "lucide-react"
+
+import {
+  Bot,
+  Workflow,
+  Activity,
+  AlertCircle,
+  Play,
+  Settings,
+  Rocket,
+  BarChart3,
+  FileText,
+  Image,
+  File,
+  FileSpreadsheet,
+  MoreVertical,
+  Trash,
+  Edit,
+  Eye,
+} from "lucide-react"
 
 const Dashboard = () => {
 
-  //  STATES
+  // STATES
   const [agents, setAgents] = useState([])
   const [workflows, setWorkflows] = useState([])
   const [documents, setDocuments] = useState([])
@@ -16,7 +46,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true)
   const [openMenuId, setOpenMenuId] = useState(null)
 
-  // ACTIVITÉS
+  // ACTIVITES
   const activities = [
     {
       id: 1,
@@ -50,7 +80,7 @@ const Dashboard = () => {
     },
   ]
 
-  // DOCUMENTS renommé de "document" en "docs"
+  // DOCUMENTS (renommé de "document" en "docs")
   const docs = [
     {
       id: 1,
@@ -102,7 +132,7 @@ const Dashboard = () => {
     }
   }
 
-  // FERME LES MENUS AU CLIC AILLEURS ✅ corrigé : document au lieu de window
+  // FERMER LES MENUS AU CLIC EXTERIEUR
   useEffect(() => {
     const handleClick = () => setOpenMenuId(null)
     document.addEventListener("click", handleClick)
@@ -116,7 +146,12 @@ const Dashboard = () => {
         const user = JSON.parse(localStorage.getItem("user") || "null")
         const userId = user?.user_id || 1
 
-        const [agentsRes, workflowsRes, erreursRes, executionsRes] = await Promise.all([
+        const [
+          agentsRes,
+          workflowsRes,
+          erreursRes,
+          executionsRes
+        ] = await Promise.all([
           fetch(`http://localhost:8000/agents/${userId}`),
           fetch(`http://localhost:8000/workflows/${userId}`),
           fetch(`http://localhost:8000/executions/ERREUR`),
@@ -161,6 +196,7 @@ const Dashboard = () => {
         {/* HEADER */}
         <div className="flex items-center justify-between sticky top-16 z-40 bg-[#080808] py-3 border-b border-gray-800">
           <h1 className="text-3xl font-bold">Dashboard</h1>
+
           <div className="flex gap-3">
             <button className="bg-yellow-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
               + Service
@@ -333,7 +369,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* DOCUMENTS ✅ renommé de "document" en "docs" */}
+              {/* DOCUMENTS */}
               <div className="bg-[#111] border border-gray-800 rounded-xl p-5 flex flex-col h-[300px]">
                 <h2 className="text-lg font-semibold mb-4">Documents</h2>
 
