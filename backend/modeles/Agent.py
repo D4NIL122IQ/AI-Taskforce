@@ -1,4 +1,6 @@
 from datetime import datetime as dt
+from backend.services.web_service import search_web
+
 import os
 
 try:
@@ -202,17 +204,17 @@ class Agent:
         # Si l'agent a des documents indexés, on cherche les chunks pertinents
         # et on les injecte avant la question dans le prompt système.
         contexte_rag = ""
-        try:
-            from backend.services.rag_service import RAGService
-            rag = RAGService()
-            contexte_rag = rag.contexte_pour_prompt(
-                agent_id=self.ID,
-                question=message,
-                top_k=5
-            )
-        except Exception as e:
+        #try:
+        #    from backend.services.rag_service import RAGService
+        #    rag = RAGService()
+        #    contexte_rag = rag.contexte_pour_prompt(
+        #        agent_id=self.ID,
+        #        question=message,
+        #        top_k=5
+        #    )
+        #except Exception as e:
             # Ne jamais bloquer executer_prompt si le RAG échoue
-            print(f"[Agent] ⚠ RAG indisponible : {e}")
+        #    print(f"[Agent] RAG indisponible : {e}")
 
         # ── Construction du prompt final ─────────────────────────────────────────
         from backend.modeles.requestLLM import chat
@@ -220,18 +222,31 @@ class Agent:
         prompt_text = (
             f"system: Tu es {self.nom}, un agent intelligent dont le rôle est : {self.prompt}. "
             "Tu dois fournir des réponses claires, précises et utiles. "
+            "En consulatant les informations de la recherche web si fournies"
             "Si une information est incertaine, indique-le explicitement. "
             "Réponds dans la même langue que le prompt suivant."
         )
 
         # Injecter le contexte RAG s'il existe
-        if contexte_rag:
-            prompt_text += f"\n\n{contexte_rag}"
+        #if contexte_rag:
+        #   prompt_text += f"\n\n{contexte_rag}"
 
         prompt_text += f"\n\nQuestion : {message}"
+        
+        # faire de la recherche web
+        if self.use_web:
+            web_data = search_web(f"{message}")
+            web_data = web_data[:3000] # limiter la taille du résultat.
+
+            conv_history = []
+            conv_history.append({
+                "role": "system",
+                "content": f"Résultat de recherche web:\n{web_data}"
+            })
+
 
         from types import SimpleNamespace
-        result = chat(prompt_text, model)
+        result = chat(prompt_text, model, conversation_history=conv_history)
         return SimpleNamespace(content=result)
 
     ##def executer_prompt(self, message, model=None):
@@ -263,6 +278,7 @@ class Agent:
         from types import SimpleNamespace
         result = chat(prompt_text, model, use_web=self.use_web, user_msg=message)
         return SimpleNamespace(content=result)
+
 
 
 

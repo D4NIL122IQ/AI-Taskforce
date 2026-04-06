@@ -1,4 +1,3 @@
-
 from api.routers.agent_router import router as agent_router
 from fastapi import FastAPI
 from api.routers.workflow_router import router as workflow_router
@@ -11,9 +10,7 @@ from backend.modeles.Agent import Agent
 
 agent = Agent("assistant", "athene-v2:latest", "tu es un assistant qui repond à des questions diverses", 200, 0.3, use_web=True)
 
-print(agent.executer_prompt("qui etais le president de la France en 1990?"))
-
-exit()
+print(agent.executer_prompt("qui est le president actuel du japon ?"))
 
 init()
 app = FastAPI()
