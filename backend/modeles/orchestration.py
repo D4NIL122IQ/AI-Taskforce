@@ -17,13 +17,6 @@ class Orchestration:
         specialistes (list[Agent]): Agents spécialisés qui exécutent les sous-tâches.
         reconstructeur (Agent): Agent créé automatiquement pour synthétiser la réponse finale.
         graph: Graphe LangGraph compilé.
-
-    Example:
-        ```python
-        orchestration = Orchestration(superviseur=sup, specialistes=[dev, tester])
-        reponse = orchestration.executer("Crée une API REST en Python")
-        print(reponse)
-        ```
     """
 
     def __init__(self, superviseur: Agent, specialistes: list, niveau_recherche: int = 1):
@@ -77,12 +70,6 @@ class Orchestration:
 
         Returns:
             str: La réponse finale synthétisée par le reconstructeur.
-
-        Example:
-            ```python
-            reponse = orchestration.executer("Explique les design patterns en Python")
-            print(reponse)
-            ```
         """
         initial_state = {
             "user_input": prompt,
