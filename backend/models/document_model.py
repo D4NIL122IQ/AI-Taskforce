@@ -23,4 +23,4 @@ class Document(Base):
         ),
     )
 
-    agent = relationship("Agent", back_populates="document")
+    agent = relationship("AgentModel", back_populates="document")

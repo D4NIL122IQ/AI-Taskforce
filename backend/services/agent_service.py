@@ -1,118 +1,100 @@
-from backend.models.agent_model import AgentModel
-from sqlalchemy.orm import Session
-from backend.modeles.Agent import Agent
-from backend.appDatabase.init_db import init
-from backend.appDatabase.database import get_db
-from sqlalchemy import (insert, delete, update)
-from pydantic import BaseModel
+# backend/services/agent_service.py
 
-class AgentData(BaseModel):
-    nom:str
-    modele:str
-    prompt:str
-    max_token:int
-    temperature:int
-    user_id:int
+from sqlalchemy.orm import Session
+from backend.models.agent_model import AgentModel
+from backend.appDatabase.database import get_db
+from backend.appDatabase.init_db import init
+from api.schemas.agent_schema import AgentBase
+from typing import List, Optional
+
 
 class AgentService:
     """
-        La classe logic pour la gestion du module Agent.
+    Service de gestion des agents.
+    Fournit les opérations CRUD via ORM SQLAlchemy.
     """
+
     def __init__(self):
-        self.all_agents = {}
         init()
-        self.db : Session = next(get_db())
+        self.db: Session = next(get_db())
 
-    def create_agent(self, nom, modele, prompt, max_token, temperature, user_id):
+    def get_agents_by_user(self, user_id: int) -> List[AgentModel]:
+        """
+        Retourne la liste des agents d’un utilisateur.
+        """
+        return self.db.query(AgentModel).filter(
+            AgentModel.utilisateur_id == user_id
+        ).all()
+
+    def create_agent(self, data: AgentBase) -> int:
+        """
+        Crée un agent et retourne son identifiant.
+        """
         try:
-            agent=Agent(nom, modele, prompt, max_token, temperature)
-            self.all_agents[agent.ID] = agent
-
-            #enrisitrer dans la base de données
-            stmt = insert(AgentModel).values(nom=agent.nom,
-                                              modele=agent.modele,
-                                              temperature=agent.temperature,
-                                              max_token=agent.max_token,
-                                              system_prompt=agent.prompt,
-                                              user_id=user_id)
-            result = self.db.execute(stmt)
-            self.db.commit()
-            
-            return result.inserted_primary_key[0]  # Retourne l'ID de l'agent créé
-
-        
-        except Exception as e:
-            print(f"Erreur de creation d'agent :{e}") 
-            return None
-        
-        return agent
-    
-    def update_agent(self, agent_id, nom=None, modele=None, prompt=None, max_token=None, temperature=None):
-        try:
-            agent = self.all_agents.get(agent_id)
-
-            if not agent:
-                raise ValueError("Agent introuvable")
-            
-            agent_id=agent.ID
-            agent = Agent(nom, modele, prompt, max_token, temperature)
-            self.all_agents[agent_id]= agent
-
-            stmt = (
-                update(AgentModel)
-                .where(AgentModel.id == agent_id)
-                .values(
-                    nom=agent.nom,
-                    modele=agent.modele,
-                    system_prompt=agent.prompt,
-                    max_token=agent.max_token,
-                    temperature=agent.temperature
-                )
+            agent = AgentModel(
+                nom=data.nom,
+                modele=data.modele,
+                system_prompt=data.prompt,
+                max_tokens=data.max_token,
+                temperature=data.temperature,
+                utilisateur_id=data.user_id
             )
 
-            self.db.execute(stmt)
+            self.db.add(agent)
             self.db.commit()
+            self.db.refresh(agent)
 
-            return agent
+            return agent.id_agent
 
         except Exception as e:
-            print(f"Erreur update agent: {e}")
-            return None
-        
-    def delete_agent(self, agent_id):
+            self.db.rollback()
+            raise e
+
+    def update_agent(self, agent_id: int, data: AgentBase) -> bool:
         """
-            Supprime un agent
+        Met à jour un agent existant.
+        Retourne True si succès, False sinon.
         """
         try:
-            agent = self.all_agents.pop(agent_id, None)
-            stmt = delete(AgentModel).where(AgentModel.id == agent_id)
+            agent: Optional[AgentModel] = self.db.query(AgentModel).filter(
+                AgentModel.id_agent == agent_id
+            ).first()
 
-            result = self.db.execute(stmt)
+            if not agent:
+                return False
+
+            agent.nom = data.nom
+            agent.modele = data.modele
+            agent.system_prompt = data.prompt
+            agent.max_tokens = data.max_token
+            agent.temperature = data.temperature
+
             self.db.commit()
-
-            if result.rowcount == 0:
-                raise ValueError("Agent introuvable en base")
 
             return True
 
         except Exception as e:
-            print(f"Erreur suppression agent: {e}")
-            return False
+            self.db.rollback()
+            raise e
 
-    @staticmethod
-    def get_list_agent(self, id_user):
-        return self.db.query(AgentModel).filter(AgentModel.user_id == id_user).all()
-        
-    @staticmethod
-    def get_list_active_agents(db: Session):
-        return db.query(AgentModel).filter(AgentModel.statut=="ACTIF").all()
-        
-    @staticmethod
-    def get_agent(self, user_id:int, agent_id:int):
-        return self.db.query(AgentModel).filter(AgentModel.id_agent==agent_id and AgentModel.id_user == user_id)
-        
-    def delete_user_agent(self, user_id, agent_id):
-        agent=AgentService.get_agent(user_id, agent_id)
-        self.db.delete(agent)
-        self.db.commit()
-            
+    def delete_agent(self, agent_id: int) -> bool:
+        """
+        Supprime un agent.
+        Retourne True si supprimé, False sinon.
+        """
+        try:
+            agent: Optional[AgentModel] = self.db.query(AgentModel).filter(
+                AgentModel.id_agent == agent_id
+            ).first()
+
+            if not agent:
+                return False
+
+            self.db.delete(agent)
+            self.db.commit()
+
+            return True
+
+        except Exception as e:
+            self.db.rollback()
+            raise e

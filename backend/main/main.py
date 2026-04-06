@@ -9,6 +9,7 @@ from backend.appDatabase.init_db import init
 from fastapi.middleware.cors import CORSMiddleware
 from backend.modeles.Agent import Agent
 
+
 init()
 app = FastAPI()
 

@@ -14,5 +14,5 @@ class Utilisateur(Base):
     mot_de_passe = Column(String(255), nullable=False)
     date_creation = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-    agents = relationship("Agent", back_populates="utilisateur", cascade="all, delete-orphan")
+    agents = relationship("AgentModel", back_populates="utilisateur", cascade="all, delete-orphan")
     workflows = relationship("Workflow", back_populates="utilisateur", cascade="all, delete-orphan")

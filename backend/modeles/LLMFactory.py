@@ -102,7 +102,7 @@ class llmFactory:
                 temperature=config.temperature,
                 max_tokens=config.max_token
             )
-        
+
         elif type_modele == "deepseek":
             return ChatOllama(
                 model="deepseek-r1",
@@ -119,7 +119,7 @@ class llmFactory:
                 max_tokens=config.max_token
             )
         
-        #elif type_modele="ufr"
+    #elif type_modele="ufr"
 
            # auth = requests.post(
            #     "https://pleiade.mi.parisdescartes.fr/api/v1/auths/signin",

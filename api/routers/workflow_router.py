@@ -1,53 +1,40 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+
 from backend.appDatabase.database import get_db
-from backend.models.workflow_model import Workflow
-from api.schemas.schema import WorkflowCreate
+from api.schemas.workflow_schema import WorkflowCreate, WorkflowUpdate, WorkflowResponse
+from backend.services import workflow_service
 
 router = APIRouter(prefix="/workflows", tags=["Workflows"])
 
 
-# tous les workflows
-@router.get("/{user_id}")
-def get_workflows(user_id: int, db: Session = Depends(get_db)):
-    workflows = db.query(Workflow).filter(Workflow.utilisateur_id == user_id).all()
-
-    result = []
-    for w in workflows:
-        nb_agents = 0
-
-        if w.donnees_graphe_json:
-            nb_agents = len(w.donnees_graphe_json.get("nodes", []))
-
-        result.append({
-            "id": w.id_workflow,
-            "nom": w.nom,
-            "nb_agents": nb_agents,
-            "date": w.date_creation
-        })
-
-    return result
+@router.get("/{user_id}", response_model=list[WorkflowResponse])
+def list_workflows(user_id: int, db: Session = Depends(get_db)):
+    return workflow_service.get_all_workflows(db, user_id)
 
 
-# POST créer un workflow
-@router.post("/")
-def create_workflow(workflow: WorkflowCreate, db: Session = Depends(get_db)):
+@router.get("/{workflow_id}", response_model=WorkflowResponse)
+def get_workflow(workflow_id: int, db: Session = Depends(get_db)):
+    workflow = workflow_service.get_workflow_by_id(db, workflow_id)
+    if not workflow:
+        raise HTTPException(status_code=404, detail="Workflow non trouvé")
+    return workflow
 
-    new_workflow = Workflow(
-        nom=workflow.nom,
-        donnees_graphe_json={
-            "nodes": workflow.nodes,
-            "edges": workflow.edges
-        },
-        superviseur_id=workflow.superviseur_id,
-        utilisateur_id=workflow.utilisateur_id
-    )
 
-    db.add(new_workflow)
-    db.commit()
-    db.refresh(new_workflow)
+@router.post("", response_model=WorkflowResponse, status_code=status.HTTP_201_CREATED)
+def create_workflow(data: WorkflowCreate, db: Session = Depends(get_db)):
+    return workflow_service.create_workflow(db, data)
 
-    return {
-        "message": "Workflow créé avec succès",
-        "id": new_workflow.id_workflow
-    }
+
+@router.put("/{workflow_id}", response_model=WorkflowResponse)
+def update_workflow(workflow_id: int, data: WorkflowUpdate, db: Session = Depends(get_db)):
+    workflow = workflow_service.update_workflow(db, workflow_id, data)
+    if not workflow:
+        raise HTTPException(status_code=404, detail="Workflow non trouvé")
+    return workflow
+
+
+@router.delete("/{workflow_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_workflow(workflow_id: int, db: Session = Depends(get_db)):
+    if not workflow_service.delete_workflow(db, workflow_id):
+        raise HTTPException(status_code=404, detail="Workflow non trouvé")

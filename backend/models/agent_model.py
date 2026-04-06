@@ -8,7 +8,7 @@ from backend.models.etape_model import Etape
 from backend.models.workflow_model import Workflow
 
 
-class Agent(Base):
+class AgentModel(Base):
     __tablename__ = "agent"
 
     id_agent      = Column(Integer, primary_key=True, autoincrement=True)
@@ -24,10 +24,6 @@ class Agent(Base):
 
 
     __table_args__ = (
-        CheckConstraint(
-            "modele IN ('Openai','Ollama','Mistral','DeepSeek','Anthropic','Gemini')",
-            name="ck_agent_modele",
-        ),
 
         CheckConstraint(
             "temperature >= 0.0 AND temperature <= 1.0",

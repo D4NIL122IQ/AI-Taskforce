@@ -1,17 +1,18 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from backend.appDatabase.database import get_db
-from backend.models.agent_model import Agent
-from api.schemas.schema import AgentData
+# api/routers/agent_router.py
+
+from fastapi import APIRouter
+from api.schemas.agent_schema import AgentBase, AgentCreate, AgentUpdate
+from backend.services.agent_service import AgentService
 
 router = APIRouter(prefix="/agents", tags=["Agents"])
 
+service = AgentService()
 
-# GET agents par user
+
 @router.get("/{user_id}")
-def get_agents(user_id: int, db: Session = Depends(get_db)):
+def get_agents(user_id: int):
     try:
-        agents = db.query(Agent).filter(Agent.utilisateur_id == user_id).all()
+        agents = service.get_agents_by_user(user_id)
 
         return [
             {
@@ -30,45 +31,22 @@ def get_agents(user_id: int, db: Session = Depends(get_db)):
         return {"error": str(e)}
 
 
-# CREATE agent
 @router.post("/")
-def create_agent(data: AgentData, db: Session = Depends(get_db)):
+def create_agent(data: AgentBase):
     try:
-        new_agent = Agent(
-            nom=data.nom,
-            modele=data.modele,
-            prompt=data.prompt,
-            max_token=data.max_token,
-            temperature=data.temperature,
-            user_id=data.user_id
-        )
-
-        db.add(new_agent)
-        db.commit()
-        db.refresh(new_agent)
-
-        return {"agent_id": new_agent.id_agent}
-
+        agent_id = service.create_agent(data)
+        return {"agent_id": agent_id}
     except Exception as e:
         return {"error": str(e)}
 
 
-# UPDATE agent
 @router.put("/{agent_id}")
-def update_agent(agent_id: int, data: AgentData, db: Session = Depends(get_db)):
+def update_agent(agent_id: int, data: AgentBase):
     try:
-        agent = db.query(Agent).filter(Agent.id_agent == agent_id).first()
+        success = service.update_agent(agent_id, data)
 
-        if not agent:
+        if not success:
             return {"error": "Agent non trouvé"}
-
-        agent.nom = data.nom
-        agent.modele = data.modele
-        agent.prompt = data.prompt
-        agent.max_token = data.max_token
-        agent.temperature = data.temperature
-
-        db.commit()
 
         return {"message": "Agent mis à jour"}
 
@@ -76,17 +54,13 @@ def update_agent(agent_id: int, data: AgentData, db: Session = Depends(get_db)):
         return {"error": str(e)}
 
 
-# DELETE agent
 @router.delete("/{agent_id}")
-def delete_agent(agent_id: int, db: Session = Depends(get_db)):
+def delete_agent(agent_id: int):
     try:
-        agent = db.query(Agent).filter(Agent.id_agent == agent_id).first()
+        success = service.delete_agent(agent_id)
 
-        if not agent:
+        if not success:
             return {"error": "-1", "message": "Agent non trouvé"}
-
-        db.delete(agent)
-        db.commit()
 
         return {"message": "Agent supprimé avec succès"}
 
