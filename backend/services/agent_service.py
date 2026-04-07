@@ -34,10 +34,10 @@ class AgentService:
             agent = Agent(
                 nom=data.nom,
                 modele=data.modele,
-                system_prompt=data.prompt,
-                max_tokens=data.max_token,
+                system_prompt=data.system_prompt,
+                max_tokens=data.max_tokens,
                 temperature=data.temperature,
-                utilisateur_id=data.user_id
+                utilisateur_id=data.utilisateur_id
             )
 
             self.db.add(agent)
@@ -65,8 +65,8 @@ class AgentService:
 
             agent.nom = data.nom
             agent.modele = data.modele
-            agent.system_prompt = data.prompt
-            agent.max_tokens = data.max_token
+            agent.system_prompt = data.system_prompt
+            agent.max_tokens = data.max_tokens
             agent.temperature = data.temperature
 
             self.db.commit()
