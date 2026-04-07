@@ -27,7 +27,7 @@ class UserService:
             password_hash = bcrypt.hashpw(
                 data.mot_de_passe.encode("utf-8"),
                 bcrypt.gensalt()
-            )
+            ).decode("utf-8")
 
             stmt = insert(User).values(
                 nom=data.nom,
@@ -44,14 +44,17 @@ class UserService:
             self.db.rollback()
             raise e
 
+
     def login_user(self, email: str, password: str):
+        user = self.db.query(User).filter(User.email == email).first()
         """
         Vérifie les identifiants utilisateur.
         Retourne l'utilisateur si valide, sinon None.
         """
-        user = self.db.query(User).filter(User.email == email).first()
-
-        if user and bcrypt.checkpw(password.encode("utf-8"), user.mot_de_passe):
+        if user and bcrypt.checkpw(
+                password.encode("utf-8"),
+                user.mot_de_passe.encode("utf-8") if isinstance(user.mot_de_passe, str) else user.mot_de_passe
+        ):
             return user
 
         return None
@@ -72,7 +75,7 @@ class UserService:
             password_hash = bcrypt.hashpw(
                 data.mot_de_passe.encode("utf-8"),
                 bcrypt.gensalt()
-            )
+            ).decode("utf-8")
 
             stmt = update(User).where(
                 User.id_utilisateur == user_id

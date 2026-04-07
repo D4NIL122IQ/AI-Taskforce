@@ -59,8 +59,53 @@ export default function FormPage() {
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '', confirm: '' })
 
-  const handleLoginSubmit = (e) => { e.preventDefault() }
-  const handleRegisterSubmit = (e) => { e.preventDefault() }
+  const handleLoginSubmit = async (e) => {
+      e.preventDefault()
+      try {
+        const response = await fetch('http://localhost:8000/user/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: loginForm.email,
+            mot_de_passe: loginForm.password
+          })
+        })
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.detail)
+
+        // Stocker l'utilisateur dans localStorage
+        localStorage.setItem('user', JSON.stringify(data))
+        navigate('/dashboard')
+      } catch (error) {
+        alert('Erreur : ' + error.message)
+      }
+    }
+
+  const handleRegisterSubmit = async (e) => {
+      e.preventDefault()
+      if (registerForm.password !== registerForm.confirm) {
+        alert('Les mots de passe ne correspondent pas')
+        return
+      }
+      try {
+        const response = await fetch('http://localhost:8000/user/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nom: registerForm.name,
+            email: registerForm.email,
+            mot_de_passe: registerForm.password
+          })
+        })
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.detail)
+
+        alert('Compte créé avec succès ! Connectez-vous.')
+        setMode('login')
+      } catch (error) {
+        alert('Erreur : ' + error.message)
+      }
+    }
 
   const eyeBtn = (show, setShow) => (
     <button
