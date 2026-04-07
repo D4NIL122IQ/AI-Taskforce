@@ -1,6 +1,6 @@
 # api/routers/agent_router.py
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from api.schemas.agent_schema import AgentBase, AgentCreate, AgentUpdate
 from backend.services.agent_service import AgentService
 
@@ -19,16 +19,17 @@ def get_agents(user_id: int):
                 "id": a.id_agent,
                 "nom": a.nom,
                 "modele": a.modele,
-                "prompt": a.system_prompt,
-                "max_token": a.max_tokens,
+                "system_prompt": a.system_prompt,
+                "max_tokens": a.max_tokens,
                 "temperature": a.temperature,
                 "statut": a.statut
             }
             for a in agents
         ]
 
+
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/")
@@ -36,9 +37,9 @@ def create_agent(data: AgentBase):
     try:
         agent_id = service.create_agent(data)
         return {"agent_id": agent_id}
-    except Exception as e:
-        return {"error": str(e)}
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/{agent_id}")
 def update_agent(agent_id: int, data: AgentBase):
@@ -46,12 +47,14 @@ def update_agent(agent_id: int, data: AgentBase):
         success = service.update_agent(agent_id, data)
 
         if not success:
-            return {"error": "Agent non trouvé"}
+             raise HTTPException(status_code=404, detail="Agent non trouvé")
 
         return {"message": "Agent mis à jour"}
 
+    except HTTPException:
+        raise
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/{agent_id}")
@@ -60,9 +63,9 @@ def delete_agent(agent_id: int):
         success = service.delete_agent(agent_id)
 
         if not success:
-            return {"error": "-1", "message": "Agent non trouvé"}
-
+            raise HTTPException(status_code=404, detail="Agent non trouvé")
         return {"message": "Agent supprimé avec succès"}
-
+    except HTTPException:
+        raise
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
