@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from backend.appDatabase.database import Base
 from backend.models.document_model import Document
-from backend.models.utilisateur_model import Utilisateur
+from sqlalchemy.dialects.postgresql import UUID
 from backend.models.workflow_model import Workflow
 
 
@@ -19,8 +19,7 @@ class Agent(Base):
     system_prompt = Column(Text, nullable=True)
     date_creation = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     statut        = Column(String(20), default="ACTIF")
-    utilisateur_id = Column(Integer, ForeignKey("utilisateur.id_utilisateur"), nullable=True)
-
+    utilisateur_id = Column(UUID(as_uuid=True), nullable=True)
 
     __table_args__ = (
 
@@ -38,7 +37,6 @@ class Agent(Base):
         ),
     )
 
-    utilisateur = relationship("Utilisateur", back_populates="agents")
     documents = relationship("Document", back_populates="agent", cascade="all, delete-orphan")
     superviseur_de = relationship(
         "Workflow",
