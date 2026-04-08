@@ -155,10 +155,11 @@ const Dashboard = () => {
           erreursRes,
           executionsRes
         ] = await Promise.all([
-          fetch(`http://localhost:8000/agents/${userId}`),
+
+          fetch(`http://localhost:8000/workflows/user/${userId}`),
           fetch(`http://localhost:8000/workflows/${userId}`),
           fetch(`http://localhost:8000/executions/ERREUR`),
-          fetch(`http://localhost:8000/executions`),
+          fetch(`http://localhost:8000/executions/`),
         ])
 
         const agentsData = await agentsRes.json()
