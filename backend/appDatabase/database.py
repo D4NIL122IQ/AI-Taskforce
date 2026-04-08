@@ -1,16 +1,19 @@
+import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from urllib.parse import quote_plus
-import os
+from dotenv import load_dotenv
 
-mot_de_passe = quote_plus("passer")
+load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", f"postgresql://postgres:{mot_de_passe}@localhost:5432/ai_taskforce") #f"postgresql://postgres:{mot_de_passe}@localhost:5432/ai_taskforce"
-
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:passer@localhost:5432/ai_taskforce")
 # URL vers la base par défaut pour pouvoir créer ai_taskforce si besoin
-DEFAULT_URL = f"postgresql://postgres:{mot_de_passe}@localhost:5432/postgres"
+DEFAULT_URL = DATABASE_URL.rsplit("/", 1)[0] + "/postgres"
 
 def create_database_if_not_exists():
+    if "supabase.co" in DATABASE_URL:
+        print("Supabase détecté — pas de création de base nécessaire.")
+        return
     try:
         default_engine = create_engine(DEFAULT_URL, isolation_level="AUTOCOMMIT")
         with default_engine.connect() as conn:

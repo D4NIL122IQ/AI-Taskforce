@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends,HTTPException
 from sqlalchemy.orm import Session
 from backend.appDatabase.database import get_db
 from backend.models.execution_model import Execution
@@ -38,3 +38,21 @@ def get_executions(status: str, db: Session = Depends(get_db)):
 
         for e in executions
     ]
+
+@router.post("/")
+def create_execution(workflow_id: int, db: Session = Depends(get_db)):
+    execution = Execution(workflow_id=workflow_id, status="EN_COURS")
+    db.add(execution)
+    db.commit()
+    db.refresh(execution)
+    return {"id_execution": execution.id_execution, "status": execution.status}
+
+
+@router.delete("/{execution_id}")
+def delete_execution(execution_id: int, db: Session = Depends(get_db)):
+    execution = db.query(Execution).filter(Execution.id_execution == execution_id).first()
+    if not execution:
+        raise HTTPException(status_code=404, detail="Exécution non trouvée")
+    db.delete(execution)
+    db.commit()
+    return {"message": f"Exécution {execution_id} supprimée"}

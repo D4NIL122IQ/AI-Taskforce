@@ -1,5 +1,4 @@
 from datetime import datetime as dt
-from backend.services.web_service import search_web
 
 import os
 
@@ -216,16 +215,13 @@ class Agent:
             prompt_text += f"\n\n{contexte_mcp}"
 
         prompt_text += f"\n\nQuestion : {message}"
-        
+        conv_history = []
+
         # faire de la recherche web
         if self.use_web:
-            web_data = search_web(f"{message}")
-            web_data = web_data[:3000] # limiter la taille du résultat.
-
             conv_history = []
             conv_history.append({
                 "role": "system",
-                "content": f"Résultat de recherche web:\n{web_data}"
             })
 
 
