@@ -1,10 +1,11 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from urllib.parse import quote_plus
+import os
 
 mot_de_passe = quote_plus("passer")
 
-DATABASE_URL = f"postgresql://postgres:{mot_de_passe}@localhost:5432/ai_taskforce"
+DATABASE_URL = os.getenv("DATABASE_URL", f"postgresql://postgres:{mot_de_passe}@localhost:5432/ai_taskforce") #f"postgresql://postgres:{mot_de_passe}@localhost:5432/ai_taskforce"
 
 # URL vers la base par défaut pour pouvoir créer ai_taskforce si besoin
 DEFAULT_URL = f"postgresql://postgres:{mot_de_passe}@localhost:5432/postgres"
