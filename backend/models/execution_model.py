@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, CheckConstraint
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, CheckConstraint, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime, timezone
@@ -14,6 +14,7 @@ class Execution(Base):
     id_execution   = Column(Integer,     primary_key=True, autoincrement=True)
     date_execution = Column(DateTime,    default=lambda: datetime.now(timezone.utc))
     status         = Column(String(20),  nullable=False, default="EN_COURS")
+    prompt = Column(Text, nullable=True)
     # Historique complet de la boucle superviseur (sÃ©rialisÃ© en JSON)
     history_json   = Column(JSONB,       nullable=True)
     # Outputs finaux par agent : { agent_id: message_dict }

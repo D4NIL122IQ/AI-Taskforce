@@ -1,4 +1,6 @@
 from datetime import datetime as dt
+from backend.services.web_service import search_web
+
 import os
 
 try:
@@ -9,8 +11,7 @@ except ImportError:
 
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from backend.modeles.requestLLM import chat, MODEL as PLEIADE_MODEL
-
-load_dotenv()
+from backend.mcp.connect_mcp import connect_mcp, MCPConnection, SUPPORTED_MCPS
 
 
 class Agent:
@@ -36,31 +37,11 @@ class Agent:
     Note:
         Chaque modification de `modele`, `temperature` ou `max_token` via leurs setters
         déclenche automatiquement une réinitialisation du modèle LLM sous-jacent.
-
-    Example:
-        ```python
-        agent = Agent(
-            nom="Assistant",
-            modele="Openai",
-            prompt="Tu es un assistant spécialisé en finance.",
-            max_token=1024,
-            temperature=0.7
-        )
-
-        reponse = agent.executer_prompt("Explique-moi les ETF en 3 lignes.")
-        print(reponse)
-
-        # Enrichir avec un document
-        agent.ajouter_document("rapport_annuel.pdf")
-
-        # Changer dynamiquement le modèle
-        agent.modele = "Mistral"
-        ```
     """
 
     ctr = 0  # Compteur global pour générer des identifiants uniques
 
-    def __init__(self, nom, modele, prompt, max_token,  temperature):
+    def __init__(self, nom, modele, prompt, max_token,  temperature, use_web=False):
         """
         Initialise un agent avec ses paramètres principaux.
 
@@ -76,6 +57,7 @@ class Agent:
                 Doit être un entier compris entre 1 et 8192.
             temperature (float): Niveau de créativité du modèle.
                 Valeur comprise entre 0 (déterministe) et 1 (créatif).
+            use_web (bool): Indique si l'agent a accès à Internet pour enrichir ses réponses.
 
         Raises:
             ValueError: Si `nom` est vide ou n'est pas une chaîne.
@@ -83,17 +65,6 @@ class Agent:
             ValueError: Si `prompt` est vide ou n'est pas une chaîne.
             ValueError: Si `max_token` n'est pas un entier positif ≤ 8192.
             ValueError: Si `temperature` n'est pas un nombre entre 0 et 1.
-
-        Example:
-            ```python
-            agent = Agent(
-                nom="Analyste",
-                modele="Mistral",
-                prompt="Tu es un expert en cybersécurité.",
-                max_token=2048,
-                temperature=0.3
-            )
-            ```
         """
 
         self.valider_parametres(nom, modele, prompt, max_token, temperature)
@@ -104,9 +75,10 @@ class Agent:
         self._temperature = temperature
         self._max_token = max_token
         self.prompt = prompt
+        self.use_web = use_web
         self.date_creation = dt.now()
         self.documents = []
-
+        self._mcp: MCPConnection | None = None
 
         self.ctr += 1
 
@@ -199,8 +171,6 @@ class Agent:
             model = PLEIADE_MODEL
 
         # ── Enrichissement RAG (optionnel) ───────────────────────────────────────
-        # Si l'agent a des documents indexés, on cherche les chunks pertinents
-        # et on les injecte avant la question dans le prompt système.
         contexte_rag = ""
         try:
             from backend.services.rag_service import RAGService
@@ -211,57 +181,53 @@ class Agent:
                 top_k=5
             )
         except Exception as e:
-            # Ne jamais bloquer executer_prompt si le RAG échoue
             print(f"[Agent] ⚠ RAG indisponible : {e}")
 
-        # ── Construction du prompt final ─────────────────────────────────────────
-        from backend.modeles.requestLLM import chat
+        # ── Enrichissement MCP (optionnel) ────────────────────────────────────────
+        # Uniquement si cet agent est connecté à un MCP.
+        contexte_mcp = ""
+        if self.mcp_actif:
+            capacites = ", ".join(self._mcp.capabilities)
+            contexte_mcp = (
+                f"Tu as accès au service externe '{self._mcp.name}' via MCP.\n"
+                f"URL : {self._mcp.url}\n"
+                f"Capacités disponibles : {capacites}\n"
+                f"Utilise ces informations pour répondre à la demande si elles sont pertinentes."
+            )
 
+        # ── Construction du prompt final ─────────────────────────────────────────
         prompt_text = (
             f"system: Tu es {self.nom}, un agent intelligent dont le rôle est : {self.prompt}. "
             "Tu dois fournir des réponses claires, précises et utiles. "
+            "En consulatant les informations de la recherche web si fournies"
             "Si une information est incertaine, indique-le explicitement. "
             "Réponds dans la même langue que le prompt suivant."
         )
 
-        # Injecter le contexte RAG s'il existe
         if contexte_rag:
             prompt_text += f"\n\n{contexte_rag}"
 
+        if contexte_mcp:
+            prompt_text += f"\n\n{contexte_mcp}"
+
         prompt_text += f"\n\nQuestion : {message}"
+        
+        # faire de la recherche web
+        if self.use_web:
+            web_data = search_web(f"{message}")
+            web_data = web_data[:3000] # limiter la taille du résultat.
+
+            conv_history = []
+            conv_history.append({
+                "role": "system",
+                "content": f"Résultat de recherche web:\n{web_data}"
+            })
+
 
         from types import SimpleNamespace
-        result = chat(prompt_text, model)
+        result = chat(prompt_text, model, conversation_history=conv_history)
         return SimpleNamespace(content=result)
 
-    ##def executer_prompt(self, message, model=None):
-        """
-        Envoie un message à l'agent via l'API Pléiade et retourne la réponse.
-
-        Args:
-            message (str): Texte à envoyer à l'agent. Ne doit pas être vide.
-            model (str | None): Modèle Pléiade à utiliser. Si None, utilise le
-                modèle par défaut défini dans requestLLM (PLEIADE_MODEL).
-
-        Returns:
-            Objet avec attribut `.content` (str).
-        """
-        if not message.strip():
-            raise ValueError("prompt vide")
-
-        if model is None:
-            model = PLEIADE_MODEL
-
-        prompt_text = (
-            f"system: Tu es {self.nom}, un agent intelligent dont le rôle est : {self.prompt}. "
-            "Tu dois fournir des réponses claires, précises et utiles. "
-            "Si une information est incertaine, indique-le explicitement. "
-            "Réponds dans la même langue que le prompt suivant : "
-            + message
-        )
-        from types import SimpleNamespace
-        result = chat(prompt_text, model)
-        return SimpleNamespace(content=result)
 
 
 
@@ -273,14 +239,7 @@ class Agent:
         au LLM de s'appuyer sur ce document lors des prochains appels à
         `executer_prompt`.
 
-        Formats supportés :
-
-        | Extension | Librairie utilisée |
-        |-----------|-------------------|
-        | `.txt`    | built-in Python   |
-        | `.pdf`    | PyPDF2            |
-        | `.csv`    | pandas            |
-
+        Formats supportés : pdf, txt, csv.
         Args:
             filepath (str): Chemin absolu ou relatif vers le fichier à charger.
 
@@ -314,6 +273,72 @@ class Agent:
 
         # Enrichissement du prompt avec le contenu du document
         self.prompt += "voir plus de detail dans ce document : " + "\n" + content
+
+    # ── MCP ──────────────────────────────────────────────────────────────────
+
+    def connecter_mcp(self, token_public: str, token_tempo: str, mcp: str) -> MCPConnection:
+        """
+        Connecte l'agent à un MCP et stocke la connexion.
+
+        Un agent ne peut être connecté qu'à un seul MCP à la fois.
+        Appeler cette méthode remplace toute connexion existante.
+
+        Args:
+            token_public (str): Token public / client ID (sera fourni par la BDD).
+            token_tempo  (str): Token temporaire / access token (sera fourni par la BDD).
+            mcp          (str): "github" ou "gmail".
+
+        Returns:
+            MCPConnection: La connexion active.
+
+        Raises:
+            ValueError: Si le MCP n'est pas supporté.
+        """
+        self._mcp = connect_mcp(token_public, token_tempo, mcp)
+        return self._mcp
+
+    def deconnecter_mcp(self) -> None:
+        """Supprime la connexion MCP active de l'agent."""
+        self._mcp = None
+
+    def changer_mcp(self, token_public: str, token_tempo: str, mcp: str) -> MCPConnection:
+        """
+        Remplace la connexion MCP actuelle par une nouvelle.
+
+        Équivalent à `deconnecter_mcp()` suivi de `connecter_mcp()`.
+
+        Args:
+            token_public (str): Token public du nouveau MCP.
+            token_tempo  (str): Token temporaire du nouveau MCP.
+            mcp          (str): "github" ou "gmail".
+
+        Returns:
+            MCPConnection: La nouvelle connexion active.
+        """
+        self.deconnecter_mcp()
+        return self.connecter_mcp(token_public, token_tempo, mcp)
+
+    @property
+    def mcp(self) -> MCPConnection | None:
+        """
+        Connexion MCP active de l'agent, ou None si aucune.
+
+        Returns:
+            MCPConnection | None
+        """
+        return self._mcp
+
+    @property
+    def mcp_actif(self) -> bool:
+        """True si l'agent est connecté à un MCP."""
+        return self._mcp is not None
+
+    @staticmethod
+    def mcps_disponibles() -> set:
+        """Retourne l'ensemble des MCPs supportés."""
+        return SUPPORTED_MCPS
+
+    # ── Propriétés LLM ───────────────────────────────────────────────────────
 
     @property
     def modele(self):

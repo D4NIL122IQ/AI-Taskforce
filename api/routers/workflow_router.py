@@ -8,7 +8,8 @@ from backend.services import workflow_service
 router = APIRouter(prefix="/workflows", tags=["Workflows"])
 
 
-@router.get("/{user_id}", response_model=list[WorkflowResponse])
+
+@router.get("/user/{user_id}", response_model=list[WorkflowResponse])
 def list_workflows(user_id: int, db: Session = Depends(get_db)):
     return workflow_service.get_all_workflows(db, user_id)
 

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from backend.appDatabase.database import Base
@@ -13,6 +13,7 @@ class Utilisateur(Base):
     email = Column(String(255), nullable=False, unique=True)
     mot_de_passe = Column(String(255), nullable=False)
     date_creation = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    gmail_token = Column(Text, nullable=True)
 
-    agents = relationship("AgentModel", back_populates="utilisateur", cascade="all, delete-orphan")
+    agents = relationship("Agent", back_populates="utilisateur", cascade="all, delete-orphan")
     workflows = relationship("Workflow", back_populates="utilisateur", cascade="all, delete-orphan")

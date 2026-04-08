@@ -15,6 +15,9 @@
 
 import NavBar from "../components/layout/NavBar"
 import { useState, useEffect } from "react"
+import PageBackground  from "../components/layout/PageBackground"
+import { Link } from 'react-router-dom'
+
 
 import {
   Bot,
@@ -152,10 +155,11 @@ const Dashboard = () => {
           erreursRes,
           executionsRes
         ] = await Promise.all([
-          fetch(`http://localhost:8000/agents/${userId}`),
+
+          fetch(`http://localhost:8000/workflows/user/${userId}`),
           fetch(`http://localhost:8000/workflows/${userId}`),
           fetch(`http://localhost:8000/executions/ERREUR`),
-          fetch(`http://localhost:8000/executions`),
+          fetch(`http://localhost:8000/executions/`),
         ])
 
         const agentsData = await agentsRes.json()
@@ -188,7 +192,8 @@ const Dashboard = () => {
 
   // UI
   return (
-    <div className="min-h-screen bg-[#080808] text-white">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#080808] text-gray-900 dark:text-white font-body transition-colors duration-300">
+      <PageBackground/>
       <NavBar />
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
@@ -283,10 +288,12 @@ const Dashboard = () => {
                                 </button>
 
                                 <button
-                                  onClick={() => console.log("Modifier", agent.id_agent)}
+                                  onClick={() => navigate(`/agents/edit/${agent.id_agent}`)}
                                   className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-700"
                                 >
-                                  <Edit size={14} /> Modifier
+                                  <Link to={`/agents/edit/${agent.id_agent}`} className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-700">
+                                    <Edit size={14} /> Modifier
+                                  </Link>
                                 </button>
 
                                 <button

@@ -1,8 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import insert, update, delete
 from backend.models.utilisateur_model import Utilisateur as User
-from backend.appDatabase.database import get_db
-from backend.appDatabase.init_db import init
 from api.schemas.user_schema import UserData
 import bcrypt
 
@@ -14,9 +12,8 @@ class UserService:
     Gère l'accès à la base de données et la logique métier associée.
     """
 
-    def __init__(self):
-        init()
-        self.db: Session = next(get_db())
+    def __init__(self, db: Session):
+        self.db = db
 
     def create_user(self, data: UserData) -> int:
         """
@@ -27,7 +24,7 @@ class UserService:
             password_hash = bcrypt.hashpw(
                 data.mot_de_passe.encode("utf-8"),
                 bcrypt.gensalt()
-            )
+            ).decode("utf-8")
 
             stmt = insert(User).values(
                 nom=data.nom,
@@ -44,14 +41,17 @@ class UserService:
             self.db.rollback()
             raise e
 
+
     def login_user(self, email: str, password: str):
+        user = self.db.query(User).filter(User.email == email).first()
         """
         Vérifie les identifiants utilisateur.
         Retourne l'utilisateur si valide, sinon None.
         """
-        user = self.db.query(User).filter(User.email == email).first()
-
-        if user and bcrypt.checkpw(password.encode("utf-8"), user.mot_de_passe):
+        if user and bcrypt.checkpw(
+                password.encode("utf-8"),
+                user.mot_de_passe.encode("utf-8") if isinstance(user.mot_de_passe, str) else user.mot_de_passe
+        ):
             return user
 
         return None
@@ -72,7 +72,7 @@ class UserService:
             password_hash = bcrypt.hashpw(
                 data.mot_de_passe.encode("utf-8"),
                 bcrypt.gensalt()
-            )
+            ).decode("utf-8")
 
             stmt = update(User).where(
                 User.id_utilisateur == user_id

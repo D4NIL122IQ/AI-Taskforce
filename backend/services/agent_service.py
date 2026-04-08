@@ -1,9 +1,7 @@
 # backend/services/agent_service.py
 
 from sqlalchemy.orm import Session
-from backend.models.agent_model import AgentModel
-from backend.appDatabase.database import get_db
-from backend.appDatabase.init_db import init
+from backend.models.agent_model import Agent
 from api.schemas.agent_schema import AgentBase
 from typing import List, Optional
 
@@ -14,16 +12,15 @@ class AgentService:
     Fournit les opérations CRUD via ORM SQLAlchemy.
     """
 
-    def __init__(self):
-        init()
-        self.db: Session = next(get_db())
+    def __init__(self, db: Session):
+        self.db = db
 
-    def get_agents_by_user(self, user_id: int) -> List[AgentModel]:
+    def get_agents_by_user(self, user_id: int) -> List[Agent]:
         """
         Retourne la liste des agents d’un utilisateur.
         """
-        return self.db.query(AgentModel).filter(
-            AgentModel.utilisateur_id == user_id
+        return self.db.query(Agent).filter(
+            Agent.utilisateur_id == user_id
         ).all()
 
     def create_agent(self, data: AgentBase) -> int:
@@ -31,13 +28,13 @@ class AgentService:
         Crée un agent et retourne son identifiant.
         """
         try:
-            agent = AgentModel(
+            agent = Agent(
                 nom=data.nom,
                 modele=data.modele,
-                system_prompt=data.prompt,
-                max_tokens=data.max_token,
+                system_prompt=data.system_prompt,
+                max_tokens=data.max_tokens,
                 temperature=data.temperature,
-                utilisateur_id=data.user_id
+                utilisateur_id=data.utilisateur_id
             )
 
             self.db.add(agent)
@@ -56,8 +53,8 @@ class AgentService:
         Retourne True si succès, False sinon.
         """
         try:
-            agent: Optional[AgentModel] = self.db.query(AgentModel).filter(
-                AgentModel.id_agent == agent_id
+            agent: Optional[Agent] = self.db.query(Agent).filter(
+                Agent.id_agent == agent_id
             ).first()
 
             if not agent:
@@ -65,8 +62,8 @@ class AgentService:
 
             agent.nom = data.nom
             agent.modele = data.modele
-            agent.system_prompt = data.prompt
-            agent.max_tokens = data.max_token
+            agent.system_prompt = data.system_prompt
+            agent.max_tokens = data.max_tokens
             agent.temperature = data.temperature
 
             self.db.commit()
@@ -83,8 +80,8 @@ class AgentService:
         Retourne True si supprimé, False sinon.
         """
         try:
-            agent: Optional[AgentModel] = self.db.query(AgentModel).filter(
-                AgentModel.id_agent == agent_id
+            agent: Optional[Agent] = self.db.query(Agent).filter(
+                Agent.id_agent == agent_id
             ).first()
 
             if not agent:

@@ -29,6 +29,9 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from backend.models.document_model import Document
+from backend.services.rag_service import RAGService
+from backend.services.rag_service import RAGService
+
 
 # ── Dossier de stockage des fichiers uploadés ─────────────────────────────────
 # Modifiable via variable d'environnement UPLOAD_DIR (ex: volume Docker)
@@ -102,6 +105,16 @@ class DocumentService:
         self.db.add(doc)
         self.db.commit()
         self.db.refresh(doc)
+
+        # Indexation dans ChromaDB
+        try:
+            RAGService().indexer_document(
+                doc_id=doc.id_document,
+                agent_id=agent_id,
+                chemin_fichier=chemin_absolu
+            )
+        except Exception as e:
+            print(f"[DocumentService] ⚠ Indexation RAG échouée : {e}")
 
         return doc
 
