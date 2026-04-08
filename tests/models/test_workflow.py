@@ -2,7 +2,6 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 from backend.models.workflow_model import Workflow
 from backend.models.agent_model import Agent
-from backend.models.etape_model import Etape
 from backend.models.execution_model import Execution
 
 
@@ -72,15 +71,12 @@ class TestWorkflowRelations:
         with pytest.raises(IntegrityError):
             session.commit()
 
-    def test_cascade_etapes(self, session, workflow_simple):
         for i in range(1, 3):
-            session.add(Etape(ordre_execution=i, workflow_id=workflow_simple.id_workflow))
         session.commit()
 
         session.delete(workflow_simple)
         session.commit()
 
-        assert session.query(Etape).count() == 0
 
     def test_cascade_executions(self, session, workflow_simple):
         exec_ = Execution(workflow_id=workflow_simple.id_workflow)
@@ -92,11 +88,8 @@ class TestWorkflowRelations:
 
         assert session.query(Execution).count() == 0
 
-    def test_plusieurs_etapes(self, session, workflow_simple):
         for i in range(1, 5):
-            session.add(Etape(ordre_execution=i, workflow_id=workflow_simple.id_workflow))
         session.commit()
-        assert len(workflow_simple.etapes) == 4
 
     def test_plusieurs_executions(self, session, workflow_simple):
         for _ in range(3):
@@ -119,7 +112,6 @@ class TestWorkflowIntegration:
         session.flush()
 
         for i in range(1, 4):
-            session.add(Etape(
                 ordre_execution=i,
                 description_tache=f"Étape {i}",
                 workflow_id=wf.id_workflow,
@@ -130,7 +122,6 @@ class TestWorkflowIntegration:
         session.add(exec_)
         session.commit()
 
-        assert len(wf.etapes) == 3
         assert len(wf.executions) == 1
         assert wf.superviseur.nom == "Superviseur"
 

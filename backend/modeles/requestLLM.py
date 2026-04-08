@@ -2,10 +2,13 @@ import os
 import requests
 import json
 from dotenv import load_dotenv
+#from ddgs import DDGS
+from duckduckgo_search import DDGS
+
 
 load_dotenv()
 
-BASE_URL = "https://pleiade.mi.parisdescartes.fr"
+BASE_URL = "https://pleiade.mi.parisdescartes.fr/api/v1"
 TOKEN = os.getenv("TOKEN_PLEIADE")
 MODEL = "athene-v2:latest"
 
@@ -29,7 +32,7 @@ def chat(message: str, model: str, conversation_history: list = None):
     }
 
     response = requests.post(
-        f"{BASE_URL}/api/chat/completions",
+        f"{BASE_URL}/chat/completions",
         json=payload,
         headers=headers,
         stream=True
@@ -58,4 +61,3 @@ def chat(message: str, model: str, conversation_history: list = None):
     conversation_history.append({"role": "assistant", "content": full_response})
 
     return full_response
-
