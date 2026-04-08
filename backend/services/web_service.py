@@ -1,5 +1,7 @@
 import os
-from ddgs import DDGS
+#from ddgs import DDGS
+from duckduckgo_search import DDGS
+
 from langchain_community.tools.tavily_search import TavilySearchResults
 
 

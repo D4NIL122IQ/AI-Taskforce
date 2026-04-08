@@ -2,8 +2,6 @@
 
 from sqlalchemy.orm import Session
 from backend.models.agent_model import Agent
-from backend.appDatabase.database import get_db
-from backend.appDatabase.init_db import init
 from api.schemas.agent_schema import AgentBase
 from typing import List, Optional
 
@@ -14,9 +12,8 @@ class AgentService:
     Fournit les opérations CRUD via ORM SQLAlchemy.
     """
 
-    def __init__(self):
-        init()
-        self.db: Session = next(get_db())
+    def __init__(self, db: Session):
+        self.db = db
 
     def get_agents_by_user(self, user_id: int) -> List[Agent]:
         """
@@ -34,10 +31,10 @@ class AgentService:
             agent = Agent(
                 nom=data.nom,
                 modele=data.modele,
-                system_prompt=data.prompt,
-                max_tokens=data.max_token,
+                system_prompt=data.system_prompt,
+                max_tokens=data.max_tokens,
                 temperature=data.temperature,
-                utilisateur_id=data.user_id
+                utilisateur_id=data.utilisateur_id
             )
 
             self.db.add(agent)
@@ -65,8 +62,8 @@ class AgentService:
 
             agent.nom = data.nom
             agent.modele = data.modele
-            agent.system_prompt = data.prompt
-            agent.max_tokens = data.max_token
+            agent.system_prompt = data.system_prompt
+            agent.max_tokens = data.max_tokens
             agent.temperature = data.temperature
 
             self.db.commit()

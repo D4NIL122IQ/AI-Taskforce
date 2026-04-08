@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation  } from 'react-router-dom'
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, ArrowLeft } from 'lucide-react'
 import PageBackground from '../components/layout/PageBackground'
+import { supabase } from '../supabase'
+
 
 const GithubIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -56,12 +58,77 @@ export default function FormPage() {
 
   const navigate = useNavigate()
 
+  const location = useLocation()
+  const from = location.state?.from || '/dashboard'
+
+
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '', confirm: '' })
 
-  const handleLoginSubmit = (e) => { e.preventDefault() }
-  const handleRegisterSubmit = (e) => { e.preventDefault() }
 
+
+  const handleLoginSubmit = async (e) => {
+      e.preventDefault()
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: loginForm.email,
+          password: loginForm.password
+        })
+        if (error) throw new Error(error.message)
+
+        localStorage.setItem('user', JSON.stringify({
+          user_id: data.user.id,
+          email: data.user.email,
+          nom: data.user.user_metadata?.nom || data.user.email
+        }))
+        navigate(from.replace('/AI-Taskforce', '') || '/dashboard')
+      } catch (error) {
+        alert('Erreur : ' + error.message)
+      }
+    }
+
+  const handleRegisterSubmit = async (e) => {
+      e.preventDefault()
+      if (registerForm.password !== registerForm.confirm) {
+        alert('Les mots de passe ne correspondent pas')
+        return
+      }
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email: registerForm.email,
+          password: registerForm.password,
+          options: {
+            data: { nom: registerForm.name }
+          }
+        })
+        if (error) throw new Error(error.message)
+
+        alert('Compte créé avec succès ! Connectez-vous.')
+        setMode('login')
+      } catch (error) {
+        alert('Erreur : ' + error.message)
+      }
+    }
+
+  const handleGoogleLogin = async () => {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: 'http://localhost:5173/AI-Taskforce/dashboard'
+        }
+      })
+      if (error) alert('Erreur : ' + error.message)
+    }
+
+    const handleGithubLogin = async () => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'github',
+    options: {
+      redirectTo: 'http://localhost:5173/AI-Taskforce/dashboard'
+    }
+  })
+  if (error) alert('Erreur : ' + error.message)
+}
   const eyeBtn = (show, setShow) => (
     <button
       type="button"
@@ -146,8 +213,8 @@ export default function FormPage() {
               </div>
 
               <div className="flex flex-col gap-3">
-                <OAuthButton icon={GoogleIcon} label="Continuer avec Gmail" onClick={() => {}} />
-                <OAuthButton icon={GithubIcon} label="Continuer avec GitHub" onClick={() => {}} />
+                <OAuthButton icon={GoogleIcon} label="Continuer avec Gmail" onClick={handleGoogleLogin} />
+                <OAuthButton icon={GithubIcon} label="Continuer avec GitHub" onClick={handleGithubLogin} />
               </div>
 
             </form>
