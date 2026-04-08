@@ -2,8 +2,6 @@
 
 from sqlalchemy.orm import Session
 from backend.models.agent_model import Agent
-from backend.appDatabase.database import get_db
-from backend.appDatabase.init_db import init
 from api.schemas.agent_schema import AgentBase
 from typing import List, Optional
 
@@ -14,9 +12,8 @@ class AgentService:
     Fournit les opérations CRUD via ORM SQLAlchemy.
     """
 
-    def __init__(self):
-        init()
-        self.db: Session = next(get_db())
+    def __init__(self, db: Session):
+        self.db = db
 
     def get_agents_by_user(self, user_id: int) -> List[Agent]:
         """

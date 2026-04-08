@@ -1,36 +1,30 @@
-# api/routers/user_router.py
-
-from fastapi import APIRouter,HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.orm import Session
 from api.schemas.user_schema import UserData, UserLogin
 from backend.services.users_service import UserService
+from backend.appDatabase.database import get_db
 
 router = APIRouter(prefix="/user", tags=["Users"])
 
-service = UserService()
-
 
 @router.post("/")
-def create_user(data: UserData):
+def create_user(data: UserData, db: Session = Depends(get_db)):
     try:
-        user_id = service.create_user(data)
+        svc = UserService(db)
+        user_id = svc.create_user(data)
         return {"user_id": user_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/login")
-def login_user(data: UserLogin):
+def login_user(data: UserLogin, db: Session = Depends(get_db)):
     try:
-        user = service.login_user(data.email, data.mot_de_passe)
-
+        svc = UserService(db)
+        user = svc.login_user(data.email, data.mot_de_passe)
         if not user:
             raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect")
-        return {
-            "user_id": user.id_utilisateur,
-            "nom": user.nom,
-            "email": user.email
-        }
-
+        return {"user_id": user.id_utilisateur, "nom": user.nom, "email": user.email}
     except HTTPException:
         raise
     except Exception as e:
@@ -38,19 +32,13 @@ def login_user(data: UserLogin):
 
 
 @router.get("/{user_id}")
-def get_user(user_id: int):
+def get_user(user_id: int, db: Session = Depends(get_db)):
     try:
-        user = service.get_user_by_id(user_id)
-
+        svc = UserService(db)
+        user = svc.get_user_by_id(user_id)
         if not user:
             raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
-
-        return {
-            "user_id": user.id_utilisateur,
-            "nom": user.nom,
-            "email": user.email
-        }
-
+        return {"user_id": user.id_utilisateur, "nom": user.nom, "email": user.email}
     except HTTPException:
         raise
     except Exception as e:
@@ -58,31 +46,27 @@ def get_user(user_id: int):
 
 
 @router.put("/{user_id}")
-def update_user(user_id: int, data: UserData):
+def update_user(user_id: int, data: UserData, db: Session = Depends(get_db)):
     try:
-        success = service.update_user(user_id, data)
-
+        svc = UserService(db)
+        success = svc.update_user(user_id, data)
         if not success:
-            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")  # ← corriger
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
         return {"message": "Utilisateur mis à jour"}
-
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
-
 @router.delete("/{user_id}")
-def delete_user(user_id: int):
+def delete_user(user_id: int, db: Session = Depends(get_db)):
     try:
-        success = service.delete_user(user_id)
-
+        svc = UserService(db)
+        success = svc.delete_user(user_id)
         if not success:
-            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")  # ← corriger
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
         return {"message": "Utilisateur supprimé avec succès"}
-
     except HTTPException:
         raise
     except Exception as e:

@@ -1,19 +1,18 @@
 # api/routers/agent_router.py
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.orm import Session
+from backend.appDatabase.database import get_db
 from api.schemas.agent_schema import AgentBase, AgentCreate, AgentUpdate
 from backend.services.agent_service import AgentService
 
 router = APIRouter(prefix="/agents", tags=["Agents"])
 
-service = AgentService()
-
-
 @router.get("/{user_id}")
-def get_agents(user_id: int):
+def get_agents(user_id: int, db: Session = Depends(get_db)):
     try:
-        agents = service.get_agents_by_user(user_id)
-
+        svc = AgentService(db)
+        agents = svc.get_agents_by_user(user_id)
         return [
             {
                 "id": a.id_agent,
@@ -33,18 +32,20 @@ def get_agents(user_id: int):
 
 
 @router.post("/")
-def create_agent(data: AgentBase):
+def create_agent(data: AgentBase, db: Session = Depends(get_db)):
     try:
-        agent_id = service.create_agent(data)
+        svc = AgentService(db)
+        agent_id = svc.create_agent(data)
         return {"agent_id": agent_id}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/{agent_id}")
-def update_agent(agent_id: int, data: AgentBase):
+def update_agent(agent_id: int, data: AgentBase, db: Session = Depends(get_db)):
     try:
-        success = service.update_agent(agent_id, data)
+        svc = AgentService(db)
+        success = svc.update_agent(agent_id, data)
 
         if not success:
              raise HTTPException(status_code=404, detail="Agent non trouvé")
@@ -58,9 +59,10 @@ def update_agent(agent_id: int, data: AgentBase):
 
 
 @router.delete("/{agent_id}")
-def delete_agent(agent_id: int):
+def delete_agent(agent_id: int, db: Session = Depends(get_db)):
     try:
-        success = service.delete_agent(agent_id)
+        svc = AgentService(db)
+        success = svc.delete_agent(agent_id)
 
         if not success:
             raise HTTPException(status_code=404, detail="Agent non trouvé")
