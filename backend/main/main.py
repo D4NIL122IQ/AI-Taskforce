@@ -10,9 +10,10 @@ from backend.modeles.Agent import Agent
 from api.routers.document_router import router as document_router
 
 
-agent = Agent("assistant", "athene-v2:latest", "tu es un assistant qui repond à des questions diverses", 200, 0.3, use_web=True)
+agent = Agent("assistant", "athene-v2:latest", "tu es un assistant qui repond à des questions diverses en IT", 200, 0.3, use_web=True)
 
-print(agent.executer_prompt("qui est le president actuel du japon ?"))
+print(agent.executer_prompt("parle moi du reseau et internet "))
+
 
 init()
 app = FastAPI()
@@ -27,13 +28,10 @@ app.add_middleware(
 
 @app.get("/")
 def welcome_page():
-    return {"Page d'accueil":" Welcome sur la page de creation d'agents"}
+    return {"Page d'accueil"}
 
 app.include_router(agent_router)
 app.include_router(user_router)
 app.include_router(workflow_router)
 app.include_router(execution_router)
 app.include_router(document_router)
-
-
- 
