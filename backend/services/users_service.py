@@ -1,8 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import insert, update, delete
 from backend.models.utilisateur_model import Utilisateur as User
-from backend.appDatabase.database import get_db
-from backend.appDatabase.init_db import init
 from api.schemas.user_schema import UserData
 import bcrypt
 
@@ -14,9 +12,8 @@ class UserService:
     Gère l'accès à la base de données et la logique métier associée.
     """
 
-    def __init__(self):
-        init()
-        self.db: Session = next(get_db())
+    def __init__(self, db: Session):
+        self.db = db
 
     def create_user(self, data: UserData) -> int:
         """
