@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation  } from 'react-router-dom'
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, ArrowLeft } from 'lucide-react'
 import PageBackground from '../components/layout/PageBackground'
 
@@ -56,6 +56,10 @@ export default function FormPage() {
 
   const navigate = useNavigate()
 
+  const location = useLocation()
+  const from = location.state?.from || '/dashboard'
+
+
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '', confirm: '' })
 
@@ -75,7 +79,7 @@ export default function FormPage() {
 
         // Stocker l'utilisateur dans localStorage
         localStorage.setItem('user', JSON.stringify(data))
-        navigate('/dashboard')
+        navigate(from.replace('/AI-Taskforce', '') || '/dashboard');
       } catch (error) {
         alert('Erreur : ' + error.message)
       }

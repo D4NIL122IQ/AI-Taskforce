@@ -19,6 +19,6 @@ class WorkflowUpdate(WorkflowBase):
 
 class WorkflowResponse(WorkflowBase):
     id_workflow: int
-    date_creation: datetime | None = None
+    date_creation: Optional[datetime] = None
     utilisateur_id: Optional[int] = None
     model_config = ConfigDict(from_attributes=True)

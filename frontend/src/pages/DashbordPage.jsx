@@ -16,7 +16,7 @@
 import NavBar from "../components/layout/NavBar"
 import { useState, useEffect } from "react"
 import PageBackground  from "../components/layout/PageBackground"
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 
 import {
@@ -48,6 +48,15 @@ const Dashboard = () => {
   const [executions, setExecutions] = useState([])
   const [loading, setLoading] = useState(true)
   const [openMenuId, setOpenMenuId] = useState(null)
+
+  const navigate = useNavigate()
+
+useEffect(() => {
+  const user = JSON.parse(localStorage.getItem("user") || "null")
+  if (!user) {
+    navigate('/auth')
+  }
+}, [])
 
   // ACTIVITES
   const activities = [
@@ -156,8 +165,8 @@ const Dashboard = () => {
           executionsRes
         ] = await Promise.all([
 
+          fetch(`http://localhost:8000/agents/${userId}`),
           fetch(`http://localhost:8000/workflows/user/${userId}`),
-          fetch(`http://localhost:8000/workflows/${userId}`),
           fetch(`http://localhost:8000/executions/ERREUR`),
           fetch(`http://localhost:8000/executions/`),
         ])
