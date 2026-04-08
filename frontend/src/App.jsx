@@ -6,6 +6,8 @@ import FormPage from './pages/FormPage'
 import CreatWorkflowPage from './pages/CreatWorkflowPage'
 import ExecuteWorkflowPage from './pages/ExecuteWorkflowPage'
 import DashboardPage from './pages/DashbordPage'
+import { useEffect } from 'react'
+import { supabase } from './supabase'
 
 
 // Protection de route
@@ -17,6 +19,20 @@ const ProtectedRoute = ({ children }) => {
 }
 
 export default function App() {
+    useEffect(() => {
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        localStorage.setItem('user', JSON.stringify({
+          user_id: session.user.id,
+          email: session.user.email,
+          nom: session.user.user_metadata?.nom || session.user.email
+        }))
+      }
+      if (event === 'SIGNED_OUT') {
+        localStorage.removeItem('user')
+      }
+    })
+  }, [])
   return (
      <Routes>
        <Route path="/" element={<HomePage />} />
