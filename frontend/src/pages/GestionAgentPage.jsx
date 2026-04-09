@@ -1,19 +1,36 @@
-import { useState } from 'react'
+import { useState, useEffect  } from 'react'
 import { Link } from 'react-router-dom'
 import NavBar from '../components/layout/NavBar'
 import PageBackground from '../components/layout/PageBackground'
 import { Plus, Bot, Pencil, Trash2, Globe, Thermometer, Hash } from 'lucide-react'
 
 const useAgents = () => {
-  const load = () => {
-    try { return JSON.parse(localStorage.getItem('agents') || '[]') } catch { return [] }
-  }
-  const [agents, setAgents] = useState(load)
+  const [agents, setAgents] = useState([])
 
-  const remove = (id) => {
-    const updated = agents.filter((a) => a.id !== id)
-    setAgents(updated)
-    localStorage.setItem('agents', JSON.stringify(updated))
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || 'null')
+    const userId = user?.user_id || 1
+    fetch(`http://localhost:8000/agents/${userId}`)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setAgents(data.map(a => ({
+            id: a.id,
+            name: a.nom,
+            role: a.role || '',
+            model: a.modele,
+            systemPrompt: a.system_prompt || '',
+            temperature: a.temperature,
+            maxTokens: a.max_tokens,
+          })))
+        }
+      })
+      .catch(() => setAgents([]))
+  }, [])
+
+  const remove = async (id) => {
+    await fetch(`http://localhost:8000/agents/${id}`, { method: 'DELETE' })
+    setAgents(prev => prev.filter(a => a.id !== id))
   }
 
   return { agents, remove }
@@ -129,6 +146,7 @@ const GestionAgentPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {agents.map((agent) => (
               <AgentCard key={agent.id} agent={agent} onDelete={remove} />
+
             ))}
           </div>
         )}

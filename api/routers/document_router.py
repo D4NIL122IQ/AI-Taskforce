@@ -80,3 +80,16 @@ def supprimer_document(doc_id: int, db: Session = Depends(get_db)):
     if not supprime:
         raise HTTPException(status_code=404, detail="Document introuvable.")
     return {"message": f"Document {doc_id} supprimé avec succès."}
+@router.get("/user/{user_id}/documents", response_model=List[DocumentResponse])
+def lister_documents_utilisateur(user_id: str, db: Session = Depends(get_db)):
+    """
+    Retourne tous les documents de tous les agents d'un utilisateur.
+    """
+    from backend.models.agent_model import Agent
+    agents = db.query(Agent).filter(Agent.utilisateur_id == user_id).all()
+    tous_les_docs = []
+    for agent in agents:
+        svc = DocumentService(db)
+        docs = svc.lister(agent_id=agent.id_agent)
+        tous_les_docs.extend(docs)
+    return tous_les_docs
