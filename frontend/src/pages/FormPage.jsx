@@ -192,7 +192,7 @@ export default function FormPage() {
                 rightElement={eyeBtn(showPassword, setShowPassword)} />
 
               <div className="text-right -mt-1">
-                <button type="button" className="text-xs text-gray-400 dark:text-white/40 hover:text-gray-600 dark:hover:text-white/70 transition-colors">
+                <button type="button" onClick={() => navigate('/forgot-password')} className="text-xs text-gray-400 dark:text-white/40 hover:text-gray-600 dark:hover:text-white/70 transition-colors">
                   Mot de passe oublié ?
                 </button>
               </div>
