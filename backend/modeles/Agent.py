@@ -174,8 +174,8 @@ class Agent:
         try:
             from backend.services.rag_service import RAGService
             rag = RAGService()
-            rag.indexer_document( 1, self.ID, "./backend/main/exempleRAG.txt")
-            print(self.ID)
+            # pour besoin de text
+            rag.indexer_document( 1, 1, "./backend/main/exempleRAG.txt")
             contexte_rag = rag.contexte_pour_prompt(
                 agent_id=1,
                 question=message,
@@ -183,9 +183,6 @@ class Agent:
             )
         except Exception as e:
             print(f"[Agent] ⚠ RAG indisponible : {e}")
-        
-        print(f"\n{contexte_rag}")
-        return "bon"
 
         # ── Enrichissement MCP (optionnel) ────────────────────────────────────────
         # Uniquement si cet agent est connecté à un MCP.

@@ -99,13 +99,21 @@ const GestionAgentPage = () => {
                 : `${agents.length} agent${agents.length > 1 ? 's' : ''} configuré${agents.length > 1 ? 's' : ''}`}
             </p>
           </div>
-          <Link
-            to="/agents/create"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors duration-200"
-          >
-            <Plus size={16} />
-            Créer un agent
-          </Link>
+          <div className="flex gap-3">
+              <Link
+              to="/agents/create"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors duration-200"
+            >
+              <Plus size={16} />
+              Créer un agent
+            </Link >
+            <Link
+              to="/rag-config"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-black text-sm font-medium transition-colors duration-200"
+            >
+              Config RAG
+            </Link>
+          </div>
         </div>
 
         {agents.length === 0 ? (
