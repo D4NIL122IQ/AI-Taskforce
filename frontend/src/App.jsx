@@ -6,6 +6,7 @@ import FormPage from './pages/FormPage'
 import CreatWorkflowPage from './pages/CreatWorkflowPage'
 import ExecuteWorkflowPage from './pages/ExecuteWorkflowPage'
 import DashboardPage from './pages/DashbordPage'
+import RagConfigPage from './pages/RagConfigPage'
 import { useEffect } from 'react'
 import { supabase } from './supabase'
 
@@ -38,12 +39,13 @@ export default function App() {
        <Route path="/" element={<HomePage />} />
        <Route path="/agents" element={<ProtectedRoute><GestionAgentPage /></ProtectedRoute>} />
        <Route path="/agents/create" element={<ProtectedRoute><CreatAgentPage /></ProtectedRoute>} />
-        <Route path="/agents/edit/:id" element={<ProtectedRoute><CreatAgentPage /></ProtectedRoute>} />
+       <Route path="/agents/edit/:id" element={<ProtectedRoute><CreatAgentPage /></ProtectedRoute>} />
        <Route path="/auth" element={<FormPage />} />
        <Route path="/workflow" element={<ProtectedRoute><CreatWorkflowPage /></ProtectedRoute>} />
        <Route path="/workflow/execute" element={<ProtectedRoute><ExecuteWorkflowPage /></ProtectedRoute>} />
        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage/></ProtectedRoute>} />
-
+       <Route path="/ragconfig" element={<ProtectedRoute><RagConfigPage /></ProtectedRoute>} />
+       <Route path="/rag-config" element={<ProtectedRoute><RagConfigPage /></ProtectedRoute>} />
      </Routes>
   )
 }
