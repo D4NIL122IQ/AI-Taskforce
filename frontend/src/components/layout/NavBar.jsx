@@ -4,11 +4,10 @@ import { useTheme } from '../../context/ThemeContext'
 import { useState } from 'react'
 
 
-const NAV_LINKS = [
+const BASE_LINKS = [
   { label: 'Accueil',        to: '/' },
   { label: 'Gestion Agents', to: '/agents' },
   { label: 'Workflow',       to: '/workflow' },
-  { label:'Dashboard',        to: '/dashboard' },
 ]
 
 const NavItem = ({ label, to }) => (
@@ -77,7 +76,7 @@ const NavBar = () => {
 
           {/* Liens centrés */}
           <ul className="md:flex items-center gap-1" role="list">
-            {NAV_LINKS.map(({ label, to }) => (
+            {BASE_LINKS.map(({ label, to }) => (
               <li key={to}>
                 <NavItem label={label} to={to} />
               </li>
@@ -113,6 +112,13 @@ const NavBar = () => {
             {showMenu && user && (
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 p-2">
                 <p className="text-sm text-gray-500 dark:text-white/50 px-3 py-1">{user.email}</p>
+                <hr className="border-gray-200 dark:border-gray-700 my-1" />
+                <button
+                  onClick={() => { setShowMenu(false); navigate('/dashboard') }}
+                  className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-white/80 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg"
+                >
+                  Dashboard
+                </button>
                 <hr className="border-gray-200 dark:border-gray-700 my-1" />
                 <button
                   onClick={handleLogout}
