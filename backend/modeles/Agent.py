@@ -40,7 +40,7 @@ class Agent:
 
     ctr = 0  # Compteur global pour générer des identifiants uniques
 
-    def __init__(self, nom, modele, prompt, max_token,  temperature, use_web=False):
+    def __init__(self, nom, modele, prompt, max_token,  temperature, use_web: bool =False):
         """
         Initialise un agent avec ses paramètres principaux.
 
@@ -214,19 +214,12 @@ class Agent:
         if contexte_mcp:
             prompt_text += f"\n\n{contexte_mcp}"
 
-        prompt_text += f"\n\nQuestion : {message}"
-        conv_history = []
-
-        # faire de la recherche web
-        if self.use_web:
-            conv_history = []
-            conv_history.append({
-                "role": "system",
-            })
-
+        conv_history = [
+            {"role": "system", "content": prompt_text}
+        ]
 
         from types import SimpleNamespace
-        result = chat(prompt_text, model, conversation_history=conv_history)
+        result = chat(message, model, conversation_history=conv_history, web_search=self.use_web)
         return SimpleNamespace(content=result)
 
 

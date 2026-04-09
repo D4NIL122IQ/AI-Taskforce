@@ -43,7 +43,6 @@ const Dashboard = () => {
   // STATES
   const [agents, setAgents] = useState([])
   const [workflows, setWorkflows] = useState([])
-  const [documents, setDocuments] = useState([])
   const [erreurs, seterreurs] = useState([])
   const [executions, setExecutions] = useState([])
   const [loading, setLoading] = useState(true)
@@ -201,24 +200,24 @@ useEffect(() => {
 
   // UI
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#080808] text-gray-900 dark:text-white font-body transition-colors duration-300">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#080808] text-gray-900 dark:text-white font-body transition-colors duration-300 pt-[68px]">
       <PageBackground/>
       <NavBar />
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
 
         {/* HEADER */}
-        <div className="flex items-center justify-between sticky top-16 z-40 bg-[#080808] py-3 border-b border-gray-800">
+        <div className="flex items-center justify-between sticky top-16 z-40 bg-gray-50 dark:bg-[#080808] py-3 border-b border-gray-200 dark:border-gray-800">
           <h1 className="text-3xl font-bold">Dashboard</h1>
 
           <div className="flex gap-3">
-            <button className="bg-yellow-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
+            <button className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg">
               + Service
             </button>
-            <button className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
+            <button onClick={() => navigate('/agents/create')} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
               + Agent
             </button>
-            <button className="border border-gray-600 px-4 py-2 rounded-lg hover:bg-gray-800">
+            <button onClick={() => navigate('/workflow')} className="border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
               + Workflow
             </button>
           </div>
@@ -234,7 +233,7 @@ useEffect(() => {
               {stats.map(({ label, value, icon: Icon }) => (
                 <div
                   key={label}
-                  className="bg-[#111] border border-gray-800 rounded-xl p-4 flex items-center justify-between hover:border-purple-500 transition"
+                  className="bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl p-4 flex items-center justify-between hover:border-purple-500 transition"
                 >
                   <div>
                     <p className="text-sm text-gray-400">{label}</p>
@@ -249,7 +248,7 @@ useEffect(() => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
               {/* AGENTS */}
-              <div className="lg:col-span-2 bg-[#111] border border-gray-800 rounded-xl p-5">
+              <div className="lg:col-span-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl p-5">
                 <h2 className="text-lg font-semibold mb-4">Agents</h2>
 
                 <div className="space-y-3">
@@ -259,7 +258,7 @@ useEffect(() => {
                     agents.map((agent) => (
                       <div
                         key={agent.id_agent}
-                        className="flex items-center justify-between bg-[#0d0d0d] p-3 rounded-lg"
+                        className="flex items-center justify-between bg-gray-50 dark:bg-[#0d0d0d] p-3 rounded-lg"
                       >
                         <div>
                           <p className="font-medium">{agent.nom}</p>
@@ -287,20 +286,20 @@ useEffect(() => {
                             </button>
 
                             {openMenuId === agent.id_agent && (
-                              <div className="absolute right-0 mt-2 w-40 bg-[#1a1a1a] border border-gray-700 rounded-lg shadow-lg z-50">
+                              <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
 
                                 <button
                                   onClick={() => console.log("Voir", agent.id_agent)}
-                                  className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-700"
+                                  className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
                                 >
                                   <Eye size={14} /> Voir détails
                                 </button>
 
                                 <button
                                   onClick={() => navigate(`/agents/edit/${agent.id_agent}`)}
-                                  className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-700"
+                                  className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
                                 >
-                                  <Link to={`/agents/edit/${agent.id_agent}`} className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-700">
+                                  <Link to={`/agents/edit/${agent.id_agent}`} className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
                                     <Edit size={14} /> Modifier
                                   </Link>
                                 </button>
@@ -323,7 +322,7 @@ useEffect(() => {
               </div>
 
               {/* ACTIVITY */}
-              <div className="bg-[#111] border border-gray-800 rounded-xl p-5 h-[300px] flex flex-col">
+              <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl p-5 h-[300px] flex flex-col">
                 <h2 className="text-lg font-semibold mb-4">Log d'Activité</h2>
 
                 <div className="space-y-3 overflow-y-auto pr-2">
@@ -334,7 +333,7 @@ useEffect(() => {
                     return (
                       <div
                         key={act.id}
-                        className="flex items-center justify-between bg-[#0d0d0d] px-3 py-2 rounded-lg"
+                        className="flex items-center justify-between bg-gray-50 dark:bg-[#0d0d0d] px-3 py-2 rounded-lg"
                       >
                         <div className="flex items-center gap-3">
                           <Icon className={color} size={16} />
@@ -351,7 +350,7 @@ useEffect(() => {
               </div>
 
               {/* WORKFLOWS */}
-              <div className="lg:col-span-2 bg-[#111] border border-gray-800 rounded-xl p-5">
+              <div className="lg:col-span-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl p-5">
                 <h2 className="text-lg font-semibold mb-4">Workflows</h2>
 
                 <div className="space-y-3">
@@ -361,7 +360,7 @@ useEffect(() => {
                     workflows.map((wf) => (
                       <div
                         key={wf.id}
-                        className="flex items-center justify-between bg-[#0d0d0d] p-3 rounded-lg"
+                        className="flex items-center justify-between bg-gray-50 dark:bg-[#0d0d0d] p-3 rounded-lg"
                       >
                         <div>
                           <p className="font-medium">{wf.nom}</p>
@@ -386,7 +385,7 @@ useEffect(() => {
               </div>
 
               {/* DOCUMENTS */}
-              <div className="bg-[#111] border border-gray-800 rounded-xl p-5 flex flex-col h-[300px]">
+              <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl p-5 flex flex-col h-[300px]">
                 <h2 className="text-lg font-semibold mb-4">Documents</h2>
 
                 <div className="space-y-3 overflow-y-auto pr-2">
