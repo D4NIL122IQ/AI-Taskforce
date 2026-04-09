@@ -1,6 +1,8 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
+import uuid
+
 
 
 class AgentBase(BaseModel):
@@ -11,7 +13,8 @@ class AgentBase(BaseModel):
     max_tokens: int = 1024
     system_prompt: Optional[str] = None
     statut: str = "ACTIF"
-    utilisateur_id: Optional[int] = None
+    utilisateur_id: Optional[uuid.UUID] = None
+
 
 
 class AgentCreate(AgentBase):

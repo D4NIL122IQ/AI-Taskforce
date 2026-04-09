@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect  } from 'react'
 import { useNavigate, useParams  } from 'react-router-dom'
 import NavBar from '../components/layout/NavBar'
 import PageBackground from '../components/layout/PageBackground'
@@ -38,6 +38,21 @@ const AgentPage = () => {
   const [files, setFiles] = useState([])
   const fileInputRef = useRef(null)
 
+  const [existingDocs, setExistingDocs] = useState([])
+
+  useEffect(() => {
+    if (id) {
+      fetch(`http://localhost:8000/agents/${id}/documents`)
+        .then(r => r.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setExistingDocs(data)
+          }
+        })
+        .catch(() => {})
+    }
+  }, [id])
+
   const [form, setForm] = useState({
     name: existing?.name || '',
     role: existing?.role || '',
@@ -66,18 +81,59 @@ const AgentPage = () => {
 
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
-      e.preventDefault()
-      const agents = JSON.parse(localStorage.getItem('agents') || '[]')
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    const user = JSON.parse(localStorage.getItem('user') || 'null')
+
+    const payload = {
+      nom: form.name,
+      role: form.role,
+      modele: form.model,
+      temperature: parseFloat(form.temperature),
+      max_tokens: parseInt(form.maxTokens),
+      system_prompt: form.systemPrompt,
+      statut: 'ACTIF',
+      utilisateur_id: user?.user_id || null,
+    }
+
+    try {
       if (id) {
-        const updated = agents.map(a => a.id === id ? { ...form, webSearch, id } : a)
-        localStorage.setItem('agents', JSON.stringify(updated))
+        await fetch(`http://localhost:8000/agents/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
       } else {
-        const newAgent = { ...form, webSearch, id: crypto.randomUUID() }
-        localStorage.setItem('agents', JSON.stringify([...agents, newAgent]))
+        const res = await fetch('http://localhost:8000/agents/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        if (!res.ok) {
+          const err = await res.json()
+          alert('Erreur : ' + (typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail)))
+          return
+        }
+        const data = await res.json()
+        const agentId = data.agent_id
+
+        // Upload des documents si il y en a
+        if (files.length > 0) {
+          for (const file of files) {
+            const formData = new FormData()
+            formData.append('file', file)
+            await fetch(`http://localhost:8000/agents/${agentId}/documents`, {
+              method: 'POST',
+              body: formData,
+            })
+          }
+        }
       }
       navigate('/agents')
+    } catch (err) {
+      alert('Erreur réseau : ' + err.message)
     }
+}
 
   const addFiles = (incoming) => {
     const list = Array.from(incoming)
@@ -232,6 +288,19 @@ const AgentPage = () => {
 
               <div className="flex flex-col gap-1.5 flex-1">
                 <FieldLabel>Documents de référence</FieldLabel>
+                {existingDocs.length > 0 && (
+                  <ul className="flex flex-col gap-2 mb-3">
+                    {existingDocs.map((doc) => (
+                      <li key={doc.id_document} className="flex items-center justify-between bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2.5">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <FileText size={15} className="text-violet-500 dark:text-violet-400 flex-shrink-0" />
+                          <span className="text-sm text-gray-600 dark:text-white/70 truncate">{doc.nom_fichier}</span>
+                        </div>
+                        <span className="text-xs text-gray-400 dark:text-white/30">existant</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 <div
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}

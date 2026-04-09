@@ -1,6 +1,8 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional, Any
 from datetime import datetime
+import uuid
+from typing import Optional, Any
 
 
 class WorkflowBase(BaseModel):
@@ -10,7 +12,7 @@ class WorkflowBase(BaseModel):
 
 
 class WorkflowCreate(WorkflowBase):
-    pass
+    utilisateur_id: Optional[uuid.UUID] = None
 
 
 class WorkflowUpdate(WorkflowBase):
@@ -20,5 +22,4 @@ class WorkflowUpdate(WorkflowBase):
 class WorkflowResponse(WorkflowBase):
     id_workflow: int
     date_creation: Optional[datetime] = None
-    utilisateur_id: Optional[int] = None
-    model_config = ConfigDict(from_attributes=True)
+    utilisateur_id: Optional[uuid.UUID] = None
