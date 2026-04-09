@@ -33,6 +33,7 @@ from typing import List
 from dotenv import load_dotenv
 from pypdf import PdfReader
 
+
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from langchain_ollama import OllamaEmbeddings
@@ -212,6 +213,17 @@ class RAGService:
     # CONTEXTE POUR PROMPT
     # ──────────────────────────────────────────────────────────────────────────
     def contexte_pour_prompt(self, agent_id: int, question: str, top_k: int = 5) -> str:
+        
+        from backend.services.document_service import DocumentService
+        from backend.appDatabase.database import get_db
+
+        docService = DocumentService(next(get_db()))
+        list_docs = docService.lister(agent_id=agent_id)
+        for doc in list_docs:
+            self.indexer_document(doc_id= doc.id_document,
+                                   agent_id= agent_id,
+                                   chemin_fichier= doc.chemin)
+            
         chunks = self.rechercher(agent_id, question, top_k)
 
         if not chunks:
