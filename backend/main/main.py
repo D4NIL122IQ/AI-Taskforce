@@ -8,11 +8,6 @@ from api.routers.workflow_router import router as workflow_router
 from backend.modeles.Agent import Agent
 
 
-agent = Agent("assistant", "athene-v2:latest", "tu es un assistant qui repond à des questions diverses en IT", 200, 0.3, use_web=True)
-
-print(agent.executer_prompt("parle moi du reseau et internet "))
-
-
 init()
 app = FastAPI()
 

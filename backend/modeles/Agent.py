@@ -170,12 +170,13 @@ class Agent:
             model = PLEIADE_MODEL
 
         # ── Enrichissement RAG (optionnel) ───────────────────────────────────────
+        """
         contexte_rag = ""
         try:
             from backend.services.rag_service import RAGService
             rag = RAGService()
             # pour besoin de text
-            rag.indexer_document( 1, 1, "./backend/main/exempleRAG.txt")
+            #rag.indexer_document( 1, 1, "./backend/main/exempleRAG.txt")
             contexte_rag = rag.contexte_pour_prompt(
                 agent_id=1,
                 question=message,
@@ -183,7 +184,7 @@ class Agent:
             )
         except Exception as e:
             print(f"[Agent] ⚠ RAG indisponible : {e}")
-
+        
         # ── Enrichissement MCP (optionnel) ────────────────────────────────────────
         # Uniquement si cet agent est connecté à un MCP.
         contexte_mcp = ""
@@ -195,7 +196,7 @@ class Agent:
                 f"Capacités disponibles : {capacites}\n"
                 f"Utilise ces informations pour répondre à la demande si elles sont pertinentes."
             )
-
+        """
         # ── Construction du prompt final ─────────────────────────────────────────
         prompt_text = (
             f"system: Tu es {self.nom}, un agent intelligent dont le rôle est : {self.prompt}. "
@@ -204,13 +205,13 @@ class Agent:
             "Si une information est incertaine, indique-le explicitement. "
             "Réponds dans la même langue que le prompt suivant."
         )
-
+        """
         if contexte_rag:
             prompt_text += f"\n\n{contexte_rag}"
 
         if contexte_mcp:
             prompt_text += f"\n\n{contexte_mcp}"
-
+        """
         conv_history = [
             {"role": "system", "content": prompt_text}
         ]

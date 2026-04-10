@@ -9,6 +9,7 @@ class WorkflowBase(BaseModel):
     nom: str
     donnees_graphe_json: Optional[Any] = None
     superviseur_id: Optional[int] = None
+    
 
 
 class WorkflowCreate(WorkflowBase):

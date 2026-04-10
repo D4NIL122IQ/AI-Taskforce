@@ -286,11 +286,13 @@ const handleSend = async () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          workflow_id: workflow.id_workflow,
           prompt: userPrompt,
           nodes: workflow.nodes,
           niveau_recherche: 1,
         }),
       })
+      console.log(workflow.id_workflow)
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({ detail: res.statusText }))

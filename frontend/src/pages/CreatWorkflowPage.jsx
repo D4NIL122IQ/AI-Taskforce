@@ -257,7 +257,9 @@ function FlowCanvas({ agents, dark, workflowName  }) {
       })
       if (!res.ok) throw new Error('Erreur sauvegarde')
       // Garder aussi dans localStorage pour l'exécution
-      localStorage.setItem('workflow_draft', JSON.stringify({ name: workflowName, nodes, edges }))
+      const data = await res.json()
+
+      localStorage.setItem('workflow_draft', JSON.stringify({ id_workflow: data.id_workflow, name: workflowName, nodes, edges }))
       showToast('Workflow sauvegardé !')
     } catch (err) {
       showToast('Erreur : ' + err.message)
@@ -368,7 +370,16 @@ function FlowCanvas({ agents, dark, workflowName  }) {
                 showToast('Ajoutez au moins 2 agents spécialisés avant d\'exécuter.')
                 return
               }
-              localStorage.setItem('workflow_execution', JSON.stringify({ nodes, edges }))
+              
+              const draft = JSON.parse(localStorage.getItem('workflow_draft') || 'null')
+              const id_workflow = draft?.id_workflow || null
+
+              localStorage.setItem('workflow_execution', JSON.stringify({
+                id_workflow,
+                nodes,
+                edges
+              }))
+
               navigate('/workflow/execute')
             }}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-green-600 hover:bg-green-500 transition-all duration-200"

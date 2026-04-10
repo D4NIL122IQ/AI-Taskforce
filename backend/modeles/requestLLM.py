@@ -41,7 +41,7 @@ def chat(message: str, model: str, conversation_history: list = None, web_search
         json=payload,
         headers=headers,
         stream=True,
-        timeout=120
+        timeout=400
     )
 
     if response.status_code != 200:

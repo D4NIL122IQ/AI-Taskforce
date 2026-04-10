@@ -21,7 +21,7 @@ class AgentService:
         """
         return self.db.query(Agent).filter(
             Agent.utilisateur_id == user_id
-        ).all()
+        ).order_by(Agent.date_creation.desc()).all()
 
     def create_agent(self, data: AgentBase) -> int:
         """
