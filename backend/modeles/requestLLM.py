@@ -46,7 +46,8 @@ def chat(message: str, model: str, conversation_history: list = None, web_search
 
     if response.status_code != 200:
         print(f"Erreur {response.status_code}: {response.text}")
-        return None, conversation_history
+        #return None, conversation_history
+        return f"Erreur {response.status_code}: impossible de contacter le LLM"
 
     # Lire la réponse SSE (Server-Sent Events)
     full_response = ""
