@@ -39,6 +39,7 @@ const AgentPage = () => {
   const fileInputRef = useRef(null)
 
   const [existingDocs, setExistingDocs] = useState([])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -83,6 +84,7 @@ const AgentPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setLoading(true)
     const user = JSON.parse(localStorage.getItem('user') || 'null')
 
     const payload = {
@@ -119,20 +121,22 @@ const AgentPage = () => {
 
         // Upload des documents si il y en a
         if (files.length > 0) {
-          for (const file of files) {
+          await Promise.all(files.map(file => {
             const formData = new FormData()
             formData.append('file', file)
-            await fetch(`http://localhost:8000/agents/${agentId}/documents`, {
+            return fetch(`http://localhost:8000/agents/${agentId}/documents`, {
               method: 'POST',
               body: formData,
             })
-          }
+          }))
         }
       }
       navigate('/agents')
     } catch (err) {
       alert('Erreur réseau : ' + err.message)
-    }
+    }finally {
+    setLoading(false)
+  }
 }
 
   const addFiles = (incoming) => {
@@ -353,9 +357,10 @@ const AgentPage = () => {
           <div className="flex gap-3 pt-8 border-t border-gray-200 dark:border-white/10 mt-8">
             <button
               type="submit"
+              disabled={loading}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors duration-200 cursor-pointer"
             >
-              {id ? 'Modifier l\'agent' : 'Créer l\'agent'}
+             {loading ? 'Création en cours...' : (id ? "Modifier l'agent" : "Créer l'agent")}
 
             </button>
 
