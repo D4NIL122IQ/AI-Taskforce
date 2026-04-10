@@ -9,18 +9,24 @@ const useWorkflows = () => {
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || 'null')
-    const userId = user?.user_id
-    if (!userId) return
-    fetch(`http://localhost:8000/workflows/user/${userId}`)
-      .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data)) setWorkflows(data)
-      })
-      .catch(() => setWorkflows([]))
+    if (user) {
+      fetch(`http://localhost:8000/workflows/user/${user.user_id}`)
+        .then(r => r.json())
+        .then(data => { if (Array.isArray(data)) setWorkflows(data) })
+        .catch(() => setWorkflows([]))
+    } else {
+      setWorkflows(JSON.parse(localStorage.getItem('local_workflows') || '[]'))
+    }
   }, [])
 
   const remove = async (id) => {
-    await fetch(`http://localhost:8000/workflows/${id}`, { method: 'DELETE' })
+    const user = JSON.parse(localStorage.getItem('user') || 'null')
+    if (user) {
+      await fetch(`http://localhost:8000/workflows/${id}`, { method: 'DELETE' })
+    } else {
+      const local = JSON.parse(localStorage.getItem('local_workflows') || '[]')
+      localStorage.setItem('local_workflows', JSON.stringify(local.filter(w => w.id_workflow !== id)))
+    }
     setWorkflows(prev => prev.filter(w => w.id_workflow !== id))
   }
 

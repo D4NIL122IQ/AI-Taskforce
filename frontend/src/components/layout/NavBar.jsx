@@ -55,9 +55,9 @@ const NavBar = () => {
   const user = JSON.parse(localStorage.getItem("user") || "null")
 
   const handleLogout = () => {
-  localStorage.removeItem('user')
-  navigate('/auth')
-}
+    localStorage.removeItem('user')
+    navigate('/')
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
