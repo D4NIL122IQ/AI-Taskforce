@@ -16,8 +16,8 @@ import {
 import '@xyflow/react/dist/style.css'
 import NavBar from '../components/layout/NavBar'
 import { useTheme } from '../context/ThemeContext'
-import { useNavigate } from 'react-router-dom'
-import { Bot, Crown, Trash2, Plus, Save, AlertCircle,Play, Workflow   } from 'lucide-react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { Bot, Crown, Trash2, Plus, Save, AlertCircle, Play, Workflow, ArrowLeft } from 'lucide-react'
 
 /* ─────────────────────────── helpers ────────────────────────────── */
 
@@ -179,12 +179,12 @@ const initialSupervisorNode = {
   deletable: false,
 }
 
-function FlowCanvas({ agents, dark, workflowName  }) {
+function FlowCanvas({ agents, dark, workflowName, workflowId = null, initialNodes: initNodes = null, initialEdges: initEdges = null }) {
   const reactFlowWrapper = useRef(null)
   const { screenToFlowPosition } = useReactFlow()
 
-  const [nodes, setNodes, onNodesChange] = useNodesState([initialSupervisorNode])
-  const [edges, setEdges, onEdgesChange] = useEdgesState([])
+  const [nodes, setNodes, onNodesChange] = useNodesState(initNodes ?? [initialSupervisorNode])
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initEdges ?? [])
   const [toast, setToast] = useState(null)
   const nodeCounter = useRef(1)
 
@@ -246,8 +246,12 @@ function FlowCanvas({ agents, dark, workflowName  }) {
   const saveWorkflow = async () => {
     const user = JSON.parse(localStorage.getItem('user') || 'null')
     try {
-      const res = await fetch('http://localhost:8000/workflows', {
-        method: 'POST',
+      const isEdit = !!workflowId
+      const url = isEdit
+        ? `http://localhost:8000/workflows/${workflowId}`
+        : 'http://localhost:8000/workflows'
+      const res = await fetch(url, {
+        method: isEdit ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nom: workflowName,
@@ -256,15 +260,13 @@ function FlowCanvas({ agents, dark, workflowName  }) {
         }),
       })
       if (!res.ok) throw new Error('Erreur sauvegarde')
-      // Garder aussi dans localStorage pour l'exécution
       const data = await res.json()
-
       localStorage.setItem('workflow_draft', JSON.stringify({ id_workflow: data.id_workflow, name: workflowName, nodes, edges }))
       showToast('Workflow sauvegardé !')
     } catch (err) {
       showToast('Erreur : ' + err.message)
     }
-}
+  }
 
   const sidebarBg = dark ? 'rgba(8,8,8,0.95)' : 'rgba(255,255,255,0.95)'
   const sidebarBorder = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'
@@ -323,8 +325,22 @@ function FlowCanvas({ agents, dark, workflowName  }) {
       {/* ── Main canvas ── */}
       <div className="flex-1 relative" ref={reactFlowWrapper}>
 
-        {/* nom workflow */}
-        <div className="absolute top-4 left-4 z-10">
+        {/* nom workflow + back button */}
+        <div className="absolute top-4 left-4 z-10 flex items-center gap-3">
+          <button
+            onClick={() => navigate('/workflow')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '6px 12px', borderRadius: 10, cursor: 'pointer',
+              background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+              border: dark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
+              color: dark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)',
+              fontSize: 12, fontWeight: 500,
+            }}
+          >
+            <ArrowLeft size={13} />
+            Mes workflows
+          </button>
           {workflowName && (
             <div style={{
               background: dark ? 'rgba(139,92,246,0.12)' : 'rgba(139,92,246,0.08)',
@@ -442,7 +458,7 @@ function FlowCanvas({ agents, dark, workflowName  }) {
     </div>
   )
 }
-function WorkflowNameModal({ dark, onConfirm }) {
+function WorkflowNameModal({ dark, onConfirm, onCancel }) {
   const [name, setName] = useState('')
   const [error, setError] = useState(false)
 
@@ -497,7 +513,7 @@ function WorkflowNameModal({ dark, onConfirm }) {
           </p>
         )}
         <button
-          onClick={() => window.history.back()}
+          onClick={onCancel}
           style={{
             width: '100%', padding: '11px', borderRadius: 10,
             background: 'transparent',
@@ -528,9 +544,14 @@ function WorkflowNameModal({ dark, onConfirm }) {
 /* ─────────────────────────── page wrapper ───────────────────────── */
 
 export default function CreatWorkflowPage() {
+  const { id } = useParams()
+  const navigate = useNavigate()
   const [agents, setAgents] = useState([])
   const { dark } = useTheme()
   const [workflowName, setWorkflowName] = useState(null)
+  const [workflowId, setWorkflowId] = useState(null)
+  const [initialNodes, setInitialNodes] = useState(null)
+  const [initialEdges, setInitialEdges] = useState(null)
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || 'null')
@@ -553,18 +574,49 @@ export default function CreatWorkflowPage() {
       .catch(() => setAgents([]))
   }, [])
 
+  useEffect(() => {
+    if (!id) return
+    fetch(`http://localhost:8000/workflows/${id}`)
+      .then(r => r.json())
+      .then(data => {
+        setWorkflowName(data.nom)
+        setWorkflowId(data.id_workflow)
+        const graphe = typeof data.donnees_graphe_json === 'string'
+          ? JSON.parse(data.donnees_graphe_json)
+          : (data.donnees_graphe_json || {})
+        setInitialNodes(graphe.nodes?.length ? graphe.nodes : [initialSupervisorNode])
+        setInitialEdges(graphe.edges || [])
+      })
+      .catch(() => navigate('/workflow'))
+  }, [id])
+
+  const isReady = workflowName !== null
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#080808] text-gray-900 dark:text-white font-body transition-colors duration-300">
       <NavBar />
-        {!workflowName && (
-          <WorkflowNameModal dark={dark} onConfirm={(name) => setWorkflowName(name)} />
-        )}
+      {!workflowName && !id && (
+        <WorkflowNameModal
+          dark={dark}
+          onConfirm={(name) => setWorkflowName(name)}
+          onCancel={() => navigate('/workflow')}
+        />
+      )}
 
+      {isReady && (
       <div style={{ paddingTop: 68 }}>
         <ReactFlowProvider>
-          <FlowCanvas agents={agents} dark={dark} workflowName={workflowName || ''} />
+          <FlowCanvas
+            agents={agents}
+            dark={dark}
+            workflowName={workflowName || ''}
+            workflowId={workflowId}
+            initialNodes={initialNodes ?? [initialSupervisorNode]}
+            initialEdges={initialEdges ?? []}
+          />
         </ReactFlowProvider>
       </div>
+      )}
     </div>
   )
 }
