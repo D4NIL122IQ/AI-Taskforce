@@ -100,11 +100,22 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
 
     # Sauvegarde en base (optionnel, ne bloque pas si échec)
     try:
-        if body.workflow_id:
-            db.add(Execution(workflow_id=body.workflow_id, status="TERMINE", outputs_json={"final_response": reponse}))
-            db.commit()
-    except Exception:
-        pass
+        execution = Execution(
+            workflow_id=body.workflow_id,
+            status="TERMINE",
+            prompt=body.prompt,
+            outputs_json={"final_response": reponse}
+        )
+
+        db.add(execution)
+        db.commit()
+        db.refresh(execution)
+
+        print("execution sauvegardée")
+
+    except Exception as e:
+        db.rollback() 
+        print("Erreur sauvegarde :", e)
 
     return {
         "response": reponse,
@@ -116,7 +127,7 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
 
 @router.get("/")
 def get_all_executions(db: Session = Depends(get_db)):
-    return [_fmt(e) for e in db.query(Execution).all()]
+    return [_fmt(e) for e in db.query(Execution).order_by(Execution.date_execution.desc()).all()]
 
 @router.get("/{status}")
 def get_executions(status: str, db: Session = Depends(get_db)):

@@ -135,6 +135,7 @@ class DocumentService:
         return (
             self.db.query(Document)
             .filter(Document.agent_id == agent_id)
+            .order_by(Document.date_upload)
             .all()
         )
 
