@@ -51,7 +51,7 @@ const AgentPage = () => {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (id) {
+    if (id && user && !String(id).startsWith('local-')) {
       fetch(`http://localhost:8000/agents/${id}/documents`)
         .then(r => r.json())
         .then(data => {

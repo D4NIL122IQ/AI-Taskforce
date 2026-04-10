@@ -79,7 +79,8 @@ export default function FormPage() {
         localStorage.setItem('user', JSON.stringify({
           user_id: data.user.id,
           email: data.user.email,
-          nom: data.user.user_metadata?.nom || data.user.email
+          nom: data.user.user_metadata?.nom || data.user.email,
+          expires_at: Date.now() + 4 * 60 * 60 * 1000,
         }))
         navigate(from.replace('/AI-Taskforce', '') || '/dashboard')
       } catch (error) {
@@ -94,7 +95,7 @@ export default function FormPage() {
         return
       }
       try {
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email: registerForm.email,
           password: registerForm.password,
           options: {

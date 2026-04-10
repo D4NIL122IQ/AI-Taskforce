@@ -13,29 +13,47 @@ import ResetPasswordPage from './pages/ResetPasswordPage'
 import { useEffect } from 'react'
 import { supabase } from './supabase'
 
+const SESSION_DURATION = 4 * 60 * 60 * 1000 // 4 heures en ms
+
+const clearIfExpired = () => {
+  const stored = JSON.parse(localStorage.getItem('user') || 'null')
+  if (stored?.expires_at && Date.now() > stored.expires_at) {
+    localStorage.removeItem('user')
+  }
+}
 
 // Protection de route
 const ProtectedRoute = ({ children }) => {
   const location = useLocation()
+  clearIfExpired()
   const user = JSON.parse(localStorage.getItem("user") || "null")
   if (!user) return <Navigate to="/auth" state={{ from: location.pathname }} />
   return children
 }
 
 export default function App() {
-    useEffect(() => {
+  useEffect(() => {
+    // Vérification à l'ouverture
+    clearIfExpired()
+
+    // Vérification périodique toutes les minutes
+    const interval = setInterval(clearIfExpired, 60_000)
+
     supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
         localStorage.setItem('user', JSON.stringify({
           user_id: session.user.id,
           email: session.user.email,
-          nom: session.user.user_metadata?.nom || session.user.email
+          nom: session.user.user_metadata?.nom || session.user.email,
+          expires_at: Date.now() + SESSION_DURATION,
         }))
       }
       if (event === 'SIGNED_OUT') {
         localStorage.removeItem('user')
       }
     })
+
+    return () => clearInterval(interval)
   }, [])
   return (
      <Routes>
@@ -49,7 +67,7 @@ export default function App() {
        <Route path="/workflow" element={<GestionWorkflowPage />} />
        <Route path="/workflow/create" element={<CreatWorkflowPage />} />
        <Route path="/workflow/edit/:id" element={<CreatWorkflowPage />} />
-       <Route path="/workflow/execute" element={<ProtectedRoute><ExecuteWorkflowPage /></ProtectedRoute>} />
+       <Route path="/workflow/execute" element={<ExecuteWorkflowPage />} />
        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage/></ProtectedRoute>} />
        <Route path="/ragconfig" element={<ProtectedRoute><RagConfigPage /></ProtectedRoute>} />
        <Route path="/rag-config" element={<ProtectedRoute><RagConfigPage /></ProtectedRoute>} />
