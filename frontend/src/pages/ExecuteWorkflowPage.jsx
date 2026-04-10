@@ -285,7 +285,7 @@ const handleSend = async () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          workflow_id: workflow.id_workflow,
+          workflow_id: typeof workflow.id_workflow === 'number' ? workflow.id_workflow : null,
           prompt: userPrompt,
           nodes: workflow.nodes,
           niveau_recherche: 1,
