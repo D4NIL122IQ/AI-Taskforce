@@ -86,7 +86,7 @@ class Orchestration:
         recursion_limit = APPELS_PAR_NIVEAU[self.niveau_recherche] * 10 + 10
         final_state = self.graph.invoke(initial_state, config={"recursion_limit": recursion_limit})
 
-        return final_state
+        return final_state["final_response"]
 
     def afficher_graphe(self, chemin_image="graph.png"):
         """
