@@ -8,14 +8,15 @@ load_dotenv()
 BASE_URL = "https://pleiade.mi.parisdescartes.fr/api/v1"
 BASE_URL_NATIVE = "https://pleiade.mi.parisdescartes.fr/api"
 TOKEN = os.getenv("TOKEN_PLEIADE")
-MODEL = "athene-v2:latest"
+MODEL = "phi4:latest"
 
 headers = {
     "Authorization": f"Bearer {TOKEN}",
     "Content-Type": "application/json"
 }
 
-def chat(message: str, model: str, conversation_history: list = None, web_search: bool = False):
+def chat(message: str, model: str, conversation_history: list = None, web_search: bool = False,
+         temperature: float = None, max_tokens: int = None):
     """Envoie un message et récupère la réponse du LLM (format OpenAI-compatible)."""
 
     if conversation_history is None:
@@ -28,6 +29,11 @@ def chat(message: str, model: str, conversation_history: list = None, web_search
         "messages": conversation_history,
         "stream": True
     }
+
+    if temperature is not None:
+        payload["temperature"] = temperature
+    if max_tokens is not None:
+        payload["max_tokens"] = max_tokens
 
     if web_search:
         payload["features"] = {"web_search": True}
@@ -45,9 +51,7 @@ def chat(message: str, model: str, conversation_history: list = None, web_search
     )
 
     if response.status_code != 200:
-        print(f"Erreur {response.status_code}: {response.text}")
-        #return None, conversation_history
-        return f"Erreur {response.status_code}: impossible de contacter le LLM"
+        raise RuntimeError(f"Pléiade API error {response.status_code}: {response.text}")
 
     # Lire la réponse SSE (Server-Sent Events)
     full_response = ""
