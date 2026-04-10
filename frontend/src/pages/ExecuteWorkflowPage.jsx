@@ -319,6 +319,10 @@ const handleSend = async () => {
               addMsg({ role: 'agent', agent: data.agent, content: data.content })
             }
 
+            if (data.type === 'supervisor') {
+                addMsg({ role: 'supervisor', name: 'Superviseur', content: data.content })
+            }
+
             if (data.type === 'final') {
               setActiveNodeId(null)
               addMsg({ role: 'result', content: data.response })

@@ -31,10 +31,18 @@ def update_results(current_results: dict, new_results: dict):
     updated.update(new_results)
     return updated
 
+# Ajouter cette fonction avant OrchestrationState
+def update_logs(current_logs: list, new_logs: list):
+    if not current_logs:
+        return new_logs
+    return current_logs + new_logs
+
+
 
 class OrchestrationState(TypedDict):
     user_input: str
     results: Annotated[dict, update_results]  # Dictionnaire accumulant les réponses { "nom_agent": "reponse" }
+    supervisor_logs: Annotated[list, update_logs]
     next_agent: str  # Le nom du prochain agent à appeler, ou "reconstructeur"
     task_for_agent: str  # Le prompt spécifique généré par le superviseur pour ce spécialiste
     final_response: str  # La réponse finale pour l'utilisateur
@@ -122,6 +130,7 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
                 "task_for_agent": decision["prompt"],
                 "current_task_calls": new_calls,
                 "current_task_agent": new_agent,
+                "supervisor_logs": [f"→ {chosen_agent} : {decision['prompt']}"],
             }
         except (json.JSONDecodeError, KeyError) as e:
             print(f"[SUPERVISEUR] ⚠ Parsing JSON échoué ({e}) → fallback reconstructeur")

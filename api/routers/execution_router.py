@@ -100,11 +100,19 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
                     "content": agent_reponse
                 }) + "\n"
 
-            # Envoie la réponse finale
-            yield json.dumps({
-                "type": "final",
-                "response": reponse
-            }) + "\n"
+            # Après le yield des échanges
+            supervisor_logs = final_state.get("supervisor_logs", [])
+            for log in supervisor_logs:
+                yield json.dumps({
+                    "type": "supervisor",
+                    "content": log
+                }) + "\n"
+
+                # Envoie la réponse finale
+                yield json.dumps({
+                    "type": "final",
+                    "response": reponse
+                }) + "\n"
 
             # Sauvegarde en base
             try:
