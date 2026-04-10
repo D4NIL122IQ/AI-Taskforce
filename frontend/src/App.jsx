@@ -4,6 +4,7 @@ import GestionAgentPage from './pages/GestionAgentPage'
 import CreatAgentPage from './pages/CreatAgentPage'
 import FormPage from './pages/FormPage'
 import CreatWorkflowPage from './pages/CreatWorkflowPage'
+import GestionWorkflowPage from './pages/GestionWorkflowPage'
 import ExecuteWorkflowPage from './pages/ExecuteWorkflowPage'
 import DashboardPage from './pages/DashbordPage'
 import RagConfigPage from './pages/RagConfigPage'
@@ -45,7 +46,9 @@ export default function App() {
        <Route path="/auth" element={<FormPage />} />
        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
        <Route path="/reset-password" element={<ResetPasswordPage />} />
-       <Route path="/workflow" element={<ProtectedRoute><CreatWorkflowPage /></ProtectedRoute>} />
+       <Route path="/workflow" element={<ProtectedRoute><GestionWorkflowPage /></ProtectedRoute>} />
+       <Route path="/workflow/create" element={<ProtectedRoute><CreatWorkflowPage /></ProtectedRoute>} />
+       <Route path="/workflow/edit/:id" element={<ProtectedRoute><CreatWorkflowPage /></ProtectedRoute>} />
        <Route path="/workflow/execute" element={<ProtectedRoute><ExecuteWorkflowPage /></ProtectedRoute>} />
        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage/></ProtectedRoute>} />
        <Route path="/ragconfig" element={<ProtectedRoute><RagConfigPage /></ProtectedRoute>} />
