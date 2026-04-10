@@ -277,8 +277,7 @@ const handleSend = async () => {
     setNodeStatuses({})
 
     addMsg({ role: 'user', content: userPrompt })
-    addMsg({ role: 'system', content: 'Workflow en cours d\'exécution...' })
-
+    addMsg({ role: 'system', content: "Workflow en cours d'exécution..." })
     setActiveNodeId(supervisorNode?.id)
 
     try {
@@ -299,21 +298,41 @@ const handleSend = async () => {
         throw new Error(err.detail || 'Erreur serveur')
       }
 
-      const data = await res.json()
+      // Lecture ligne par ligne du stream
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
 
-      // Afficher les échanges de chaque agent
-      if (data.echanges) {
-        Object.entries(data.echanges).forEach(([agentNom, reponseAgent]) => {
-          const agentNode = agentNodes.find(n => n.data.label === agentNom)
-          if (agentNode) {
-            setNodeStatuses(s => ({ ...s, [agentNode.id]: 'TERMINE' }))
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const lines = decoder.decode(value).split('\n').filter(l => l.trim())
+        for (const line of lines) {
+          try {
+            const data = JSON.parse(line)
+
+            if (data.type === 'echange') {
+              const agentNode = agentNodes.find(n => n.data.label === data.agent)
+              if (agentNode) {
+                setNodeStatuses(s => ({ ...s, [agentNode.id]: 'TERMINE' }))
+              }
+              addMsg({ role: 'agent', agent: data.agent, content: data.content })
+            }
+
+            if (data.type === 'final') {
+              setActiveNodeId(null)
+              addMsg({ role: 'result', content: data.response })
+            }
+
+            if (data.type === 'error') {
+              throw new Error(data.message)
+            }
+
+          } catch (e) {
+            console.error('Parse error:', e)
           }
-          addMsg({ role: 'agent', agent: agentNom, content: reponseAgent })
-        })
+        }
       }
-
-      setActiveNodeId(null)
-      addMsg({ role: 'result', content: data.response })
 
     } catch (err) {
       setActiveNodeId(null)
@@ -322,7 +341,6 @@ const handleSend = async () => {
 
     setRunning(false)
   }
-
   /* Pas de workflow */
   if (!workflow) {
     return (
