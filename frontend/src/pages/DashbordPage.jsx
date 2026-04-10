@@ -226,7 +226,7 @@
                     ) : (
                       agents.map((agent) => (
                         <div
-                          key={agent.id_agent}
+                          key={agent.id}
                           className="flex items-center justify-between bg-[#0d0d0d] p-3 rounded-lg"
                         >
                           <div>
@@ -247,14 +247,14 @@
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  setOpenMenuId(openMenuId === agent.id_agent ? null : agent.id_agent)
+                                  setOpenMenuId(openMenuId === agent.id ? null : agent.id)
                                 }}
                                 className="p-2 hover:bg-gray-800 rounded"
                               >
                                 <MoreVertical size={16} />
                               </button>
 
-                              {openMenuId === agent.id_agent && (
+                              {openMenuId === agent.id && (
                                 <div className="absolute right-0 mt-2 w-40 bg-[#1a1a1a] border border-gray-700 rounded-lg shadow-lg z-50">
 
                                   <button
@@ -330,7 +330,7 @@
                     ) : (
                       workflows.map((wf) => (
                         <div
-                          key={wf.id}
+                          key={wf.id_workflow}
                           className="flex items-center justify-between bg-[#0d0d0d] p-3 rounded-lg"
                         >
                           <div>
