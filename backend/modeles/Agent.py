@@ -1,15 +1,7 @@
 from datetime import datetime as dt
-
 import os
 
-try:
-    from dotenv import load_dotenv
-except ImportError:
-    def load_dotenv():
-        return False
-
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from backend.modeles.requestLLM import chat, MODEL as PLEIADE_MODEL
+from backend.modeles.requestLLM import chat
 from backend.mcp.connect_mcp import connect_mcp, MCPConnection, SUPPORTED_MCPS
 
 
@@ -81,19 +73,6 @@ class Agent:
 
         self.ctr += 1
 
-        # Template de prompt utilisé pour les interactions avec le LLM
-        self.template = ChatPromptTemplate.from_messages([
-            (
-                "system",
-                "Tu es {name}, un agent intelligent dont le rôle est : {role}. "
-                "Tu dois fournir des réponses claires, précises et utiles. "
-                "Si une information est incertaine, indique-le explicitement. "
-                "Adapte ton niveau de détail en fonction de la demande."
-                "Repond dans la meme langue que la langue du prompt"
-            ),
-            MessagesPlaceholder(variable_name="messages"),
-        ])
-
     def valider_parametres(self, nom, modele, prompt, max_token, temperature):
         """
         Vérifie la validité des paramètres fournis lors de l'initialisation.
@@ -150,14 +129,15 @@ class Agent:
       - Si aucun document → comportement identique à avant (aucune régression).
     """
 
-    def executer_prompt(self, message, model=None):
+    def executer_prompt(self, message):
         """
         Envoie un message à l'agent via l'API Pléiade, enrichi du contexte RAG
         si des documents ont été indexés pour cet agent.
 
+        Utilise le modèle, la température et le max_token configurés à l'initialisation.
+
         Args:
             message (str): Texte à envoyer. Ne doit pas être vide.
-            model (str | None): Modèle Pléiade. Si None → PLEIADE_MODEL.
 
         Returns:
             SimpleNamespace avec attribut .content (str).
@@ -165,9 +145,7 @@ class Agent:
         if not message.strip():
             raise ValueError("prompt vide")
 
-        if model is None:
-            from backend.modeles.requestLLM import MODEL as PLEIADE_MODEL
-            model = PLEIADE_MODEL
+        model = self._modele
 
         # ── Enrichissement RAG (optionnel) ───────────────────────────────────────
         """
@@ -175,17 +153,16 @@ class Agent:
         try:
             from backend.services.rag_service import RAGService
             rag = RAGService()
-            # pour besoin de text
-            #rag.indexer_document( 1, 1, "./backend/main/exempleRAG.txt")
             contexte_rag = rag.contexte_pour_prompt(
-                agent_id=1,
+                agent_id=self.ID,
                 question=message,
-                top_k=4
+                top_k=5
             )
         except Exception as e:
             print(f"[Agent] ⚠ RAG indisponible : {e}")
-        
-        # ── Enrichissement MCP (optionnel) ────────────────────────────────────────
+
+
+        # ── Enrichissement MCP ────────────────────────────────────────
         # Uniquement si cet agent est connecté à un MCP.
         contexte_mcp = ""
         if self.mcp_actif:
@@ -217,7 +194,13 @@ class Agent:
         ]
 
         from types import SimpleNamespace
-        result = chat(message, model, conversation_history=conv_history, web_search=self.use_web)
+        result = chat(
+            message, model,
+            conversation_history=conv_history,
+            web_search=self.use_web,
+            temperature=self._temperature,
+            max_tokens=self._max_token
+        )
         return SimpleNamespace(content=result)
 
 
