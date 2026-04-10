@@ -2,13 +2,11 @@ import os
 import requests
 import json
 from dotenv import load_dotenv
-#from ddgs import DDGS
-from duckduckgo_search import DDGS
-
 
 load_dotenv()
 
 BASE_URL = "https://pleiade.mi.parisdescartes.fr/api/v1"
+BASE_URL_NATIVE = "https://pleiade.mi.parisdescartes.fr/api"
 TOKEN = os.getenv("TOKEN_PLEIADE")
 MODEL = "athene-v2:latest"
 
@@ -17,7 +15,7 @@ headers = {
     "Content-Type": "application/json"
 }
 
-def chat(message: str, model: str, conversation_history: list = None):
+def chat(message: str, model: str, conversation_history: list = None, web_search: bool = False):
     """Envoie un message et récupère la réponse du LLM (format OpenAI-compatible)."""
 
     if conversation_history is None:
@@ -31,11 +29,19 @@ def chat(message: str, model: str, conversation_history: list = None):
         "stream": True
     }
 
+    if web_search:
+        payload["features"] = {"web_search": True}
+        payload["stream"] = True  # /api/chat/completions requiert stream=True
+        url = f"{BASE_URL_NATIVE}/chat/completions"
+    else:
+        url = f"{BASE_URL}/chat/completions"
+
     response = requests.post(
-        f"{BASE_URL}/chat/completions",
+        url,
         json=payload,
         headers=headers,
-        stream=True
+        stream=True,
+        timeout=400
     )
 
     if response.status_code != 200:

@@ -3,11 +3,11 @@ from backend.models.workflow_model import Workflow
 from api.schemas.workflow_schema import WorkflowCreate, WorkflowUpdate
 
 
-def get_all_workflows(db: Session, user_id: int) -> list[Workflow]:
+def get_all_workflows(db: Session, user_id: str) -> list[Workflow]:
     return db.query(Workflow).filter(Workflow.utilisateur_id == user_id).all()
 
 
-def get_workflow_by_id(db: Session, workflow_id: int) -> Workflow | None:
+def get_workflow_by_id(db: Session, workflow_id: str) -> Workflow | None:
     return db.query(Workflow).filter(Workflow.id_workflow == workflow_id).first()
 
 
@@ -16,6 +16,7 @@ def create_workflow(db: Session, data: WorkflowCreate) -> Workflow:
         nom=data.nom,
         donnees_graphe_json=data.donnees_graphe_json,
         superviseur_id=data.superviseur_id,
+        utilisateur_id=data.utilisateur_id,
     )
     db.add(workflow)
     db.commit()

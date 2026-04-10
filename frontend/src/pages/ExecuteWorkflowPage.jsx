@@ -268,7 +268,7 @@ const ExecuteWorkflowPage = () => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const handleSend = async () => {
+const handleSend = async () => {
     if (!prompt.trim() || running || !workflow) return
     const userPrompt = prompt
     setPrompt('')
@@ -277,51 +277,70 @@ const ExecuteWorkflowPage = () => {
     setNodeStatuses({})
 
     addMsg({ role: 'user', content: userPrompt })
-    addMsg({ role: 'system', content: 'Workflow démarré...' })
-
-    // Superviseur décompose et délègue en un seul message global
-    await new Promise(r => setTimeout(r, 600))
+    addMsg({ role: 'system', content: "Workflow en cours d'exécution..." })
     setActiveNodeId(supervisorNode?.id)
-    const supLabel = supervisorNode?.data?.label || 'Superviseur'
-    const delegations = agentNodes.map(a =>
-      `${a.data.label}, traite la demande selon ton rôle de ${a.data.role || 'spécialiste'}.`
-    ).join(' ')
-    addMsg({
-      role: 'supervisor',
-      name: supLabel,
-      content: 'Reçu. ' + delegations,
-    })
 
-    // Chaque agent répond
-    for (const agentNode of agentNodes) {
-      await new Promise(r => setTimeout(r, 900))
-      setActiveNodeId(agentNode.id)
-      setNodeStatuses(s => ({ ...s, [agentNode.id]: 'EN_COURS' }))
-
-      await new Promise(r => setTimeout(r, 1200))
-      setNodeStatuses(s => ({ ...s, [agentNode.id]: 'TERMINE' }))
-      addMsg({
-        role: 'agent',
-        agent: agentNode.data.label,
-        content: "(Résultat simulé — backend requis pour l'exécution réelle.) ",
+    try {
+      const res = await fetch('http://localhost:8000/executions/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workflow_id: workflow.id_workflow,
+          prompt: userPrompt,
+          nodes: workflow.nodes,
+          niveau_recherche: 1,
+        }),
       })
+      console.log(workflow.id_workflow)
 
-      await new Promise(r => setTimeout(r, 300))
-      setActiveNodeId(supervisorNode?.id)
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: res.statusText }))
+        throw new Error(err.detail || 'Erreur serveur')
+      }
+
+      // Lecture ligne par ligne du stream
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const lines = decoder.decode(value).split('\n').filter(l => l.trim())
+        for (const line of lines) {
+          try {
+            const data = JSON.parse(line)
+
+            if (data.type === 'echange') {
+              const agentNode = agentNodes.find(n => n.data.label === data.agent)
+              if (agentNode) {
+                setNodeStatuses(s => ({ ...s, [agentNode.id]: 'TERMINE' }))
+              }
+              addMsg({ role: 'agent', agent: data.agent, content: data.content })
+            }
+
+            if (data.type === 'final') {
+              setActiveNodeId(null)
+              addMsg({ role: 'result', content: data.response })
+            }
+
+            if (data.type === 'error') {
+              throw new Error(data.message)
+            }
+
+          } catch (e) {
+            console.error('Parse error:', e)
+          }
+        }
+      }
+
+    } catch (err) {
+      setActiveNodeId(null)
+      addMsg({ role: 'result', content: `Erreur : ${err.message}` })
     }
-
-    // Synthèse finale du superviseur
-    await new Promise(r => setTimeout(r, 800))
-    setActiveNodeId(null)
-
-addMsg({
-  role: 'result',
-  content: `Voici le plan complet pour : "${userPrompt}".\n\n${agentNodes.length} agent(s) ont traité leurs sous-tâches avec succès.\n\n(Connectez le backend FastAPI pour obtenir de vrais résultats.)`,
-})
 
     setRunning(false)
   }
-
   /* Pas de workflow */
   if (!workflow) {
     return (

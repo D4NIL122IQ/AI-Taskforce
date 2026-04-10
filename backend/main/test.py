@@ -6,7 +6,7 @@ auth = requests.post(
     "https://pleiade.mi.parisdescartes.fr/api/v1/auths/signin",
     json={
         "email":"laye-fode.keita@etu.u-paris.fr",
-        "password": "ciBtiz-qevtih-5pozxu"
+        "password": ""
     }
 )
 
