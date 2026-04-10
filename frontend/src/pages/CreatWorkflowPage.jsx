@@ -21,9 +21,6 @@ import { Bot, Crown, Trash2, Plus, Save, AlertCircle,Play, Workflow   } from 'lu
 
 /* ─────────────────────────── helpers ────────────────────────────── */
 
-const loadAgents = () => {
-  try { return JSON.parse(localStorage.getItem('agents') || '[]') } catch { return [] }
-}
 
 const SUPERVISOR_ID = 'supervisor-0'
 
@@ -246,10 +243,28 @@ function FlowCanvas({ agents, dark, workflowName  }) {
     setEdges(es => es.filter(e => !e.selected))
   }, [setNodes, setEdges])
 
-  const saveWorkflow = () => {
-    localStorage.setItem('workflow_draft', JSON.stringify({ name: workflowName, nodes, edges, savedAt: new Date().toISOString() }))
-    showToast('Workflow sauvegardé !')
-  }
+  const saveWorkflow = async () => {
+    const user = JSON.parse(localStorage.getItem('user') || 'null')
+    try {
+      const res = await fetch('http://localhost:8000/workflows', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nom: workflowName,
+          donnees_graphe_json: { nodes, edges },
+          utilisateur_id: user?.user_id || null,
+        }),
+      })
+      if (!res.ok) throw new Error('Erreur sauvegarde')
+      // Garder aussi dans localStorage pour l'exécution
+      const data = await res.json()
+
+      localStorage.setItem('workflow_draft', JSON.stringify({ id_workflow: data.id_workflow, name: workflowName, nodes, edges }))
+      showToast('Workflow sauvegardé !')
+    } catch (err) {
+      showToast('Erreur : ' + err.message)
+    }
+}
 
   const sidebarBg = dark ? 'rgba(8,8,8,0.95)' : 'rgba(255,255,255,0.95)'
   const sidebarBorder = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'
@@ -285,7 +300,7 @@ function FlowCanvas({ agents, dark, workflowName  }) {
               </div>
             </div>
           ) : (
-            agents.map(a => <ToolboxItem key={a.id} agent={a} dark={dark} />)
+            agents.map((a, i) => <ToolboxItem key={i} agent={a} dark={dark} />)
           )}
         </div>
 
@@ -355,7 +370,16 @@ function FlowCanvas({ agents, dark, workflowName  }) {
                 showToast('Ajoutez au moins 2 agents spécialisés avant d\'exécuter.')
                 return
               }
-              localStorage.setItem('workflow_execution', JSON.stringify({ nodes, edges }))
+              
+              const draft = JSON.parse(localStorage.getItem('workflow_draft') || 'null')
+              const id_workflow = draft?.id_workflow || null
+
+              localStorage.setItem('workflow_execution', JSON.stringify({
+                id_workflow,
+                nodes,
+                edges
+              }))
+
               navigate('/workflow/execute')
             }}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-green-600 hover:bg-green-500 transition-all duration-200"
@@ -504,9 +528,30 @@ function WorkflowNameModal({ dark, onConfirm }) {
 /* ─────────────────────────── page wrapper ───────────────────────── */
 
 export default function CreatWorkflowPage() {
-  const agents = loadAgents()
+  const [agents, setAgents] = useState([])
   const { dark } = useTheme()
   const [workflowName, setWorkflowName] = useState(null)
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || 'null')
+    const userId = user?.user_id || 1
+    fetch(`http://localhost:8000/agents/${userId}`)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setAgents(data.map(a => ({
+            id: String(a.id_agent),
+            name: a.nom,
+            role: a.role || '',
+            model: a.modele,
+            systemPrompt: a.system_prompt || '',
+            temperature: a.temperature,
+            maxTokens: a.max_tokens,
+          })))
+        }
+      })
+      .catch(() => setAgents([]))
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#080808] text-gray-900 dark:text-white font-body transition-colors duration-300">

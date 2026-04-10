@@ -1,5 +1,4 @@
 from datetime import datetime as dt
-from backend.services.web_service import search_web
 
 import os
 
@@ -41,7 +40,7 @@ class Agent:
 
     ctr = 0  # Compteur global pour générer des identifiants uniques
 
-    def __init__(self, nom, modele, prompt, max_token,  temperature, use_web=False):
+    def __init__(self, nom, modele, prompt, max_token,  temperature, use_web: bool =False):
         """
         Initialise un agent avec ses paramètres principaux.
 
@@ -171,18 +170,21 @@ class Agent:
             model = PLEIADE_MODEL
 
         # ── Enrichissement RAG (optionnel) ───────────────────────────────────────
+        """
         contexte_rag = ""
         try:
             from backend.services.rag_service import RAGService
             rag = RAGService()
+            # pour besoin de text
+            #rag.indexer_document( 1, 1, "./backend/main/exempleRAG.txt")
             contexte_rag = rag.contexte_pour_prompt(
-                agent_id=self.ID,
+                agent_id=1,
                 question=message,
-                top_k=5
+                top_k=4
             )
         except Exception as e:
             print(f"[Agent] ⚠ RAG indisponible : {e}")
-
+        
         # ── Enrichissement MCP (optionnel) ────────────────────────────────────────
         # Uniquement si cet agent est connecté à un MCP.
         contexte_mcp = ""
@@ -194,7 +196,7 @@ class Agent:
                 f"Capacités disponibles : {capacites}\n"
                 f"Utilise ces informations pour répondre à la demande si elles sont pertinentes."
             )
-
+        """
         # ── Construction du prompt final ─────────────────────────────────────────
         prompt_text = (
             f"system: Tu es {self.nom}, un agent intelligent dont le rôle est : {self.prompt}. "
@@ -203,29 +205,19 @@ class Agent:
             "Si une information est incertaine, indique-le explicitement. "
             "Réponds dans la même langue que le prompt suivant."
         )
-
+        """
         if contexte_rag:
             prompt_text += f"\n\n{contexte_rag}"
 
         if contexte_mcp:
             prompt_text += f"\n\n{contexte_mcp}"
-
-        prompt_text += f"\n\nQuestion : {message}"
-        
-        # faire de la recherche web
-        if self.use_web:
-            web_data = search_web(f"{message}")
-            web_data = web_data[:3000] # limiter la taille du résultat.
-
-            conv_history = []
-            conv_history.append({
-                "role": "system",
-                "content": f"Résultat de recherche web:\n{web_data}"
-            })
-
+        """
+        conv_history = [
+            {"role": "system", "content": prompt_text}
+        ]
 
         from types import SimpleNamespace
-        result = chat(prompt_text, model, conversation_history=conv_history)
+        result = chat(message, model, conversation_history=conv_history, web_search=self.use_web)
         return SimpleNamespace(content=result)
 
 

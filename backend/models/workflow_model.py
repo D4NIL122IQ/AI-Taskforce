@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from backend.appDatabase.database import Base
-from backend.models.utilisateur_model import Utilisateur
+from sqlalchemy.dialects.postgresql import UUID
 from backend.models.execution_model import Execution
 
 class Workflow(Base):
@@ -13,9 +13,8 @@ class Workflow(Base):
     donnees_graphe_json = Column(JSON,        nullable=True)
     superviseur_id      = Column(Integer,     ForeignKey("agent.id_agent"), nullable=True)
     date_creation       = Column(DateTime,    default=lambda: datetime.now(timezone.utc))
-    utilisateur_id      = Column(Integer,     ForeignKey("utilisateur.id_utilisateur"), nullable=True)
+    utilisateur_id = Column(UUID(as_uuid=True), nullable=True)
 
-    utilisateur = relationship("Utilisateur", back_populates="workflows")
     superviseur = relationship("Agent", foreign_keys=[superviseur_id])
     executions  = relationship("Execution", back_populates="workflow",
                                cascade="all, delete-orphan")

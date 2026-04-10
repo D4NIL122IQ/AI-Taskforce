@@ -9,7 +9,7 @@ from backend.services.agent_service import AgentService
 router = APIRouter(prefix="/agents", tags=["Agents"])
 
 @router.get("/{user_id}")
-def get_agents(user_id: int, db: Session = Depends(get_db)):
+def get_agents(user_id: str, db: Session = Depends(get_db)):
     try:
         svc = AgentService(db)
         agents = svc.get_agents_by_user(user_id)

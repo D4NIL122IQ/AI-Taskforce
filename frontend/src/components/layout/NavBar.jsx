@@ -1,12 +1,13 @@
 import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { Sun, Moon } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
+import { useState } from 'react'
 
-const NAV_LINKS = [
+
+const BASE_LINKS = [
   { label: 'Accueil',        to: '/' },
   { label: 'Gestion Agents', to: '/agents' },
   { label: 'Workflow',       to: '/workflow' },
-  { label:'Dashboard',        to: '/dashboard' },
 ]
 
 const NavItem = ({ label, to }) => (
@@ -50,6 +51,13 @@ const UserIcon = () => (
 const NavBar = () => {
   const navigate = useNavigate()
   const { dark, toggle } = useTheme()
+  const [showMenu, setShowMenu] = useState(false)
+  const user = JSON.parse(localStorage.getItem("user") || "null")
+
+  const handleLogout = () => {
+  localStorage.removeItem('user')
+  navigate('/auth')
+}
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -68,7 +76,7 @@ const NavBar = () => {
 
           {/* Liens centrés */}
           <ul className="md:flex items-center gap-1" role="list">
-            {NAV_LINKS.map(({ label, to }) => (
+            {BASE_LINKS.map(({ label, to }) => (
               <li key={to}>
                 <NavItem label={label} to={to} />
               </li>
@@ -91,14 +99,36 @@ const NavBar = () => {
             </button>
 
             {/* Profil */}
+          <div className="relative">
             <button
               type="button"
-              onClick={() => navigate('/auth')}
+              onClick={() => user ? setShowMenu(!showMenu) : navigate('/auth')}
               className="text-gray-500 dark:text-white/60 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded-full p-0.5"
               aria-label="Accéder au profil"
             >
               <UserIcon />
             </button>
+
+            {showMenu && user && (
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 p-2">
+                <p className="text-sm text-gray-500 dark:text-white/50 px-3 py-1">{user.email}</p>
+                <hr className="border-gray-200 dark:border-gray-700 my-1" />
+                <button
+                  onClick={() => { setShowMenu(false); navigate('/dashboard') }}
+                  className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-white/80 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg"
+                >
+                  Dashboard
+                </button>
+                <hr className="border-gray-200 dark:border-gray-700 my-1" />
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg"
+                >
+                  Déconnexion
+                </button>
+              </div>
+            )}
+          </div>
           </div>
         </nav>
       </div>

@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation  } from 'react-router-dom'
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, ArrowLeft } from 'lucide-react'
 import PageBackground from '../components/layout/PageBackground'
+import { supabase } from '../supabase'
+
 
 const GithubIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -56,26 +58,30 @@ export default function FormPage() {
 
   const navigate = useNavigate()
 
+  const location = useLocation()
+  const from = location.state?.from || '/dashboard'
+
+
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '', confirm: '' })
+
+
 
   const handleLoginSubmit = async (e) => {
       e.preventDefault()
       try {
-        const response = await fetch('http://localhost:8000/user/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: loginForm.email,
-            mot_de_passe: loginForm.password
-          })
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: loginForm.email,
+          password: loginForm.password
         })
-        const data = await response.json()
-        if (!response.ok) throw new Error(data.detail)
+        if (error) throw new Error(error.message)
 
-        // Stocker l'utilisateur dans localStorage
-        localStorage.setItem('user', JSON.stringify(data))
-        navigate('/dashboard')
+        localStorage.setItem('user', JSON.stringify({
+          user_id: data.user.id,
+          email: data.user.email,
+          nom: data.user.user_metadata?.nom || data.user.email
+        }))
+        navigate(from.replace('/AI-Taskforce', '') || '/dashboard')
       } catch (error) {
         alert('Erreur : ' + error.message)
       }
@@ -88,17 +94,14 @@ export default function FormPage() {
         return
       }
       try {
-        const response = await fetch('http://localhost:8000/user/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            nom: registerForm.name,
-            email: registerForm.email,
-            mot_de_passe: registerForm.password
-          })
+        const { data, error } = await supabase.auth.signUp({
+          email: registerForm.email,
+          password: registerForm.password,
+          options: {
+            data: { nom: registerForm.name }
+          }
         })
-        const data = await response.json()
-        if (!response.ok) throw new Error(data.detail)
+        if (error) throw new Error(error.message)
 
         alert('Compte créé avec succès ! Connectez-vous.')
         setMode('login')
@@ -107,6 +110,25 @@ export default function FormPage() {
       }
     }
 
+  const handleGoogleLogin = async () => {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: 'http://localhost:5173/AI-Taskforce/dashboard'
+        }
+      })
+      if (error) alert('Erreur : ' + error.message)
+    }
+
+    const handleGithubLogin = async () => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'github',
+    options: {
+      redirectTo: 'http://localhost:5173/AI-Taskforce/dashboard'
+    }
+  })
+  if (error) alert('Erreur : ' + error.message)
+}
   const eyeBtn = (show, setShow) => (
     <button
       type="button"
@@ -170,7 +192,7 @@ export default function FormPage() {
                 rightElement={eyeBtn(showPassword, setShowPassword)} />
 
               <div className="text-right -mt-1">
-                <button type="button" className="text-xs text-gray-400 dark:text-white/40 hover:text-gray-600 dark:hover:text-white/70 transition-colors">
+                <button type="button" onClick={() => navigate('/forgot-password')} className="text-xs text-gray-400 dark:text-white/40 hover:text-gray-600 dark:hover:text-white/70 transition-colors">
                   Mot de passe oublié ?
                 </button>
               </div>
@@ -191,8 +213,8 @@ export default function FormPage() {
               </div>
 
               <div className="flex flex-col gap-3">
-                <OAuthButton icon={GoogleIcon} label="Continuer avec Gmail" onClick={() => {}} />
-                <OAuthButton icon={GithubIcon} label="Continuer avec GitHub" onClick={() => {}} />
+                <OAuthButton icon={GoogleIcon} label="Continuer avec Gmail" onClick={handleGoogleLogin} />
+                <OAuthButton icon={GithubIcon} label="Continuer avec GitHub" onClick={handleGithubLogin} />
               </div>
 
             </form>
