@@ -3,7 +3,7 @@ from backend.models.workflow_model import Workflow
 from api.schemas.workflow_schema import WorkflowCreate, WorkflowUpdate
 
 
-def get_all_workflows(db: Session, user_id: int) -> list[Workflow]:
+def get_all_workflows(db: Session, user_id: str) -> list[Workflow]:
     return db.query(Workflow).filter(Workflow.utilisateur_id == user_id).all()
 
 
