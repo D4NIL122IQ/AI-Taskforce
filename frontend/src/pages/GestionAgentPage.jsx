@@ -9,27 +9,36 @@ const useAgents = () => {
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || 'null')
-    const userId = user?.user_id || 1
-    fetch(`http://localhost:8000/agents/${userId}`)
-      .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setAgents(data.map(a => ({
-            id: a.id,
-            name: a.nom,
-            role: a.role || '',
-            model: a.modele,
-            systemPrompt: a.system_prompt || '',
-            temperature: a.temperature,
-            maxTokens: a.max_tokens,
-          })))
-        }
-      })
-      .catch(() => setAgents([]))
+    if (user) {
+      fetch(`http://localhost:8000/agents/${user.user_id}`)
+        .then(r => r.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setAgents(data.map(a => ({
+              id: a.id,
+              name: a.nom,
+              role: a.role || '',
+              model: a.modele,
+              systemPrompt: a.system_prompt || '',
+              temperature: a.temperature,
+              maxTokens: a.max_tokens,
+            })))
+          }
+        })
+        .catch(() => setAgents([]))
+    } else {
+      setAgents(JSON.parse(localStorage.getItem('local_agents') || '[]'))
+    }
   }, [])
 
   const remove = async (id) => {
-    await fetch(`http://localhost:8000/agents/${id}`, { method: 'DELETE' })
+    const user = JSON.parse(localStorage.getItem('user') || 'null')
+    if (user) {
+      await fetch(`http://localhost:8000/agents/${id}`, { method: 'DELETE' })
+    } else {
+      const local = JSON.parse(localStorage.getItem('local_agents') || '[]')
+      localStorage.setItem('local_agents', JSON.stringify(local.filter(a => a.id !== id)))
+    }
     setAgents(prev => prev.filter(a => a.id !== id))
   }
 
@@ -80,6 +89,7 @@ const AgentCard = ({ agent, onDelete }) => (
     <div className="flex gap-2 border-t border-gray-100 dark:border-white/5 pt-3">
       <Link
         to={`/agents/edit/${agent.id}`}
+        state={{ agent }}
         className="flex items-center gap-2 flex-1 justify-center py-2 rounded-xl text-xs font-medium text-gray-500 dark:text-white/60 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-white/20 transition-all duration-200"
       >
         <Pencil size={13} />

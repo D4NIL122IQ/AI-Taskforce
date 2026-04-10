@@ -40,15 +40,15 @@ export default function App() {
   return (
      <Routes>
        <Route path="/" element={<HomePage />} />
-       <Route path="/agents" element={<ProtectedRoute><GestionAgentPage /></ProtectedRoute>} />
-       <Route path="/agents/create" element={<ProtectedRoute><CreatAgentPage /></ProtectedRoute>} />
-       <Route path="/agents/edit/:id" element={<ProtectedRoute><CreatAgentPage /></ProtectedRoute>} />
+       <Route path="/agents" element={<GestionAgentPage />} />
+       <Route path="/agents/create" element={<CreatAgentPage />} />
+       <Route path="/agents/edit/:id" element={<CreatAgentPage />} />
        <Route path="/auth" element={<FormPage />} />
        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
        <Route path="/reset-password" element={<ResetPasswordPage />} />
-       <Route path="/workflow" element={<ProtectedRoute><GestionWorkflowPage /></ProtectedRoute>} />
-       <Route path="/workflow/create" element={<ProtectedRoute><CreatWorkflowPage /></ProtectedRoute>} />
-       <Route path="/workflow/edit/:id" element={<ProtectedRoute><CreatWorkflowPage /></ProtectedRoute>} />
+       <Route path="/workflow" element={<GestionWorkflowPage />} />
+       <Route path="/workflow/create" element={<CreatWorkflowPage />} />
+       <Route path="/workflow/edit/:id" element={<CreatWorkflowPage />} />
        <Route path="/workflow/execute" element={<ProtectedRoute><ExecuteWorkflowPage /></ProtectedRoute>} />
        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage/></ProtectedRoute>} />
        <Route path="/ragconfig" element={<ProtectedRoute><RagConfigPage /></ProtectedRoute>} />

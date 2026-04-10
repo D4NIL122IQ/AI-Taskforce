@@ -148,7 +148,7 @@ export default function FormPage() {
 
         <button
           type="button"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(location.state?.from || '/')}
           className="flex items-center gap-2 text-gray-400 dark:text-white/40 hover:text-gray-700 dark:hover:text-white/80 text-sm transition-colors duration-200 mb-6"
         >
           <ArrowLeft size={16} />

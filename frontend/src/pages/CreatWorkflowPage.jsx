@@ -246,6 +246,27 @@ function FlowCanvas({ agents, dark, workflowName, workflowId = null, initialNode
   const saveWorkflow = async () => {
     const user = JSON.parse(localStorage.getItem('user') || 'null')
     try {
+      if (!user) {
+        // ── Mode localStorage ─────────────────────────────────────────
+        const local = JSON.parse(localStorage.getItem('local_workflows') || '[]')
+        const savedId = workflowId || `local-${Date.now()}`
+        const saved = {
+          id_workflow: savedId,
+          nom: workflowName,
+          donnees_graphe_json: { nodes, edges },
+          date_creation: new Date().toISOString(),
+        }
+        if (workflowId) {
+          localStorage.setItem('local_workflows', JSON.stringify(local.map(w => w.id_workflow === workflowId ? saved : w)))
+        } else {
+          localStorage.setItem('local_workflows', JSON.stringify([...local, saved]))
+        }
+        localStorage.setItem('workflow_draft', JSON.stringify({ id_workflow: savedId, name: workflowName, nodes, edges }))
+        showToast('Workflow sauvegardé !')
+        return
+      }
+
+      // ── Mode API (connecté) ───────────────────────────────────────
       const isEdit = !!workflowId
       const url = isEdit
         ? `http://localhost:8000/workflows/${workflowId}`
@@ -256,7 +277,7 @@ function FlowCanvas({ agents, dark, workflowName, workflowId = null, initialNode
         body: JSON.stringify({
           nom: workflowName,
           donnees_graphe_json: { nodes, edges },
-          utilisateur_id: user?.user_id || null,
+          utilisateur_id: user.user_id || null,
         }),
       })
       if (!res.ok) throw new Error('Erreur sauvegarde')
@@ -555,27 +576,46 @@ export default function CreatWorkflowPage() {
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || 'null')
-    const userId = user?.user_id || 1
-    fetch(`http://localhost:8000/agents/${userId}`)
-      .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setAgents(data.map(a => ({
-            id: String(a.id_agent),
-            name: a.nom,
-            role: a.role || '',
-            model: a.modele,
-            systemPrompt: a.system_prompt || '',
-            temperature: a.temperature,
-            maxTokens: a.max_tokens,
-          })))
-        }
-      })
-      .catch(() => setAgents([]))
+    if (user) {
+      fetch(`http://localhost:8000/agents/${user.user_id}`)
+        .then(r => r.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setAgents(data.map(a => ({
+              id: String(a.id_agent),
+              name: a.nom,
+              role: a.role || '',
+              model: a.modele,
+              systemPrompt: a.system_prompt || '',
+              temperature: a.temperature,
+              maxTokens: a.max_tokens,
+            })))
+          }
+        })
+        .catch(() => setAgents([]))
+    } else {
+      setAgents(JSON.parse(localStorage.getItem('local_agents') || '[]'))
+    }
   }, [])
 
   useEffect(() => {
     if (!id) return
+    const user = JSON.parse(localStorage.getItem('user') || 'null')
+
+    if (!user || String(id).startsWith('local-')) {
+      // ── Mode localStorage ─────────────────────────────────────────
+      const local = JSON.parse(localStorage.getItem('local_workflows') || '[]')
+      const wf = local.find(w => String(w.id_workflow) === String(id))
+      if (!wf) { navigate('/workflow'); return }
+      setWorkflowName(wf.nom)
+      setWorkflowId(wf.id_workflow)
+      const graphe = wf.donnees_graphe_json || {}
+      setInitialNodes(graphe.nodes?.length ? graphe.nodes : [initialSupervisorNode])
+      setInitialEdges(graphe.edges || [])
+      return
+    }
+
+    // ── Mode API (connecté) ───────────────────────────────────────
     fetch(`http://localhost:8000/workflows/${id}`)
       .then(r => r.json())
       .then(data => {

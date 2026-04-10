@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect  } from 'react'
-import { useNavigate, useParams  } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import NavBar from '../components/layout/NavBar'
 import PageBackground from '../components/layout/PageBackground'
 import { UploadCloud, X, FileText } from 'lucide-react'
@@ -30,7 +30,16 @@ const FieldLabel = ({ children }) => (
 
 const AgentPage = () => {
   const { id } = useParams()
-  const existing = id ? JSON.parse(localStorage.getItem('agents') || '[]').find(a => a.id === id) : null
+  const location = useLocation()
+  const user = JSON.parse(localStorage.getItem('user') || 'null')
+
+  // Connecté → données passées via location.state depuis GestionAgentPage
+  // Non connecté → lecture dans local_agents
+  const existing = id
+    ? (user
+        ? (location.state?.agent || null)
+        : JSON.parse(localStorage.getItem('local_agents') || '[]').find(a => String(a.id) === String(id)))
+    : null
 
   const [roleType, setRoleType] = useState(existing?.role === 'Superviseur' ? 'superviseur' : 'autre')
   const [webSearch, setWebSearch] = useState(existing?.webSearch || false)
@@ -85,20 +94,44 @@ const AgentPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    const user = JSON.parse(localStorage.getItem('user') || 'null')
-
-    const payload = {
-      nom: form.name,
-      role: form.role,
-      modele: form.model,
-      temperature: parseFloat(form.temperature),
-      max_tokens: parseInt(form.maxTokens),
-      system_prompt: form.systemPrompt,
-      statut: 'ACTIF',
-      utilisateur_id: user?.user_id || null,
-    }
 
     try {
+      if (!user) {
+        // ── Mode localStorage ─────────────────────────────────────────
+        const local = JSON.parse(localStorage.getItem('local_agents') || '[]')
+        const savedAgent = {
+          id: id || `local-${Date.now()}`,
+          name: form.name,
+          role: form.role,
+          model: form.model,
+          temperature: parseFloat(form.temperature),
+          maxTokens: parseInt(form.maxTokens),
+          systemPrompt: form.systemPrompt,
+          webSearch,
+        }
+        if (id) {
+          localStorage.setItem('local_agents', JSON.stringify(
+            local.map(a => String(a.id) === String(id) ? savedAgent : a)
+          ))
+        } else {
+          localStorage.setItem('local_agents', JSON.stringify([...local, savedAgent]))
+        }
+        navigate('/agents')
+        return
+      }
+
+      // ── Mode API (connecté) ───────────────────────────────────────
+      const payload = {
+        nom: form.name,
+        role: form.role,
+        modele: form.model,
+        temperature: parseFloat(form.temperature),
+        max_tokens: parseInt(form.maxTokens),
+        system_prompt: form.systemPrompt,
+        statut: 'ACTIF',
+        utilisateur_id: user.user_id || null,
+      }
+
       if (id) {
         await fetch(`http://localhost:8000/agents/${id}`, {
           method: 'PUT',
@@ -117,14 +150,11 @@ const AgentPage = () => {
           return
         }
         const data = await res.json()
-        const agentId = data.agent_id
-
-        // Upload des documents si il y en a
         if (files.length > 0) {
           await Promise.all(files.map(file => {
             const formData = new FormData()
             formData.append('file', file)
-            return fetch(`http://localhost:8000/agents/${agentId}/documents`, {
+            return fetch(`http://localhost:8000/agents/${data.agent_id}/documents`, {
               method: 'POST',
               body: formData,
             })
@@ -134,10 +164,10 @@ const AgentPage = () => {
       navigate('/agents')
     } catch (err) {
       alert('Erreur réseau : ' + err.message)
-    }finally {
-    setLoading(false)
+    } finally {
+      setLoading(false)
+    }
   }
-}
 
   const addFiles = (incoming) => {
     const list = Array.from(incoming)
@@ -292,7 +322,12 @@ const AgentPage = () => {
 
               <div className="flex flex-col gap-1.5 flex-1">
                 <FieldLabel>Documents de référence</FieldLabel>
-                {existingDocs.length > 0 && (
+                {!user && (
+                  <p className="text-xs text-gray-400 dark:text-white/35 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3">
+                    Connectez-vous pour attacher des documents à un agent.
+                  </p>
+                )}
+                {user && existingDocs.length > 0 && (
                   <ul className="flex flex-col gap-2 mb-3">
                     {existingDocs.map((doc) => (
                       <li key={doc.id_document} className="flex items-center justify-between bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2.5">
@@ -305,49 +340,52 @@ const AgentPage = () => {
                     ))}
                   </ul>
                 )}
-                <div
-                  onDrop={handleDrop}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onClick={() => fileInputRef.current?.click()}
-                  className={[
-                    'flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-8 cursor-pointer transition-all duration-200 min-h-[160px]',
-                    isDragging
-                      ? 'border-violet-400 bg-violet-50 dark:border-violet-500 dark:bg-violet-600/10'
-                      : 'border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.02] hover:border-gray-300 dark:hover:border-white/20 hover:bg-gray-100 dark:hover:bg-white/5',
-                  ].join(' ')}
-                >
-                  <UploadCloud size={28} className={isDragging ? 'text-violet-500 dark:text-violet-400' : 'text-gray-300 dark:text-white/30'} />
-                  <div className="text-center">
-                    <p className="text-sm text-gray-400 dark:text-white/50">
-                      Glissez vos fichiers ici ou{' '}
-                      <span className="text-violet-500 dark:text-violet-400 underline underline-offset-2">parcourez</span>
-                    </p>
-                    <p className="text-xs text-gray-300 dark:text-white/25 mt-1">PDF, TXT, MD, JSON — max 10 Mo</p>
-                  </div>
-                  <input ref={fileInputRef} type="file" multiple className="hidden" onChange={(e) => addFiles(e.target.files)} />
-                </div>
-
-                {files.length > 0 && (
-                  <ul className="flex flex-col gap-2 mt-1">
-                    {files.map((f) => (
-                      <li key={f.name} className="flex items-center justify-between bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2.5">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <FileText size={15} className="text-violet-500 dark:text-violet-400 flex-shrink-0" />
-                          <span className="text-sm text-gray-600 dark:text-white/70 truncate">{f.name}</span>
-                          <span className="text-xs text-gray-400 dark:text-white/30 flex-shrink-0">
-                            {(f.size / 1024).toFixed(0)} Ko
-                          </span>
-                        </div>
-                        <button
-                          type="button" onClick={() => removeFile(f.name)}
-                          className="text-gray-300 dark:text-white/30 hover:text-gray-600 dark:hover:text-white/70 transition-colors ml-3 flex-shrink-0"
-                        >
-                          <X size={15} />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+                {user && (
+                  <>
+                    <div
+                      onDrop={handleDrop}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onClick={() => fileInputRef.current?.click()}
+                      className={[
+                        'flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-8 cursor-pointer transition-all duration-200 min-h-[160px]',
+                        isDragging
+                          ? 'border-violet-400 bg-violet-50 dark:border-violet-500 dark:bg-violet-600/10'
+                          : 'border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.02] hover:border-gray-300 dark:hover:border-white/20 hover:bg-gray-100 dark:hover:bg-white/5',
+                      ].join(' ')}
+                    >
+                      <UploadCloud size={28} className={isDragging ? 'text-violet-500 dark:text-violet-400' : 'text-gray-300 dark:text-white/30'} />
+                      <div className="text-center">
+                        <p className="text-sm text-gray-400 dark:text-white/50">
+                          Glissez vos fichiers ici ou{' '}
+                          <span className="text-violet-500 dark:text-violet-400 underline underline-offset-2">parcourez</span>
+                        </p>
+                        <p className="text-xs text-gray-300 dark:text-white/25 mt-1">PDF, TXT, MD, JSON — max 10 Mo</p>
+                      </div>
+                      <input ref={fileInputRef} type="file" multiple className="hidden" onChange={(e) => addFiles(e.target.files)} />
+                    </div>
+                    {files.length > 0 && (
+                      <ul className="flex flex-col gap-2 mt-1">
+                        {files.map((f) => (
+                          <li key={f.name} className="flex items-center justify-between bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2.5">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <FileText size={15} className="text-violet-500 dark:text-violet-400 flex-shrink-0" />
+                              <span className="text-sm text-gray-600 dark:text-white/70 truncate">{f.name}</span>
+                              <span className="text-xs text-gray-400 dark:text-white/30 flex-shrink-0">
+                                {(f.size / 1024).toFixed(0)} Ko
+                              </span>
+                            </div>
+                            <button
+                              type="button" onClick={() => removeFile(f.name)}
+                              className="text-gray-300 dark:text-white/30 hover:text-gray-600 dark:hover:text-white/70 transition-colors ml-3 flex-shrink-0"
+                            >
+                              <X size={15} />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
                 )}
               </div>
 
