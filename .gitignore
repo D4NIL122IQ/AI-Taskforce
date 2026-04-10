@@ -4,6 +4,7 @@ venv/
 *.pyc
 .env
 .pytest_cache/
+uploads/
 
 #Mac 
 ./env
