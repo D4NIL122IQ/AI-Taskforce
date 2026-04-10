@@ -2,6 +2,8 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy.orm import Session
 from fastapi import Depends
 from pydantic import BaseModel
+from fastapi.responses import StreamingResponse
+import json
 
 from backend.appDatabase.database import get_db
 from backend.models.execution_model import Execution
@@ -35,12 +37,10 @@ class ExecuteRequest(BaseModel):
 
 # ── Endpoint principal ─────────────────────────────────────────────────────────
 
+
+
 @router.post("/execute")
 def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
-    """
-    Reçoit le workflow (nodes) et un prompt utilisateur.
-    Instancie les agents LLM, lance l'orchestration LangGraph, retourne la réponse.
-    """
     supervisor_node = next((n for n in body.nodes if n.type == "supervisor"), None)
     agent_nodes     = [n for n in body.nodes if n.type == "agent"]
 
@@ -49,7 +49,6 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
     if len(agent_nodes) < 1:
         raise HTTPException(status_code=400, detail="Au moins 1 agent spécialiste requis.")
 
-    # Prompt superviseur par défaut (peut être surchargé par system_prompt custom)
     noms_agents = ", ".join(n.data.label for n in agent_nodes)
     prompt_superviseur = (
         f"Tu es un superviseur qui coordonne : {noms_agents}.\n"
@@ -62,7 +61,6 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
     if supervisor_node.data.system_prompt.strip():
         prompt_superviseur = supervisor_node.data.system_prompt
 
-    # Instanciation des agents LLM
     try:
         superviseur = AgentLLM(
             nom="superviseur",
@@ -87,16 +85,14 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
     except ValueError as e:
         raise HTTPException(status_code=422, detail=f"Configuration agent invalide : {e}")
 
-    ## Lancement orchestration
-    try:
-        niveau = body.niveau_recherche if body.niveau_recherche in (1, 2, 3) else 1
-        orche = Orchestration(superviseur=superviseur, specialistes=specialistes, niveau_recherche=niveau)
-        final_state = orche.executer(body.prompt)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur orchestration : {e}")
+    def generate():
+        try:
+            niveau = body.niveau_recherche if body.niveau_recherche in (1, 2, 3) else 1
+            orche = Orchestration(superviseur=superviseur, specialistes=specialistes, niveau_recherche=niveau)
+            final_state = orche.executer(body.prompt)
 
-    reponse = final_state.get("final_response", "")
-    echanges = final_state.get("results", {})
+            reponse = final_state.get("final_response", "")
+            echanges = final_state.get("results", {})
 
     # Sauvegarde en base (optionnel, ne bloque pas si échec)
     try:
@@ -117,12 +113,19 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
         db.rollback() 
         print("Erreur sauvegarde :", e)
 
-    return {
-        "response": reponse,
-        "echanges": echanges,
-    }
+            # Envoie la réponse finale
+            yield json.dumps({
+                "type": "final",
+                "response": reponse
+            }) + "\n"
 
+        except Exception as e:
+            yield json.dumps({
+                "type": "error",
+                "message": str(e)
+            }) + "\n"
 
+    return StreamingResponse(generate(), media_type="application/x-ndjson")
 # ── CRUD existant ──────────────────────────────────────────────────────────────
 
 @router.get("/")
