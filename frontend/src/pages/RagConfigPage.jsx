@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useParams } from 'react-router-dom'
 import NavBar from '../components/layout/NavBar'
 import PageBackground from '../components/layout/PageBackground'
 
 const RagConfigPage = () => {
+  const { id } = useParams()
 
   const [config, setConfig] = useState({
     chunkSize: 500,
@@ -11,17 +13,6 @@ const RagConfigPage = () => {
     lambdaMult: 0.5,
     usePostProcessing: true,
   })
-
-useEffect(() => {
-  try {
-    const saved = localStorage.getItem("rag_config")
-    if (saved) {
-      setConfig(JSON.parse(saved))
-    }
-  } catch (e) {
-    console.error("Erreur parsing config RAG", e)
-  }
-}, [])
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -32,7 +23,7 @@ useEffect(() => {
   }
 
   const handleSave = () => {
-    localStorage.setItem("rag_config", JSON.stringify(config))
+    localStorage.setItem(`rag_config_${id}`, JSON.stringify(config))
     alert("Configuration RAG sauvegardée")
   }
 
@@ -47,6 +38,7 @@ useEffect(() => {
 
         <div className="flex flex-col gap-6">
 
+          {/* Chunk Size */}
           <div>
             <label className="text-sm">Chunk Size : {config.chunkSize}</label>
             <input
@@ -61,6 +53,7 @@ useEffect(() => {
             />
           </div>
 
+          {/* Overlap */}
           <div>
             <label className="text-sm">Chunk Overlap : {config.chunkOverlap}</label>
             <input
@@ -75,6 +68,7 @@ useEffect(() => {
             />
           </div>
 
+          {/* Top K */}
           <div>
             <label className="text-sm">Top K : {config.topK}</label>
             <input
@@ -88,6 +82,7 @@ useEffect(() => {
             />
           </div>
 
+          {/* Lambda */}
           <div>
             <label className="text-sm">Lambda (MMR) : {config.lambdaMult}</label>
             <input
@@ -102,6 +97,7 @@ useEffect(() => {
             />
           </div>
 
+          {/* Post processing */}
           <div className="flex items-center justify-between">
             <span className="text-sm">Post-traitement (Rerank + Extraction)</span>
             <input
@@ -112,6 +108,7 @@ useEffect(() => {
             />
           </div>
 
+          {/* Save */}
           <button
             onClick={handleSave}
             className="mt-4 px-6 py-3 bg-violet-600 hover:bg-violet-500 rounded-xl text-white"
