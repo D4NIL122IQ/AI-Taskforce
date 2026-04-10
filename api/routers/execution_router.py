@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 import json
 
-from backend.appDatabase.database import get_db
+from backend.appDatabase.database import get_db, SessionLocal
 from backend.models.execution_model import Execution
 from backend.modeles.Agent import Agent as AgentLLM
 from backend.modeles.orchestration import Orchestration
@@ -36,8 +36,6 @@ class ExecuteRequest(BaseModel):
 
 
 # ── Endpoint principal ─────────────────────────────────────────────────────────
-
-
 
 @router.post("/execute")
 def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
@@ -94,30 +92,34 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
             reponse = final_state.get("final_response", "")
             echanges = final_state.get("results", {})
 
-    # Sauvegarde en base (optionnel, ne bloque pas si échec)
-    try:
-        execution = Execution(
-            workflow_id=body.workflow_id,
-            status="TERMINE",
-            prompt=body.prompt,
-            outputs_json={"final_response": reponse}
-        )
-
-        db.add(execution)
-        db.commit()
-        db.refresh(execution)
-
-        print("execution sauvegardée")
-
-    except Exception as e:
-        db.rollback() 
-        print("Erreur sauvegarde :", e)
+            # Envoie les échanges agent par agent
+            for agent_nom, agent_reponse in echanges.items():
+                yield json.dumps({
+                    "type": "echange",
+                    "agent": agent_nom,
+                    "content": agent_reponse
+                }) + "\n"
 
             # Envoie la réponse finale
             yield json.dumps({
                 "type": "final",
                 "response": reponse
             }) + "\n"
+
+            # Sauvegarde en base
+            try:
+                db_save = SessionLocal()
+                execution = Execution(
+                    workflow_id=body.workflow_id,
+                    status="TERMINE",
+                    outputs_json={"final_response": reponse}
+                )
+                db_save.add(execution)
+                db_save.commit()
+                db_save.close()
+                print("Execution sauvegardée")
+            except Exception as e:
+                print("Erreur sauvegarde :", e)
 
         except Exception as e:
             yield json.dumps({
@@ -126,6 +128,8 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
             }) + "\n"
 
     return StreamingResponse(generate(), media_type="application/x-ndjson")
+
+
 # ── CRUD existant ──────────────────────────────────────────────────────────────
 
 @router.get("/")
