@@ -19,6 +19,7 @@ class Agent(Base):
     system_prompt = Column(Text, nullable=True)
     date_creation = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     statut        = Column(String(20), default="ACTIF")
+    web_search    = Column(Integer, nullable=False, default=0)  # 0 = False, 1 = True
     utilisateur_id = Column(UUID(as_uuid=True), nullable=True)
 
     __table_args__ = (

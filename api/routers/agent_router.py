@@ -17,11 +17,13 @@ def get_agents(user_id: str, db: Session = Depends(get_db)):
             {
                 "id": a.id_agent,
                 "nom": a.nom,
+                "role": a.role,
                 "modele": a.modele,
                 "system_prompt": a.system_prompt,
                 "max_tokens": a.max_tokens,
                 "temperature": a.temperature,
-                "statut": a.statut
+                "statut": a.statut,
+                "web_search": bool(a.web_search),
             }
             for a in agents
         ]

@@ -22,6 +22,7 @@ const useAgents = () => {
               systemPrompt: a.system_prompt || '',
               temperature: a.temperature,
               maxTokens: a.max_tokens,
+              webSearch: a.web_search || false,
             })))
           }
         })

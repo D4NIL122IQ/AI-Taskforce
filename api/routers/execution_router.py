@@ -22,6 +22,7 @@ class NodeData(BaseModel):
     system_prompt: str = ""
     max_tokens: int = 800
     temperature: float = 0.3
+    web_search: bool = False
 
 class WorkflowNode(BaseModel):
     id: str
@@ -79,6 +80,7 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
                 prompt=prompt_agent,
                 max_token=min(n.data.max_tokens, 8192),
                 temperature=_clamp(n.data.temperature),
+                use_web=n.data.web_search,
             ))
     except ValueError as e:
         raise HTTPException(status_code=422, detail=f"Configuration agent invalide : {e}")

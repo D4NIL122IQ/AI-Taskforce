@@ -13,6 +13,7 @@ class AgentBase(BaseModel):
     max_tokens: int = 1024
     system_prompt: Optional[str] = None
     statut: str = "ACTIF"
+    web_search: bool = False
     utilisateur_id: Optional[uuid.UUID] = None
 
 
