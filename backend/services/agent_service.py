@@ -34,6 +34,7 @@ class AgentService:
                 system_prompt=data.system_prompt,
                 max_tokens=data.max_tokens,
                 temperature=data.temperature,
+                web_search=1 if data.web_search else 0,
                 utilisateur_id=data.utilisateur_id
             )
 
@@ -65,6 +66,7 @@ class AgentService:
             agent.system_prompt = data.system_prompt
             agent.max_tokens = data.max_tokens
             agent.temperature = data.temperature
+            agent.web_search = 1 if data.web_search else 0
 
             self.db.commit()
 

@@ -129,6 +129,7 @@ const AgentPage = () => {
         max_tokens: parseInt(form.maxTokens),
         system_prompt: form.systemPrompt,
         statut: 'ACTIF',
+        web_search: webSearch,
         utilisateur_id: user.user_id || null,
       }
 

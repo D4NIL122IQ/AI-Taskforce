@@ -234,7 +234,7 @@ function FlowCanvas({ agents, dark, workflowName, workflowId = null, initialNode
       id: `agent-${nodeCounter.current++}`,
       type: 'agent',
       position,
-      data: { label: agent.name, role: agent.role, model: agent.model },
+      data: { label: agent.name, role: agent.role, model: agent.model, system_prompt: agent.systemPrompt || '', web_search: agent.webSearch || false },
     }])
   }, [screenToFlowPosition, setNodes])
 
