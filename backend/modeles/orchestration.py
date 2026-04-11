@@ -61,6 +61,7 @@ class Orchestration:
             niveau_recherche=self.niveau_recherche
         )
 
+
     def executer(self, prompt: str) -> str:
         """
         Lance l'orchestration pour une requête utilisateur.
@@ -85,9 +86,30 @@ class Orchestration:
 
         # recursion_limit : ~10 transitions par appel max, avec marge pour le reconstructeur
         recursion_limit = APPELS_PAR_NIVEAU[self.niveau_recherche] * 10 + 10
-        final_state = self.graph.invoke(initial_state, config={"recursion_limit": recursion_limit})
+        final_state = self.graph.stream(initial_state, config={"recursion_limit": recursion_limit})  #self.graph.invoke(initial_state, config={"recursion_limit": recursion_limit})
 
         return final_state
+    
+    def executer_stream(self, prompt: str):
+        initial_state = {
+            "user_input": prompt,
+            "results": {},
+            "supervisor_logs": [],
+            "next_agent": "",
+            "task_for_agent": "",
+            "final_response": "",
+            "niveau_recherche": APPELS_PAR_NIVEAU[self.niveau_recherche],
+            "current_task_calls": 0,
+            "current_task_agent": "",
+        }
+
+        recursion_limit = APPELS_PAR_NIVEAU[self.niveau_recherche] * 10 + 10
+
+        for event in self.graph.stream(
+            initial_state,
+            config={"recursion_limit": recursion_limit}
+        ):
+            yield event
 
     def afficher_graphe(self, chemin_image="graph.png"):
         """
