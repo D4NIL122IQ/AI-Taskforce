@@ -1,6 +1,6 @@
 import json
 import re
-from typing import TypedDict, Annotated, List
+from typing import TypedDict, Annotated
 from langgraph.graph import StateGraph, END
 
 
@@ -143,9 +143,15 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
     def create_specialist_node(agent):
         def node(state: OrchestrationState):
             print(f"\n[{agent.nom.upper()}] Exécution en cours...")
+
             response = agent.executer_prompt(state["task_for_agent"])
+
             print(f"[{agent.nom.upper()}] Réponse reçue ({len(response.content)} caractères)")
-            return {"results": {agent.nom: response.content}}
+
+            return {
+                "results": {agent.nom: response.content},
+                "supervisor_logs": [f"{agent.nom} a répondu"]
+            }
 
         return node
 
@@ -163,7 +169,13 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
         )
         response = agent_reconstructeur.executer_prompt(prompt_rec)
         print(f"[RECONSTRUCTEUR] Réponse finale générée ({len(response.content)} caractères)")
-        return {"final_response": response.content}
+        return {
+            "final_response": response.content,
+            "supervisor_logs": [
+                "Reconstruction en cours...",
+                "Reconstruction finale terminée"
+            ]
+        }
 
     workflow.add_node("reconstructeur", reconstructeur_node)
 

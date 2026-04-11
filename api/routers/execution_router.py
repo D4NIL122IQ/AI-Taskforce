@@ -39,7 +39,9 @@ class ExecuteRequest(BaseModel):
 # ── Endpoint principal ─────────────────────────────────────────────────────────
 
 @router.post("/execute")
+@router.post("/execute")
 def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
+
     supervisor_node = next((n for n in body.nodes if n.type == "supervisor"), None)
     agent_nodes     = [n for n in body.nodes if n.type == "agent"]
 
@@ -49,6 +51,7 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Au moins 1 agent spécialiste requis.")
 
     noms_agents = ", ".join(n.data.label for n in agent_nodes)
+
     prompt_superviseur = (
         f"Tu es un superviseur qui coordonne : {noms_agents}.\n"
         "Délègue chaque sous-tâche à l'agent le plus adapté selon son rôle.\n"
@@ -57,6 +60,7 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
         '{"next_agent": "nom_du_specialiste", "prompt": "instructions"}\n'
         'Ou si terminé : {"next_agent": "reconstructeur", "prompt": ""}'
     )
+
     if supervisor_node.data.system_prompt.strip():
         prompt_superviseur = supervisor_node.data.system_prompt
 
@@ -68,12 +72,14 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
             max_token=min(supervisor_node.data.max_tokens, 8192),
             temperature=_clamp(supervisor_node.data.temperature),
         )
+
         specialistes = []
         for n in agent_nodes:
             prompt_agent = n.data.system_prompt.strip() or (
                 f"Tu es {n.data.label}, un expert en : {n.data.role or n.data.label}. "
                 "Réponds de façon précise et structurée."
             )
+
             specialistes.append(AgentLLM(
                 nom=n.data.label,
                 modele=_normalise_modele(n.data.model),
@@ -82,52 +88,62 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
                 temperature=_clamp(n.data.temperature),
                 use_web=n.data.web_search,
             ))
+
     except ValueError as e:
         raise HTTPException(status_code=422, detail=f"Configuration agent invalide : {e}")
 
     def generate():
         try:
             niveau = body.niveau_recherche if body.niveau_recherche in (1, 2, 3) else 1
-            orche = Orchestration(superviseur=superviseur, specialistes=specialistes, niveau_recherche=niveau)
-            final_state = orche.executer(body.prompt)
 
-            reponse = final_state.get("final_response", "")
-            echanges = final_state.get("results", {})
+            orche = Orchestration(
+                superviseur=superviseur,
+                specialistes=specialistes,
+                niveau_recherche=niveau
+            )
 
-            # Envoie les échanges agent par agent
-            for agent_nom, agent_reponse in echanges.items():
-                yield json.dumps({
-                    "type": "echange",
-                    "agent": agent_nom,
-                    "content": agent_reponse
-                }) + "\n"
+            final_response = ""
 
-            # Après le yield des échanges
-            supervisor_logs = final_state.get("supervisor_logs", [])
-            for log in supervisor_logs:
-                yield json.dumps({
-                    "type": "supervisor",
-                    "content": log
-                }) + "\n"
+            for event in orche.executer_stream(body.prompt):
 
-            # Envoie la réponse finale
-            yield json.dumps({
-                "type": "final",
-                "response": reponse
-            }) + "\n"
+                for node_name, state_update in event.items():
 
-            # Sauvegarde en base
+                    # Résultat d’un agent spécialiste
+                    if "results" in state_update:
+                        for agent_nom, content in state_update["results"].items():
+                            yield json.dumps({
+                                "type": "echange",
+                                "agent": agent_nom,
+                                "content": content
+                            }) + "\n"
+
+                    # Logs du superviseur
+                    if "supervisor_logs" in state_update:
+                        for log in state_update["supervisor_logs"]:
+                            yield json.dumps({
+                                "type": "supervisor",
+                                "content": log
+                            }) + "\n"
+
+                    # Réponse finale
+                    if "final_response" in state_update:
+                        final_response = state_update["final_response"]
+                        yield json.dumps({
+                            "type": "final",
+                            "response": final_response
+                        }) + "\n"
+
+            # Sauvegarde en base après exécution
             try:
                 db_save = SessionLocal()
                 execution = Execution(
                     workflow_id=body.workflow_id,
                     status="TERMINE",
-                    outputs_json={"final_response": reponse}
+                    outputs_json={"final_response": final_response}
                 )
                 db_save.add(execution)
                 db_save.commit()
                 db_save.close()
-                print("Execution sauvegardée")
             except Exception as e:
                 print("Erreur sauvegarde :", e)
 
