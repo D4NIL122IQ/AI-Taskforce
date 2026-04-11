@@ -1,15 +1,21 @@
 from api.routers.agent_router import router as agent_router
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 from api.routers.execution_router import router as execution_router
 from backend.appDatabase.init_db import init
 from fastapi.middleware.cors import CORSMiddleware
 from api.routers.document_router import router as document_router
 from api.routers.workflow_router import router as workflow_router
-from backend.modeles.Agent import Agent
+from backend.auth_pleiade import refresh_token
 
 
-init()
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init()
+    refresh_token()
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
