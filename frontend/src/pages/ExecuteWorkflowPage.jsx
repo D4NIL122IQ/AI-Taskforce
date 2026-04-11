@@ -11,6 +11,8 @@ import {
   MarkerType,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import NavBar from '../components/layout/NavBar'
 import PageBackground from '../components/layout/PageBackground'
 import { useTheme } from '../context/ThemeContext'
@@ -188,12 +190,46 @@ function ExecutionCanvas({ workflow, activeNodeId, nodeStatuses, dark }) {
   )
 }
 
+/* ─────────────────────────── rendu markdown ────────────────────────── */
+
+const mdComponents = (textColor) => ({
+  p:      ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed" style={{ color: textColor }}>{children}</p>,
+  h1:     ({ children }) => <h1 className="text-xl font-bold mt-3 mb-1.5" style={{ color: textColor }}>{children}</h1>,
+  h2:     ({ children }) => <h2 className="text-lg font-bold mt-3 mb-1" style={{ color: textColor }}>{children}</h2>,
+  h3:     ({ children }) => <h3 className="text-base font-semibold mt-2 mb-1" style={{ color: textColor }}>{children}</h3>,
+  strong: ({ children }) => <strong className="font-semibold" style={{ color: textColor }}>{children}</strong>,
+  em:     ({ children }) => <em className="italic">{children}</em>,
+  ul:     ({ children }) => <ul className="list-disc pl-4 mb-2 flex flex-col gap-0.5">{children}</ul>,
+  ol:     ({ children }) => <ol className="list-decimal pl-4 mb-2 flex flex-col gap-0.5">{children}</ol>,
+  li:     ({ children }) => <li className="leading-relaxed" style={{ color: textColor }}>{children}</li>,
+  a:      ({ href, children }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer"
+      className="underline underline-offset-2 hover:opacity-80 transition-opacity"
+      style={{ color: '#a78bfa' }}>
+      {children}
+    </a>
+  ),
+  code:   ({ inline, children }) => inline
+    ? <code className="px-1.5 py-0.5 rounded text-xs font-mono" style={{ background: 'rgba(139,92,246,0.15)', color: '#a78bfa' }}>{children}</code>
+    : <pre className="mt-2 mb-2 p-3 rounded-xl text-xs font-mono overflow-x-auto" style={{ background: 'rgba(0,0,0,0.3)', color: '#e2e8f0' }}><code>{children}</code></pre>,
+  hr:     () => <hr className="my-3 border-white/10" />,
+  blockquote: ({ children }) => (
+    <blockquote className="pl-3 my-2 italic border-l-2" style={{ borderColor: 'rgba(139,92,246,0.5)', color: textColor }}>{children}</blockquote>
+  ),
+})
+
+const Markdown = ({ content, textColor }) => (
+  <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents(textColor)}>
+    {content}
+  </ReactMarkdown>
+)
+
 /* ─────────────────────────── message chat ──────────────────────────── */
 
 const ChatMessage = ({ msg }) => {
   if (msg.role === 'user') return (
     <div className="flex justify-end">
-      <div className="max-w-[80%] px-4 py-2.5 rounded-2xl rounded-br-sm text-sm text-white"
+      <div className="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-br-sm text-sm text-white"
         style={{ background: 'rgba(139,92,246,0.5)', border: '1px solid rgba(139,92,246,0.4)' }}>
         {msg.content}
       </div>
@@ -206,9 +242,9 @@ const ChatMessage = ({ msg }) => {
         <CheckCircle size={12} style={{ color: '#34d399' }} />
         <span className="text-xs" style={{ color: '#34d399' }}>Résultat final</span>
       </div>
-      <div className="px-4 py-3 rounded-2xl rounded-tl-sm text-sm text-gray-800 dark:text-white leading-relaxed whitespace-pre-wrap"
+      <div className="px-4 py-3 rounded-2xl rounded-tl-sm text-sm"
         style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}>
-        {msg.content}
+        <Markdown content={msg.content} textColor="inherit" />
       </div>
     </div>
   )
@@ -219,9 +255,9 @@ const ChatMessage = ({ msg }) => {
         <Crown size={11} style={{ color: '#a78bfa' }} />
         <span className="text-xs font-medium" style={{ color: '#a78bfa' }}>{msg.name}</span>
       </div>
-      <div className="px-4 py-2.5 rounded-2xl rounded-tl-sm text-sm leading-relaxed text-gray-700 dark:text-white/75"
+      <div className="px-4 py-2.5 rounded-2xl rounded-tl-sm text-sm"
         style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}>
-        {msg.content}
+        <Markdown content={msg.content} textColor="rgba(255,255,255,0.75)" />
       </div>
     </div>
   )
@@ -232,8 +268,8 @@ const ChatMessage = ({ msg }) => {
         <Bot size={11} className="text-gray-500 dark:text-white/40" />
         <span className="text-xs font-medium text-gray-500 dark:text-white/40">{msg.agent}</span>
       </div>
-      <div className="px-4 py-2.5 rounded-2xl rounded-tl-sm text-sm leading-relaxed text-gray-700 dark:text-white/75 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10">
-        {msg.content}
+      <div className="px-4 py-2.5 rounded-2xl rounded-tl-sm text-sm bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10">
+        <Markdown content={msg.content} textColor="rgba(255,255,255,0.75)" />
       </div>
     </div>
   )
@@ -387,7 +423,7 @@ const handleSend = async () => {
           </div>
 
           {/* Chat */}
-          <div className="w-[380px] flex-shrink-0 flex flex-col" style={{ background: dark ? 'rgba(8,8,8,0.95)' : 'rgba(255,255,255,0.95)' }}>
+          <div className="w-[520px] flex-shrink-0 flex flex-col" style={{ background: dark ? 'rgba(8,8,8,0.95)' : 'rgba(255,255,255,0.95)' }}>
 
             <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
               {messages.length === 0 && (
