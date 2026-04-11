@@ -108,11 +108,11 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
                     "content": log
                 }) + "\n"
 
-                # Envoie la réponse finale
-                yield json.dumps({
-                    "type": "final",
-                    "response": reponse
-                }) + "\n"
+            # Envoie la réponse finale
+            yield json.dumps({
+                "type": "final",
+                "response": reponse
+            }) + "\n"
 
             # Sauvegarde en base
             try:
@@ -176,9 +176,20 @@ def _fmt(e):
     }
 
 def _normalise_modele(model_str: str) -> str:
-    mapping = {"pleiade": "Pleiade", "mistral": "Mistral", "openai": "Openai",
-               "anthropic": "Anthropic", "gemini": "Gemini", "ollama": "Ollama", "deepseek": "DeepSeek"}
-    return mapping.get(model_str.lower(), "Pleiade")
+    # Si c'est un nom de modèle réel (ex: "phi4:latest", "athene-v2:latest") → passer tel quel
+    if ":" in model_str or "." in model_str:
+        return model_str
+    # Sinon c'est un nom de provider → mapper vers le modèle par défaut
+    mapping = {
+        "pleiade": "phi4:latest",
+        "ollama": "llama3.2",
+        "openai": "gpt-4o-mini",
+        "anthropic": "claude-haiku-4-5-20251001",
+        "gemini": "gemini-1.5-flash",
+        "mistral": "mistral-small-latest",
+        "deepseek": "deepseek-chat",
+    }
+    return mapping.get(model_str.lower(), "phi4:latest")
 
 def _clamp(val: float) -> float:
     return max(0.0, min(1.0, float(val)))
