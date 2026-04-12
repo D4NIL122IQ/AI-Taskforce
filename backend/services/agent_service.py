@@ -35,6 +35,7 @@ class AgentService:
                 max_tokens=data.max_tokens,
                 temperature=data.temperature,
                 web_search=1 if data.web_search else 0,
+                mcp_type=data.mcp_type or None,
                 utilisateur_id=data.utilisateur_id
             )
 
@@ -67,6 +68,7 @@ class AgentService:
             agent.max_tokens = data.max_tokens
             agent.temperature = data.temperature
             agent.web_search = 1 if data.web_search else 0
+            agent.mcp_type = data.mcp_type or None
 
             self.db.commit()
 

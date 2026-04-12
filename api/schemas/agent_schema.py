@@ -14,6 +14,7 @@ class AgentBase(BaseModel):
     system_prompt: Optional[str] = None
     statut: str = "ACTIF"
     web_search: bool = False
+    mcp_type: Optional[str] = None  # null | "github" | "gmail"
     utilisateur_id: Optional[uuid.UUID] = None
 
 

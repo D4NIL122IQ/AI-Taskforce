@@ -1,12 +1,14 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy.orm import Session
 from fastapi import Depends
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 import json
+import requests as http_requests
 
 from backend.appDatabase.database import get_db, SessionLocal
 from backend.models.execution_model import Execution
+from backend.models.mcp_token_model import McpToken
 from backend.modeles.Agent import Agent as AgentLLM
 from backend.modeles.orchestration import Orchestration
 
@@ -42,17 +44,21 @@ class ExecuteRequest(BaseModel):
     nodes: list[WorkflowNode]
     niveau_recherche: int = 1
     workflow_id: int | None = None
+    utilisateur_id: str | None = None   # pour résoudre les tokens MCP utilisateur
 
 class McpTokenCreate(BaseModel):
-    mcp_type: str        # "github" | "gmail"
-    token_public: str    # client_id OAuth
+    mcp_type: str       # "github" | "gmail"
+    token_public: str
     access_token: str
     refresh_token: str
+
+class PatTokenCreate(BaseModel):
+    mcp_type: str   # "github" | "gmail"
+    token: str      # Personal Access Token
 
 
 # ── Endpoint principal ─────────────────────────────────────────────────────────
 
-@router.post("/execute")
 @router.post("/execute")
 def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
 
@@ -109,29 +115,22 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
             # Si l'access_token est expiré (401), il rafraîchit automatiquement
             # via OAuth et met à jour la BDD avant de reconnecter l'agent.
             if n.data.utilise_mcp and n.data.mcp_type:
-                if body.workflow_id is None:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=(
-                            f"L'agent '{n.data.label}' utilise MCP mais "
-                            "workflow_id est absent de la requête."
-                        ),
-                    )
-                try:
-                    McpTokenService(db).connecter_agent_mcp(
-                        agent=agent,
-                        workflow_id=body.workflow_id,
-                        mcp_type=n.data.mcp_type,
-                    )
-                except McpTokenNotFoundError as e:
-                    # Pas de token en BDD → on log et on continue sans MCP
-                    # (l'agent fonctionnera normalement, juste sans les outils MCP)
-                    print(f"[execution_router] ⚠ {e}")
-                except McpTokenExpiredError as e:
-                    raise HTTPException(
-                        status_code=401,
-                        detail=f"Token MCP expiré pour '{n.data.mcp_type}' : {e}",
-                    )
+                if not body.utilisateur_id:
+                    print(f"[execution_router] ⚠ utilisateur_id absent — MCP ignoré pour '{n.data.label}'")
+                else:
+                    try:
+                        McpTokenService(db).connecter_agent_mcp(
+                            agent=agent,
+                            utilisateur_id=body.utilisateur_id,
+                            mcp_type=n.data.mcp_type,
+                        )
+                    except McpTokenNotFoundError as e:
+                        print(f"[execution_router] ⚠ {e}")
+                    except McpTokenExpiredError as e:
+                        raise HTTPException(
+                            status_code=401,
+                            detail=f"Token MCP expiré pour '{n.data.mcp_type}' : {e}",
+                        )
  
             specialistes.append(agent)
 
@@ -202,6 +201,65 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
     return StreamingResponse(generate(), media_type="application/x-ndjson")
 
 
+# ── Endpoints MCP tokens (niveau utilisateur) ─────────────────────────────────
+
+@router.get("/mcp-tokens/{utilisateur_id}")
+def get_mcp_tokens(utilisateur_id: str, db: Session = Depends(get_db)):
+    tokens = McpTokenService(db).get_tokens_for_user(utilisateur_id)
+    return [_fmt_mcp(t) for t in tokens]
+
+@router.post("/mcp-tokens/{utilisateur_id}/pat")
+def connect_pat(utilisateur_id: str, body: PatTokenCreate, db: Session = Depends(get_db)):
+    """Connecte un MCP via Personal Access Token (PAT)."""
+    if body.mcp_type == "github":
+        resp = http_requests.get(
+            "https://api.github.com/user",
+            headers={"Authorization": f"token {body.token}", "Accept": "application/json"},
+            timeout=10,
+        )
+        if not resp.ok:
+            raise HTTPException(status_code=400, detail="Token GitHub invalide ou insuffisant")
+        token_public = resp.json().get("login", "github-user")
+    elif body.mcp_type == "gmail":
+        resp = http_requests.get(
+            "https://www.googleapis.com/oauth2/v3/tokeninfo",
+            params={"access_token": body.token},
+            timeout=10,
+        )
+        if not resp.ok:
+            raise HTTPException(status_code=400, detail="Token Gmail invalide ou expiré")
+        token_public = resp.json().get("email", "gmail-user")
+    else:
+        raise HTTPException(status_code=400, detail=f"MCP '{body.mcp_type}' non supporté")
+
+    token = McpTokenService(db).creer_ou_remplacer(
+        utilisateur_id=utilisateur_id,
+        mcp_type=body.mcp_type,
+        token_public=token_public,
+        access_token=body.token,
+        refresh_token="",
+    )
+    return _fmt_mcp(token)
+
+@router.post("/mcp-tokens/{utilisateur_id}")
+def upsert_mcp_token(utilisateur_id: str, body: McpTokenCreate, db: Session = Depends(get_db)):
+    token = McpTokenService(db).creer_ou_remplacer(
+        utilisateur_id=utilisateur_id,
+        mcp_type=body.mcp_type,
+        token_public=body.token_public,
+        access_token=body.access_token,
+        refresh_token=body.refresh_token,
+    )
+    return _fmt_mcp(token)
+
+@router.delete("/mcp-tokens/{utilisateur_id}/{mcp_type}")
+def delete_mcp_token(utilisateur_id: str, mcp_type: str, db: Session = Depends(get_db)):
+    deleted = McpTokenService(db).supprimer(utilisateur_id, mcp_type)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Token MCP non trouvé")
+    return {"message": f"Token {mcp_type} déconnecté"}
+
+
 # ── CRUD existant ──────────────────────────────────────────────────────────────
 
 @router.get("/")
@@ -257,3 +315,12 @@ def _normalise_modele(model_str: str) -> str:
 
 def _clamp(val: float) -> float:
     return max(0.0, min(1.0, float(val)))
+
+def _fmt_mcp(t: McpToken) -> dict:
+    return {
+        "id": t.id,
+        "utilisateur_id": str(t.utilisateur_id),
+        "mcp_type": t.mcp_type,
+        "token_public": t.token_public,
+        "updated_at": t.updated_at.isoformat() if t.updated_at else None,
+    }

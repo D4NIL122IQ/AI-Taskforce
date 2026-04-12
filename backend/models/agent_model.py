@@ -20,6 +20,7 @@ class Agent(Base):
     date_creation = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     statut        = Column(String(20), default="ACTIF")
     web_search    = Column(Integer, nullable=False, default=0)  # 0 = False, 1 = True
+    mcp_type      = Column(String(10), nullable=True)           # null | "github" | "gmail"
     utilisateur_id = Column(UUID(as_uuid=True), nullable=True)
 
     __table_args__ = (

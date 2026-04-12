@@ -43,6 +43,8 @@ const AgentPage = () => {
 
   const [roleType, setRoleType] = useState(existing?.role === 'Superviseur' ? 'superviseur' : 'autre')
   const [webSearch, setWebSearch] = useState(existing?.webSearch || false)
+  const [mcpEnabled, setMcpEnabled] = useState(!!existing?.mcpType)
+  const [mcpType, setMcpType] = useState(existing?.mcpType || 'github')
   const [isDragging, setIsDragging] = useState(false)
   const [files, setFiles] = useState([])
   const fileInputRef = useRef(null)
@@ -76,6 +78,7 @@ const AgentPage = () => {
     setRoleType(type)
     if (type === 'superviseur') {
       setForm((prev) => ({ ...prev, role: 'Superviseur', systemPrompt: SUPERVISOR_PROMPT }))
+      setMcpEnabled(false)
     } else {
       setForm((prev) => ({ ...prev, role: '', systemPrompt: '' }))
     }
@@ -108,6 +111,7 @@ const AgentPage = () => {
           maxTokens: parseInt(form.maxTokens),
           systemPrompt: form.systemPrompt,
           webSearch,
+          mcpType: mcpEnabled ? mcpType : null,
         }
         if (id) {
           localStorage.setItem('local_agents', JSON.stringify(
@@ -130,6 +134,7 @@ const AgentPage = () => {
         system_prompt: form.systemPrompt,
         statut: 'ACTIF',
         web_search: webSearch,
+        mcp_type: mcpEnabled ? mcpType : null,
         utilisateur_id: user.user_id || null,
       }
 
@@ -243,6 +248,46 @@ const AgentPage = () => {
                   <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${webSearch ? 'translate-x-5' : 'translate-x-0'}`} />
                 </button>
               </div>
+
+              {roleType !== 'superviseur' && <div className={`flex flex-col gap-0 bg-gray-50 dark:bg-white/5 border rounded-xl overflow-hidden transition-colors duration-200 ${mcpEnabled ? 'border-violet-400 dark:border-violet-500' : 'border-gray-200 dark:border-white/10'}`}>
+                <div className="flex items-center justify-between px-4 py-3">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm text-gray-900 dark:text-white">Connexion MCP</span>
+                    <span className="text-xs text-gray-400 dark:text-white/40">Donne accès à un service externe (GitHub, Gmail…)</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setMcpEnabled((v) => !v)}
+                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 cursor-pointer flex-shrink-0 ${mcpEnabled ? 'bg-violet-600' : 'bg-gray-200 dark:bg-white/15'}`}
+                    aria-pressed={mcpEnabled}
+                    aria-label="Activer la connexion MCP"
+                  >
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${mcpEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+                {mcpEnabled && (
+                  <div className="px-4 pb-3 border-t border-violet-200 dark:border-violet-500/30 pt-3 flex flex-col gap-1.5">
+                    <span className="text-xs text-gray-500 dark:text-white/50">Service à connecter</span>
+                    <div className="flex gap-2">
+                      {['github', 'gmail'].map((svc) => (
+                        <button
+                          key={svc}
+                          type="button"
+                          onClick={() => setMcpType(svc)}
+                          className={[
+                            'flex-1 py-2 rounded-lg text-sm font-medium border transition-colors duration-200 cursor-pointer capitalize',
+                            mcpType === svc
+                              ? 'bg-violet-50 dark:bg-violet-600/30 border-violet-400 dark:border-violet-500 text-violet-700 dark:text-white'
+                              : 'bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-500 dark:text-white/50 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-white/20',
+                          ].join(' ')}
+                        >
+                          {svc === 'github' ? 'GitHub' : 'Gmail'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>}
 
               <div className="flex flex-col gap-2">
                 <FieldLabel>
