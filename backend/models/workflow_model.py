@@ -18,3 +18,4 @@ class Workflow(Base):
     superviseur = relationship("Agent", foreign_keys=[superviseur_id])
     executions  = relationship("Execution", back_populates="workflow",
                                cascade="all, delete-orphan")
+    mcp_tokens = relationship("McpToken", back_populates="workflow",cascade="all, delete-orphan")

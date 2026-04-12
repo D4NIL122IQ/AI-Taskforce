@@ -32,7 +32,7 @@ class Agent:
 
     ctr = 0  # Compteur global pour générer des identifiants uniques
 
-    def __init__(self, nom, modele, prompt, max_token,  temperature, use_web: bool =False):
+    def __init__(self, nom, modele, prompt, max_token,  temperature, use_web: bool =False, utilise_mcp: bool = False):
         """
         Initialise un agent avec ses paramètres principaux.
 
@@ -67,6 +67,7 @@ class Agent:
         self._max_token = max_token
         self.prompt = prompt
         self.use_web = use_web
+        self.utilise_mcp = utilise_mcp
         self.date_creation = dt.now()
         self.documents = []
         self._mcp: MCPConnection | None = None
@@ -161,7 +162,9 @@ class Agent:
         except Exception as e:
             print(f"[Agent] ⚠ RAG indisponible : {e}")
 
+        """
 
+        
         # ── Enrichissement MCP ────────────────────────────────────────
         # Uniquement si cet agent est connecté à un MCP.
         contexte_mcp = ""
@@ -173,7 +176,7 @@ class Agent:
                 f"Capacités disponibles : {capacites}\n"
                 f"Utilise ces informations pour répondre à la demande si elles sont pertinentes."
             )
-        """
+        
         # ── Construction du prompt final ─────────────────────────────────────────
         prompt_text = (
             f"system: Tu es {self.nom}, un agent intelligent dont le rôle est : {self.prompt}. "
