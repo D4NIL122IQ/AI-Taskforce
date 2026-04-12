@@ -10,6 +10,12 @@ from backend.models.execution_model import Execution
 from backend.modeles.Agent import Agent as AgentLLM
 from backend.modeles.orchestration import Orchestration
 
+from backend.services.mcp_token_service import (
+    McpTokenService,
+    McpTokenNotFoundError,
+    McpTokenExpiredError,
+)
+
 router = APIRouter(prefix="/executions", tags=["Executions"])
 
 
@@ -23,6 +29,8 @@ class NodeData(BaseModel):
     max_tokens: int = 800
     temperature: float = 0.3
     web_search: bool = False
+    utilise_mcp: bool = False   # L'agent doit-il se connecter à un MCP ?
+    mcp_type: str = ""          # "github" | "gmail" — ignoré si utilise_mcp=False
 
 class WorkflowNode(BaseModel):
     id: str
@@ -34,6 +42,12 @@ class ExecuteRequest(BaseModel):
     nodes: list[WorkflowNode]
     niveau_recherche: int = 1
     workflow_id: int | None = None
+
+class McpTokenCreate(BaseModel):
+    mcp_type: str        # "github" | "gmail"
+    token_public: str    # client_id OAuth
+    access_token: str
+    refresh_token: str
 
 
 # ── Endpoint principal ─────────────────────────────────────────────────────────
@@ -79,15 +93,47 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
                 f"Tu es {n.data.label}, un expert en : {n.data.role or n.data.label}. "
                 "Réponds de façon précise et structurée."
             )
-
-            specialistes.append(AgentLLM(
+ 
+            agent = AgentLLM(
                 nom=n.data.label,
                 modele=_normalise_modele(n.data.model),
                 prompt=prompt_agent,
                 max_token=min(n.data.max_tokens, 8192),
                 temperature=_clamp(n.data.temperature),
                 use_web=n.data.web_search,
-            ))
+                utilise_mcp=n.data.utilise_mcp,
+            )
+ 
+            # ── Connexion MCP si demandée ─────────────────────────────────────
+            # McpTokenService lit les tokens en BDD et appelle agent.connecter_mcp().
+            # Si l'access_token est expiré (401), il rafraîchit automatiquement
+            # via OAuth et met à jour la BDD avant de reconnecter l'agent.
+            if n.data.utilise_mcp and n.data.mcp_type:
+                if body.workflow_id is None:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=(
+                            f"L'agent '{n.data.label}' utilise MCP mais "
+                            "workflow_id est absent de la requête."
+                        ),
+                    )
+                try:
+                    McpTokenService(db).connecter_agent_mcp(
+                        agent=agent,
+                        workflow_id=body.workflow_id,
+                        mcp_type=n.data.mcp_type,
+                    )
+                except McpTokenNotFoundError as e:
+                    # Pas de token en BDD → on log et on continue sans MCP
+                    # (l'agent fonctionnera normalement, juste sans les outils MCP)
+                    print(f"[execution_router] ⚠ {e}")
+                except McpTokenExpiredError as e:
+                    raise HTTPException(
+                        status_code=401,
+                        detail=f"Token MCP expiré pour '{n.data.mcp_type}' : {e}",
+                    )
+ 
+            specialistes.append(agent)
 
     except ValueError as e:
         raise HTTPException(status_code=422, detail=f"Configuration agent invalide : {e}")
