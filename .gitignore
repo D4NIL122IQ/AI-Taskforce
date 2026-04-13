@@ -15,6 +15,7 @@ uploads/
 /.venv
 /.idea
 
+/node_modules
 
 /*/__pycache__
 /frontend/node_modules/
