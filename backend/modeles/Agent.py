@@ -130,7 +130,7 @@ class Agent:
       - Si aucun document → comportement identique à avant (aucune régression).
     """
 
-    def executer_prompt(self, message):
+    def executer_prompt(self, message, user_input_context: str = ""):
         """
         Envoie un message à l'agent via l'API Pléiade, enrichi du contexte RAG
         si des documents ont été indexés pour cet agent.
@@ -165,18 +165,35 @@ class Agent:
         """
 
         
+        # ── Enrichissement RAG (désactivé) ──────────────────────────────────────
+        contexte_rag = ""
+
         # ── Enrichissement MCP ────────────────────────────────────────
-        # Uniquement si cet agent est connecté à un MCP.
         contexte_mcp = ""
+        print(f"[Agent:{self.nom}] mcp_actif={self.mcp_actif}")
         if self.mcp_actif:
-            capacites = ", ".join(self._mcp.capabilities)
-            contexte_mcp = (
-                f"Tu as accès au service externe '{self._mcp.name}' via MCP.\n"
-                f"URL : {self._mcp.url}\n"
-                f"Capacités disponibles : {capacites}\n"
-                f"Utilise ces informations pour répondre à la demande si elles sont pertinentes."
+            from backend.mcp.mcp_client import (
+                detecter_outils_necessaires, appeler_outil_mcp,
+                formater_resultats_mcp, MCPCallError
             )
-        
+            texte_detection = f"{user_input_context} {message}".strip()
+            outils = detecter_outils_necessaires(texte_detection, self._mcp.capabilities)
+            print(f"[Agent:{self.nom}] MCP outils détectés: {outils}")
+            resultats_bruts = []
+            for outil, params in outils:
+                try:
+                    print(f"[Agent:{self.nom}] Appel MCP → {outil}({params})")
+                    res = appeler_outil_mcp(self._mcp, outil, params)
+                    resultats_bruts.append((outil, res))
+                    print(f"[Agent:{self.nom}] MCP {outil} OK — {len(str(res))} chars")
+                except MCPCallError as e:
+                    print(f"[Agent:{self.nom}] MCP {outil} ERREUR: {e}")
+            if resultats_bruts:
+                contexte_mcp = formater_resultats_mcp(resultats_bruts, self._mcp.name)
+                print(f"[Agent:{self.nom}] Contexte MCP injecté ({len(contexte_mcp)} chars)")
+            else:
+                print(f"[Agent:{self.nom}] Aucun résultat MCP — contexte vide")
+
         # ── Construction du prompt final ─────────────────────────────────────────
         prompt_text = (
             f"system: Tu es {self.nom}, un agent intelligent dont le rôle est : {self.prompt}. "
@@ -185,13 +202,12 @@ class Agent:
             "Si une information est incertaine, indique-le explicitement. "
             "Réponds dans la même langue que le prompt suivant."
         )
-        """
+
         if contexte_rag:
             prompt_text += f"\n\n{contexte_rag}"
 
         if contexte_mcp:
             prompt_text += f"\n\n{contexte_mcp}"
-        """
         conv_history = [
             {"role": "system", "content": prompt_text}
         ]

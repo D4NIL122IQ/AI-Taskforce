@@ -23,6 +23,7 @@ const useAgents = () => {
               temperature: a.temperature,
               maxTokens: a.max_tokens,
               webSearch: a.web_search || false,
+              mcpType: a.mcp_type || null,
             })))
           }
         })
