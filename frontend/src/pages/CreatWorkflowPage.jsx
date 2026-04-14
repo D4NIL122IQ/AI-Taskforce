@@ -182,15 +182,26 @@ const initialSupervisorNode = {
 function FlowCanvas({ agents, dark, workflowName, workflowId = null, initialNodes: initNodes = null, initialEdges: initEdges = null }) {
   const reactFlowWrapper = useRef(null)
   const { screenToFlowPosition } = useReactFlow()
+  const isEditMode = initNodes !== null
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initNodes ?? [initialSupervisorNode])
   const [edges, setEdges, onEdgesChange] = useEdgesState(initEdges ?? [])
   const [toast, setToast] = useState(null)
-  const nodeCounter = useRef(1)
+
+  // Initialise le compteur depuis le max des IDs existants pour éviter les conflits
+  const _initCounter = () => {
+    if (!initNodes) return 1
+    const ids = initNodes.map(n => { const m = n.id?.match(/^agent-(\d+)$/); return m ? parseInt(m[1]) : 0 })
+    return Math.max(0, ...ids) + 1
+  }
+  const nodeCounter = useRef(_initCounter())
 
   const nodeTypes = dark ? darkNodeTypes : lightNodeTypes
   const navigate = useNavigate()
+
+  // En mode création seulement : auto-remplir le superviseur depuis la toolbox
   useEffect(() => {
+    if (isEditMode) return
     const sup = agents.find(a => a.role === 'Superviseur' || a.role === 'supervisor')
     if (sup) {
       setNodes(ns => ns.map(n => n.id === SUPERVISOR_ID
@@ -198,7 +209,7 @@ function FlowCanvas({ agents, dark, workflowName, workflowId = null, initialNode
         : n
       ))
     }
-  }, [agents, setNodes])
+  }, [agents, isEditMode, setNodes])
 
   const showToast = (msg) => {
     setToast(msg)
@@ -234,7 +245,7 @@ function FlowCanvas({ agents, dark, workflowName, workflowId = null, initialNode
       id: `agent-${nodeCounter.current++}`,
       type: 'agent',
       position,
-      data: { label: agent.name, role: agent.role, model: agent.model, system_prompt: agent.systemPrompt || '', web_search: agent.webSearch || false },
+      data: { label: agent.name, role: agent.role, model: agent.model, system_prompt: agent.systemPrompt || '', web_search: agent.webSearch || false, utilise_mcp: !!(agent.mcpType || agent.mcp_type), mcp_type: agent.mcpType || agent.mcp_type || '' },
     }])
   }, [screenToFlowPosition, setNodes])
 
@@ -282,7 +293,8 @@ function FlowCanvas({ agents, dark, workflowName, workflowId = null, initialNode
       })
       if (!res.ok) throw new Error('Erreur sauvegarde')
       const data = await res.json()
-      localStorage.setItem('workflow_draft', JSON.stringify({ id_workflow: data.id_workflow, name: workflowName, nodes, edges }))
+      const savedId = data.id_workflow ?? workflowId
+      localStorage.setItem('workflow_draft', JSON.stringify({ id_workflow: savedId, name: workflowName, nodes, edges }))
       showToast('Workflow sauvegardé !')
     } catch (err) {
       showToast('Erreur : ' + err.message)
@@ -582,13 +594,15 @@ export default function CreatWorkflowPage() {
         .then(data => {
           if (Array.isArray(data)) {
             setAgents(data.map(a => ({
-              id: String(a.id_agent),
+              id: String(a.id),
               name: a.nom,
               role: a.role || '',
               model: a.modele,
               systemPrompt: a.system_prompt || '',
               temperature: a.temperature,
               maxTokens: a.max_tokens,
+              webSearch: a.web_search || false,
+              mcp_type: a.mcp_type || '',
             })))
           }
         })

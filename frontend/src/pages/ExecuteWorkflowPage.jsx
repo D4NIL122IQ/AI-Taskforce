@@ -11,15 +11,21 @@ import {
   MarkerType,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import NavBar from '../components/layout/NavBar'
 import PageBackground from '../components/layout/PageBackground'
 import { useTheme } from '../context/ThemeContext'
-import { Bot, Crown, Send, CheckCircle, GitBranch, FileText, Globe, LogIn, LogOut } from 'lucide-react'
+import { Bot, Crown, Send, CheckCircle, GitBranch, FileText, Globe, LogIn, LogOut, AlertTriangle } from 'lucide-react'
 
 /* ─────────────────────────── helpers localStorage ──────────────────── */
 
 const loadWorkflow = () => {
   try { return JSON.parse(localStorage.getItem('workflow_execution') || localStorage.getItem('workflow_draft') || 'null') } catch { return null }
+}
+
+const loadUserId = () => {
+  try { return JSON.parse(localStorage.getItem('user') || 'null')?.user_id || null } catch { return null }
 }
 
 /* ─────────────────────────── nœuds lecture seule ───────────────────── */
@@ -188,12 +194,37 @@ function ExecutionCanvas({ workflow, activeNodeId, nodeStatuses, dark }) {
   )
 }
 
+/* ─────────────────────────── rendu markdown ────────────────────────── */
+
+const mdComponents = {
+  h1: ({ children }) => <h1 className="text-xl font-bold mt-4 mb-2 text-gray-900 dark:text-white">{children}</h1>,
+  h2: ({ children }) => <h2 className="text-lg font-semibold mt-3 mb-1.5 text-gray-900 dark:text-white">{children}</h2>,
+  h3: ({ children }) => <h3 className="text-base font-semibold mt-2 mb-1 text-gray-800 dark:text-white/90">{children}</h3>,
+  p:  ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
+  ul: ({ children }) => <ul className="list-disc pl-5 mb-2 space-y-0.5">{children}</ul>,
+  ol: ({ children }) => <ol className="list-decimal pl-5 mb-2 space-y-0.5">{children}</ol>,
+  li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+  strong: ({ children }) => <strong className="font-semibold text-gray-900 dark:text-white">{children}</strong>,
+  em: ({ children }) => <em className="italic">{children}</em>,
+  code: ({ inline, children }) => inline
+    ? <code className="px-1.5 py-0.5 rounded text-xs font-mono bg-black/10 dark:bg-white/10 text-violet-700 dark:text-violet-300">{children}</code>
+    : <pre className="my-2 p-3 rounded-xl overflow-x-auto text-xs font-mono bg-black/10 dark:bg-white/10 text-gray-800 dark:text-white/80"><code>{children}</code></pre>,
+  blockquote: ({ children }) => <blockquote className="pl-3 border-l-2 border-violet-400/50 italic text-gray-600 dark:text-white/60 my-2">{children}</blockquote>,
+  hr: () => <hr className="my-3 border-gray-200 dark:border-white/10" />,
+}
+
+const MarkdownContent = ({ content }) => (
+  <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+    {content}
+  </ReactMarkdown>
+)
+
 /* ─────────────────────────── message chat ──────────────────────────── */
 
 const ChatMessage = ({ msg }) => {
   if (msg.role === 'user') return (
     <div className="flex justify-end">
-      <div className="max-w-[80%] px-4 py-2.5 rounded-2xl rounded-br-sm text-sm text-white"
+      <div className="max-w-[85%] px-4 py-3 rounded-2xl rounded-br-sm text-base text-white"
         style={{ background: 'rgba(139,92,246,0.5)', border: '1px solid rgba(139,92,246,0.4)' }}>
         {msg.content}
       </div>
@@ -201,45 +232,53 @@ const ChatMessage = ({ msg }) => {
   )
 
   if (msg.role === 'result') return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-2 px-1">
-        <CheckCircle size={12} style={{ color: '#34d399' }} />
-        <span className="text-xs" style={{ color: '#34d399' }}>Résultat final</span>
+        <CheckCircle size={13} style={{ color: '#34d399' }} />
+        <span className="text-sm font-medium" style={{ color: '#34d399' }}>Résultat final</span>
       </div>
-      <div className="px-4 py-3 rounded-2xl rounded-tl-sm text-sm text-gray-800 dark:text-white leading-relaxed whitespace-pre-wrap"
+      <div className="px-5 py-4 rounded-2xl rounded-tl-sm text-base text-gray-800 dark:text-white/90 leading-relaxed"
         style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}>
-        {msg.content}
+        <MarkdownContent content={msg.content} />
       </div>
     </div>
   )
 
   if (msg.role === 'supervisor') return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-2 px-1">
-        <Crown size={11} style={{ color: '#a78bfa' }} />
-        <span className="text-xs font-medium" style={{ color: '#a78bfa' }}>{msg.name}</span>
+        <Crown size={12} style={{ color: '#a78bfa' }} />
+        <span className="text-sm font-medium" style={{ color: '#a78bfa' }}>{msg.name}</span>
       </div>
-      <div className="px-4 py-2.5 rounded-2xl rounded-tl-sm text-sm leading-relaxed text-gray-700 dark:text-white/75"
+      <div className="px-5 py-3 rounded-2xl rounded-tl-sm text-base leading-relaxed text-gray-700 dark:text-white/75"
         style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}>
-        {msg.content}
+        <MarkdownContent content={msg.content} />
       </div>
     </div>
   )
 
   if (msg.role === 'agent') return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-2 px-1">
-        <Bot size={11} className="text-gray-500 dark:text-white/40" />
-        <span className="text-xs font-medium text-gray-500 dark:text-white/40">{msg.agent}</span>
+        <Bot size={12} className="text-gray-500 dark:text-white/40" />
+        <span className="text-sm font-medium text-gray-500 dark:text-white/40">{msg.agent}</span>
       </div>
-      <div className="px-4 py-2.5 rounded-2xl rounded-tl-sm text-sm leading-relaxed text-gray-700 dark:text-white/75 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10">
-        {msg.content}
+      <div className="px-5 py-3 rounded-2xl rounded-tl-sm text-base leading-relaxed text-gray-700 dark:text-white/75 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10">
+        <MarkdownContent content={msg.content} />
       </div>
     </div>
   )
 
+  if (msg.role === 'warning') return (
+    <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl"
+      style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)' }}>
+      <AlertTriangle size={14} className="shrink-0 mt-0.5" style={{ color: '#f59e0b' }} />
+      <span className="text-sm leading-snug" style={{ color: '#fbbf24' }}>{msg.content}</span>
+    </div>
+  )
+
   return (
-    <div className="px-4 py-1 text-xs text-center text-gray-400 dark:text-white/25">
+    <div className="px-4 py-1 text-sm text-center text-gray-400 dark:text-white/25">
       {msg.content}
     </div>
   )
@@ -251,13 +290,47 @@ const ExecuteWorkflowPage = () => {
   const navigate = useNavigate()
   const { dark } = useTheme()
   const workflow = loadWorkflow()
+  const utilisateurId = loadUserId()
 
   const [prompt, setPrompt]               = useState('')
   const [messages, setMessages]           = useState([])
   const [running, setRunning]             = useState(false)
   const [activeNodeId, setActiveNodeId]   = useState(null)
   const [nodeStatuses, setNodeStatuses]   = useState({})
-  const chatBottomRef = useRef(null)
+  const [chatWidth, setChatWidth]         = useState(520)
+  const [niveauRecherche, setNiveauRecherche] = useState(1)
+  const chatBottomRef  = useRef(null)
+  const isDragging     = useRef(false)
+  const dragStartX     = useRef(0)
+  const dragStartWidth = useRef(520)
+
+  const CHAT_MIN = 340
+  const CHAT_MAX = 900
+
+  const onDragStart = (e) => {
+    isDragging.current     = true
+    dragStartX.current     = e.clientX
+    dragStartWidth.current = chatWidth
+    document.body.style.cursor    = 'col-resize'
+    document.body.style.userSelect = 'none'
+  }
+
+  useEffect(() => {
+    const onMove = (e) => {
+      if (!isDragging.current) return
+      const delta = dragStartX.current - e.clientX
+      setChatWidth(Math.min(CHAT_MAX, Math.max(CHAT_MIN, dragStartWidth.current + delta)))
+    }
+    const onUp = () => {
+      if (!isDragging.current) return
+      isDragging.current = false
+      document.body.style.cursor    = ''
+      document.body.style.userSelect = ''
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+  }, [])
 
   const agentNodes   = workflow?.nodes.filter(n => n.type === 'agent') || []
   const supervisorNode = workflow?.nodes.find(n => n.type === 'supervisor')
@@ -288,7 +361,8 @@ const handleSend = async () => {
           workflow_id: workflow.id_workflow,
           prompt: userPrompt,
           nodes: workflow.nodes,
-          niveau_recherche: 1,
+          niveau_recherche: niveauRecherche,
+          utilisateur_id: utilisateurId,
         }),
       })
       console.log(workflow.id_workflow)
@@ -310,6 +384,10 @@ const handleSend = async () => {
         for (const line of lines) {
           try {
             const data = JSON.parse(line)
+
+            if (data.type === 'warning') {
+                addMsg({ role: 'warning', content: data.message })
+            }
 
             if (data.type === 'echange') {
               const agentNode = agentNodes.find(n => n.data.label === data.agent)
@@ -382,8 +460,28 @@ const handleSend = async () => {
             </ReactFlowProvider>
           </div>
 
+          {/* Drag handle */}
+          <div
+            onMouseDown={onDragStart}
+            style={{
+              width: 6,
+              flexShrink: 0,
+              cursor: 'col-resize',
+              background: 'transparent',
+              position: 'relative',
+              zIndex: 10,
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(139,92,246,0.35)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            title="Glisser pour redimensionner"
+          />
+
           {/* Chat */}
-          <div className="w-[380px] flex-shrink-0 flex flex-col" style={{ background: dark ? 'rgba(8,8,8,0.95)' : 'rgba(255,255,255,0.95)' }}>
+          <div
+            className="flex-shrink-0 flex flex-col"
+            style={{ width: chatWidth, background: dark ? 'rgba(8,8,8,0.95)' : 'rgba(255,255,255,0.95)' }}
+          >
 
             <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
               {messages.length === 0 && (
@@ -400,23 +498,51 @@ const handleSend = async () => {
             </div>
 
             {/* Input */}
-            <div className="px-4 py-4 border-t border-gray-200 dark:border-white/[0.06] flex gap-2 items-end">
-              <textarea
-                value={prompt}
-                onChange={e => setPrompt(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
-                rows={2}
-                placeholder="Entrez votre demande..."
-                disabled={running}
-                className="flex-1 resize-none bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:border-violet-400 transition-colors"
-              />
-              <button
-                onClick={handleSend}
-                disabled={!prompt.trim() || running}
-                className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                <Send size={15} />
-              </button>
+            <div className="px-4 py-4 border-t border-gray-200 dark:border-white/[0.06] flex flex-col gap-2">
+              {/* Niveau de recherche */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400 dark:text-white/35 shrink-0">Niveau :</span>
+                <div className="flex gap-1">
+                  {[
+                    { value: 1, label: 'Rapide',    desc: '1 appel LLM par tâche' },
+                    { value: 2, label: 'Moyen',     desc: '2 appels LLM par tâche' },
+                    { value: 3, label: 'Réflexion', desc: '3 appels LLM par tâche' },
+                  ].map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setNiveauRecherche(opt.value)}
+                      title={opt.desc}
+                      className="px-3 py-1 rounded-lg text-xs font-medium transition-all"
+                      style={{
+                        background: niveauRecherche === opt.value ? 'rgba(139,92,246,0.25)' : 'transparent',
+                        border: `1px solid ${niveauRecherche === opt.value ? 'rgba(139,92,246,0.6)' : 'rgba(139,92,246,0.15)'}`,
+                        color: niveauRecherche === opt.value ? '#a78bfa' : (dark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.4)'),
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2 items-end">
+                <textarea
+                  value={prompt}
+                  onChange={e => setPrompt(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
+                  rows={5}
+                  placeholder="Entrez votre demande..."
+                  disabled={running}
+                  className="flex-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:border-violet-400 transition-colors"
+                  style={{ resize: 'vertical', minHeight: 96, maxHeight: 320 }}
+                />
+                <button
+                  onClick={handleSend}
+                  disabled={!prompt.trim() || running}
+                  className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Send size={15} />
+                </button>
+              </div>
             </div>
           </div>
         </div>

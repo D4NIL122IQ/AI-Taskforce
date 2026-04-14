@@ -3,7 +3,7 @@
     "name": "GitHub MCP",
     "description": "Accès aux dépôts, issues, pull requests et utilisateurs GitHub",
     "transport": "http",
-    "url": "https://api.githubcopilot.com/mcp/",
+    "url": "https://api.github.com",
     "auth": {
       "type": "bearer",
       "header": "Authorization",
@@ -24,7 +24,16 @@
       "get_pull_request",
       "list_commits",
       "search_code"
-    ]
+    ],
+    "tool_params": {
+      "list_repos": {},
+      "list_issues": {"owner": "string", "repo": "string"},
+      "get_repo": {"owner": "string", "repo": "string"},
+      "create_issue": {"owner": "string", "repo": "string", "title": "string", "body": "string"},
+      "search_code": {"query": "string"},
+      "list_commits": {"owner": "string", "repo": "string"},
+      "get_pull_request": {"owner": "string", "repo": "string", "pull_number": "int"}
+    }
   },
   "gmail": {
     "name": "Gmail MCP",

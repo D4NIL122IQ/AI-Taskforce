@@ -93,13 +93,14 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
             temperature=_clamp(supervisor_node.data.temperature),
         )
 
+        mcp_warnings = []
         specialistes = []
         for n in agent_nodes:
             prompt_agent = n.data.system_prompt.strip() or (
                 f"Tu es {n.data.label}, un expert en : {n.data.role or n.data.label}. "
                 "Réponds de façon précise et structurée."
             )
- 
+
             agent = AgentLLM(
                 nom=n.data.label,
                 modele=_normalise_modele(n.data.model),
@@ -109,14 +110,14 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
                 use_web=n.data.web_search,
                 utilise_mcp=n.data.utilise_mcp,
             )
- 
+
             # ── Connexion MCP si demandée ─────────────────────────────────────
-            # McpTokenService lit les tokens en BDD et appelle agent.connecter_mcp().
-            # Si l'access_token est expiré (401), il rafraîchit automatiquement
-            # via OAuth et met à jour la BDD avant de reconnecter l'agent.
+            print(f"[execution_router] Agent '{n.data.label}' → utilise_mcp={n.data.utilise_mcp}, mcp_type='{n.data.mcp_type}'")
             if n.data.utilise_mcp and n.data.mcp_type:
                 if not body.utilisateur_id:
-                    print(f"[execution_router] ⚠ utilisateur_id absent — MCP ignoré pour '{n.data.label}'")
+                    mcp_warnings.append(
+                        f"⚠ MCP '{n.data.mcp_type}' ignoré pour '{n.data.label}' : utilisateur non identifié."
+                    )
                 else:
                     try:
                         McpTokenService(db).connecter_agent_mcp(
@@ -124,14 +125,18 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
                             utilisateur_id=body.utilisateur_id,
                             mcp_type=n.data.mcp_type,
                         )
-                    except McpTokenNotFoundError as e:
-                        print(f"[execution_router] ⚠ {e}")
+                        print(f"[execution_router] ✓ MCP '{n.data.mcp_type}' connecté pour '{n.data.label}'")
+                    except McpTokenNotFoundError:
+                        mcp_warnings.append(
+                            f"⚠ Token MCP '{n.data.mcp_type}' introuvable pour '{n.data.label}'. "
+                            f"Enregistrez votre Personal Access Token GitHub via le panneau MCP."
+                        )
                     except McpTokenExpiredError as e:
                         raise HTTPException(
                             status_code=401,
                             detail=f"Token MCP expiré pour '{n.data.mcp_type}' : {e}",
                         )
- 
+
             specialistes.append(agent)
 
     except ValueError as e:
@@ -139,6 +144,10 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
 
     def generate():
         try:
+            # Émettre les warnings MCP en tête de stream
+            for w in mcp_warnings:
+                yield json.dumps({"type": "warning", "message": w}) + "\n"
+
             niveau = body.niveau_recherche if body.niveau_recherche in (1, 2, 3) else 1
 
             orche = Orchestration(

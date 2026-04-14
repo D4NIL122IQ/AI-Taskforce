@@ -144,7 +144,10 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
         def node(state: OrchestrationState):
             print(f"\n[{agent.nom.upper()}] Exécution en cours...")
 
-            response = agent.executer_prompt(state["task_for_agent"])
+            response = agent.executer_prompt(
+                state["task_for_agent"],
+                user_input_context=state.get("user_input", ""),
+            )
 
             print(f"[{agent.nom.upper()}] Réponse reçue ({len(response.content)} caractères)")
 
