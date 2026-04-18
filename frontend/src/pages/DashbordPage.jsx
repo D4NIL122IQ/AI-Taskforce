@@ -61,6 +61,18 @@
 
     const navigate = useNavigate()
 
+    const fetchExecutionDetail = async (executionId) => {
+    try {
+      const res = await fetch(`http://localhost:8000/executions/detail/${executionId}`)
+      if (!res.ok) throw new Error('Exécution introuvable')
+      const data = await res.json()
+      localStorage.setItem('execution_detail', JSON.stringify(data))
+      navigate('/workflow/execute')
+    } catch (err) {
+      console.error('Erreur détail exécution:', err)
+    }
+  }
+
   // MCP — chargement initial
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || 'null')
@@ -335,7 +347,11 @@
                       const { icon, color } = getStyle(act.type)
                       const Icon = icon
                       return (
-                        <div key={act.id} className="flex items-center justify-between bg-[#0d0d0d] px-3 py-2 rounded-lg">
+                        <div
+                          key={act.id}
+                          onClick={() => fetchExecutionDetail(act.id)}
+                          className="flex items-center justify-between bg-[#0d0d0d] px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a1a1a] transition-colors"
+                        >
                           <div className="flex items-center gap-3"><Icon className={color} size={16} /><span className="text-sm">{act.message}</span></div>
                           <span className="text-xs text-gray-500">{act.time}</span>
                         </div>
