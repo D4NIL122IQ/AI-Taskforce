@@ -9,6 +9,7 @@ ENDPOINTS :
 """
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -22,6 +23,7 @@ router = APIRouter(prefix="/agents", tags=["documents"])
 
 @router.post("/{agent_id}/documents", response_model=DocumentUploadResponse)
 async def upload_document(
+    background_tasks: BackgroundTasks,
     agent_id: int,
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
@@ -46,11 +48,12 @@ async def upload_document(
 
     # Indexer dans ChromaDB
     try:
-        RAGService().indexer_document(
+        background_tasks.add_task(
+            RAGService().indexer_document,
             doc_id=doc.id_document,
             agent_id=agent_id,
-            chemin_fichier=doc.chemin
-        )
+            chemin_fichier=doc.chemin)
+        
     except Exception as e:
         # Ne pas bloquer si ChromaDB échoue
         print(f"[DocumentRouter] ⚠ Indexation RAG échouée : {e}")

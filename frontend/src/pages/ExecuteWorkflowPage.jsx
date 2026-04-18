@@ -16,7 +16,7 @@ import remarkGfm from 'remark-gfm'
 import NavBar from '../components/layout/NavBar'
 import PageBackground from '../components/layout/PageBackground'
 import { useTheme } from '../context/ThemeContext'
-import { Bot, Crown, Send, CheckCircle, GitBranch, FileText, Globe, LogIn, LogOut, AlertTriangle } from 'lucide-react'
+import { Bot, Crown, Send, CheckCircle, GitBranch, FileText, Globe, LogIn, LogOut, AlertTriangle, Square } from 'lucide-react'
 
 /* ─────────────────────────── helpers localStorage ──────────────────── */
 
@@ -296,6 +296,7 @@ const ExecuteWorkflowPage = () => {
   const [messages, setMessages]           = useState([])
   const [running, setRunning]             = useState(false)
   const [activeNodeId, setActiveNodeId]   = useState(null)
+  const [executionId, setExecutionId] = useState(null)
   const [nodeStatuses, setNodeStatuses]   = useState({})
   const [chatWidth, setChatWidth]         = useState(520)
   const [niveauRecherche, setNiveauRecherche] = useState(1)
@@ -341,6 +342,8 @@ const ExecuteWorkflowPage = () => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  const controllerRef = useRef(null)
+
 const handleSend = async () => {
     if (!prompt.trim() || running || !workflow) return
     const userPrompt = prompt
@@ -354,6 +357,10 @@ const handleSend = async () => {
     setActiveNodeId(supervisorNode?.id)
 
     try {
+      // création controller pour annulation
+      const controller = new AbortController()
+      controllerRef.current = controller
+
       const res = await fetch('http://localhost:8000/executions/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -364,7 +371,12 @@ const handleSend = async () => {
           niveau_recherche: niveauRecherche,
           utilisateur_id: utilisateurId,
         }),
+        signal: controller.signal,
       })
+      const execId = res.headers.get("execution_id")
+      console.log("Response headers:", [...res.headers.entries()])
+      console.log("Execution ID:", execId)
+      setExecutionId(execId)
       console.log(workflow.id_workflow)
 
       if (!res.ok) {
@@ -424,12 +436,31 @@ const handleSend = async () => {
       }
 
     } catch (err) {
+      // gestion annulation propre
+      if (err.name === 'AbortError') {
+        addMsg({ role: 'system', content: "Exécution interrompue." })
+        return
+      }
       setActiveNodeId(null)
       addMsg({ role: 'result', content: `Erreur : ${err.message}` })
     }
 
     setRunning(false)
   }
+ /* la fonctionn d'arret du workflow */
+  const stopExecution = async () => {
+    if (controllerRef.current) {
+      controllerRef.current.abort()
+    }
+    if (executionId) {
+      await fetch(`http://localhost:8000/executions/stop/${executionId}`, {
+        method: 'POST'
+      })
+    }
+    setRunning(false)
+    setActiveNodeId(null)
+  }
+
   /* Pas de workflow */
   if (!workflow) {
     return (
@@ -546,13 +577,22 @@ const handleSend = async () => {
                   className="flex-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:border-violet-400 transition-colors"
                   style={{ resize: 'vertical', minHeight: 96, maxHeight: 320 }}
                 />
-                <button
-                  onClick={handleSend}
-                  disabled={!prompt.trim() || running}
-                  className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                >
-                  <Send size={15} />
-                </button>
+                {running ? (
+                  <button
+                    onClick={stopExecution}
+                    className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-600 hover:bg-red-500 transition-colors"
+                  >
+                    <Square size={15} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSend}
+                    disabled={!prompt.trim()}
+                    className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Send size={15} />
+                  </button>
+                )}
               </div>
             </div>
           </div>

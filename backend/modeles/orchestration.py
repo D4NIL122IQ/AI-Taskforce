@@ -39,6 +39,7 @@ class Orchestration:
         self.superviseur = superviseur
         self.specialistes = specialistes
         self.niveau_recherche = niveau_recherche
+        self.stop_execution = False
 
         # Création automatique du reconstructeur avec les paramètres du superviseur
         self.reconstructeur = Agent(
@@ -109,6 +110,9 @@ class Orchestration:
             initial_state,
             config={"recursion_limit": recursion_limit}
         ):
+            if self.stop_execution:
+                print("Orchestration interrompue par l'utilisateur.")
+                break
             yield event
 
     def afficher_graphe(self, chemin_image="graph.png"):
@@ -125,3 +129,10 @@ class Orchestration:
             print(f"Graphique sauvegardé sous {chemin_image}")
         except Exception as e:
             print(f"Impossible de dessiner le graphe : {e}")
+            
+    def stop(self):
+        """
+        Méthode pour signaler l'arrêt de l'orchestration en cours.
+        Implémentée comme un flag que les agents vérifient périodiquement.
+        """
+        self.graph.stop_execution = True        

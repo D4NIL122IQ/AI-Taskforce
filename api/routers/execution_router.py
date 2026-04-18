@@ -19,6 +19,7 @@ from backend.services.mcp_token_service import (
 )
 
 router = APIRouter(prefix="/executions", tags=["Executions"])
+all_executions = {} # dict des executions en cours.
 
 
 # ── Schéma de la requête /execute ─────────────────────────────────────────────
@@ -61,6 +62,10 @@ class PatTokenCreate(BaseModel):
 
 @router.post("/execute")
 def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
+    # Marque l'exécution comme active
+    import uuid
+    execution_id = str(uuid.uuid4())
+    all_executions[execution_id] = True  
 
     supervisor_node = next((n for n in body.nodes if n.type == "supervisor"), None)
     agent_nodes     = [n for n in body.nodes if n.type == "agent"]
@@ -159,6 +164,11 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
             final_response = ""
 
             for event in orche.executer_stream(body.prompt):
+                 # Arrête l'orchestration en cours
+                if not all_executions.get(execution_id, False):
+                    orche.stop()
+                    break
+
 
                 for node_name, state_update in event.items():
 
@@ -186,7 +196,8 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
                             "type": "final",
                             "response": final_response
                         }) + "\n"
-
+            orche.stop_execution = False
+            
             # Sauvegarde en base après exécution
             try:
                 db_save = SessionLocal()
@@ -207,7 +218,20 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
                 "message": str(e)
             }) + "\n"
 
-    return StreamingResponse(generate(), media_type="application/x-ndjson")
+    response = StreamingResponse(generate(), media_type="application/x-ndjson")
+    response.headers["execution_id"] = execution_id 
+
+    return response
+
+#---------------------mettre fin à l'exécution en cours-------------------------#
+
+@router.post("/stop/{execution_id}")
+def stop_execution(execution_id: str):
+    if execution_id in all_executions:
+        all_executions[execution_id] = False
+        print("STOP demandé dans route", flush=True)
+        return {"message": "Execution stoppée"}
+    return {"message": "Execution non trouvée"}
 
 
 # ── Endpoints MCP tokens (niveau utilisateur) ─────────────────────────────────

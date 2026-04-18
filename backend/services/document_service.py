@@ -86,6 +86,12 @@ class DocumentService:
                 f"Extension '{extension}' non supportée. "
                 f"Extensions acceptées : {EXTENSIONS_AUTORISEES}"
             )
+        
+        # Vérifie l'unicité  de fichier pour agent
+        docs = self.db.query(Document).filter(Document.agent_id == agent_id).all()
+        for doc in docs:
+            if doc.nom_fichier == filename:
+                raise ValueError(f"Un document nommé '{filename}' existe déjà pour cet agent.") 
 
         # Nom unique sur le disque : uuid + extension d'origine
         nom_unique = f"{uuid.uuid4().hex}{extension}"
@@ -105,16 +111,6 @@ class DocumentService:
         self.db.add(doc)
         self.db.commit()
         self.db.refresh(doc)
-
-        # Indexation dans ChromaDB
-        try:
-            RAGService().indexer_document(
-                doc_id=doc.id_document,
-                agent_id=agent_id,
-                chemin_fichier=chemin_absolu
-            )
-        except Exception as e:
-            print(f"[DocumentService] ⚠ Indexation RAG échouée : {e}")
 
         return doc
 
