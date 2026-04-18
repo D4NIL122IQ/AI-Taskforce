@@ -14,13 +14,14 @@ def refresh_token() -> str | None:
     met à jour TOKEN_PLEIADE dans le fichier .env et dans os.environ.
     Retourne le nouveau token, ou None si échec.
     """
-    load_dotenv(ENV_PATH, override=True)
+    if ENV_PATH.exists():
+        load_dotenv(ENV_PATH, override=True)
 
     email    = os.getenv("PLEIADE_EMAIL", "").strip()
     password = os.getenv("PLEIADE_PASSWORD", "").strip()
 
     if not email or not password:
-        print("[Pléiade] PLEIADE_EMAIL ou PLEIADE_PASSWORD non définis dans .env — token non rafraîchi.")
+        print("[Pléiade] PLEIADE_EMAIL ou PLEIADE_PASSWORD non définis — token non rafraîchi.")
         return None
 
     try:
@@ -42,14 +43,15 @@ def refresh_token() -> str | None:
     # Mise à jour dans os.environ (utilisé par requestLLM.py dès maintenant)
     os.environ["TOKEN_PLEIADE"] = token
 
-    # Mise à jour persistante dans le fichier .env
-    env_text = ENV_PATH.read_text(encoding="utf-8")
-    new_line  = f'TOKEN_PLEIADE = "{token}"'
-    if re.search(r"^TOKEN_PLEIADE\s*=", env_text, re.MULTILINE):
-        env_text = re.sub(r"^TOKEN_PLEIADE\s*=.*$", new_line, env_text, flags=re.MULTILINE)
-    else:
-        env_text = new_line + "\n" + env_text
-    ENV_PATH.write_text(env_text, encoding="utf-8")
+    # Mise à jour persistante dans le fichier .env (uniquement en dev local)
+    if ENV_PATH.exists():
+        env_text = ENV_PATH.read_text(encoding="utf-8")
+        new_line  = f'TOKEN_PLEIADE = "{token}"'
+        if re.search(r"^TOKEN_PLEIADE\s*=", env_text, re.MULTILINE):
+            env_text = re.sub(r"^TOKEN_PLEIADE\s*=.*$", new_line, env_text, flags=re.MULTILINE)
+        else:
+            env_text = new_line + "\n" + env_text
+        ENV_PATH.write_text(env_text, encoding="utf-8")
 
     print("[Pléiade] Token rafraîchi avec succès.")
     return token
