@@ -7,13 +7,17 @@ load_dotenv()
 
 BASE_URL = "https://pleiade.mi.parisdescartes.fr/api/v1"
 BASE_URL_NATIVE = "https://pleiade.mi.parisdescartes.fr/api"
-TOKEN = os.getenv("TOKEN_PLEIADE")
 MODEL = "phi4:latest"
 
-headers = {
-    "Authorization": f"Bearer {TOKEN}",
-    "Content-Type": "application/json"
-}
+
+def _get_headers() -> dict:
+    """Lit le token à chaque appel pour prendre en compte les rafraîchissements."""
+    token = os.environ.get("TOKEN_PLEIADE") or os.getenv("TOKEN_PLEIADE", "")
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+
 
 def chat(message: str, model: str, conversation_history: list = None, web_search: bool = False,
          temperature: float = None, max_tokens: int = None):
@@ -45,7 +49,7 @@ def chat(message: str, model: str, conversation_history: list = None, web_search
     response = requests.post(
         url,
         json=payload,
-        headers=headers,
+        headers=_get_headers(),
         stream=True,
         timeout=400
     )
