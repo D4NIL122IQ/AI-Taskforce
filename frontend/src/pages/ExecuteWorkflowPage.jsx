@@ -385,16 +385,27 @@ const handleSend = async () => {
           try {
             const data = JSON.parse(line)
 
+
             if (data.type === 'warning') {
                 addMsg({ role: 'warning', content: data.message })
+                  await new Promise(r => setTimeout(r, 500))
+
+            }
+
+            if (data.type === 'supervisor') {
+              setActiveNodeId(supervisorNode?.id)
+              addMsg({ role: 'supervisor', name: 'Superviseur', content: data.content })
+               await new Promise(r => setTimeout(r, 500))
             }
 
             if (data.type === 'echange') {
               const agentNode = agentNodes.find(n => n.data.label === data.agent)
               if (agentNode) {
+                setActiveNodeId(agentNode.id)
                 setNodeStatuses(s => ({ ...s, [agentNode.id]: 'TERMINE' }))
               }
               addMsg({ role: 'agent', agent: data.agent, content: data.content })
+                await new Promise(r => setTimeout(r, 500))
             }
 
             if (data.type === 'final') {
