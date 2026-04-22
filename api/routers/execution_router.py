@@ -174,6 +174,7 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
             )
 
             final_response = ""
+            all_echanges = {}
 
             for event in orche.executer_stream(body.prompt):
                  # Arrête l'orchestration en cours
@@ -187,6 +188,7 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
                     # Résultat d’un agent spécialiste
                     if "results" in state_update:
                         for agent_nom, content in state_update["results"].items():
+                            all_echanges[agent_nom] = content
                             yield json.dumps({
                                 "type": "echange",
                                 "agent": agent_nom,
@@ -216,7 +218,9 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
                 execution = Execution(
                     workflow_id=body.workflow_id,
                     status="TERMINE",
-                    outputs_json={"final_response": final_response}
+                    prompt=body.prompt,
+                    outputs_json={"final_response": final_response},
+                    history_json = all_echanges
                 )
                 db_save.add(execution)
                 db_save.commit()
@@ -311,6 +315,20 @@ def delete_mcp_token(utilisateur_id: str, mcp_type: str, db: Session = Depends(g
 def get_all_executions(db: Session = Depends(get_db)):
     return [_fmt(e) for e in db.query(Execution).order_by(Execution.date_execution.desc()).all()]
 
+@router.get("/detail/{execution_id}")
+def get_execution_detail(execution_id: int, db: Session = Depends(get_db)):
+    e = db.query(Execution).filter(Execution.id_execution == execution_id).first()
+    if not e:
+        raise HTTPException(status_code=404, detail="Exécution non trouvée")
+    return {
+        "id": e.id_execution,
+        "workflow_id": e.workflow_id,
+        "status": e.status,
+        "prompt": e.prompt,
+        "echanges": e.history_json or {},
+        "reponse_finale": (e.outputs_json or {}).get("final_response", ""),
+        "date": e.date_execution.isoformat() if e.date_execution else None,
+    }
 @router.get("/{status}")
 def get_executions(status: str, db: Session = Depends(get_db)):
     return [_fmt(e) for e in db.query(Execution).filter(Execution.status == status).all()]

@@ -338,6 +338,29 @@ const ExecuteWorkflowPage = () => {
 
   const addMsg = (msg) => setMessages(prev => [...prev, msg])
 
+  // Charge le détail d'une exécution passée depuis le Dashboard
+  useEffect(() => {
+    const raw = localStorage.getItem('execution_detail')
+    if (!raw) return
+    try {
+      const detail = JSON.parse(raw)
+      localStorage.removeItem('execution_detail')
+      const msgs = []
+      if (detail.prompt) msgs.push({ role: 'user', content: detail.prompt })
+      if (detail.echanges) {
+        Object.entries(detail.echanges).forEach(([agent, reponse]) => {
+          msgs.push({ role: 'agent', agent, content: reponse })
+        })
+      }
+      if (detail.reponse_finale) {
+        msgs.push({ role: 'result', content: detail.reponse_finale })
+      }
+      setMessages(msgs)
+    } catch (e) {
+      console.error('Erreur chargement détail:', e)
+    }
+  }, [])
+
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])

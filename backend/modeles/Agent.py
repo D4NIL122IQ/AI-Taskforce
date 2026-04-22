@@ -3,6 +3,7 @@ import os
 
 from backend.modeles.requestLLM import chat
 from backend.mcp.connect_mcp import connect_mcp, MCPConnection, SUPPORTED_MCPS
+from langfuse import observe
 
 
 class Agent:
@@ -126,6 +127,7 @@ class Agent:
       - Si aucun document → comportement identique à avant (aucune régression).
     """
 
+    @observe(name="executer_prompt")
     def executer_prompt(self, message, user_input_context: str = ""):
         """
         Envoie un message à l'agent via l'API Pléiade, enrichi du contexte RAG
