@@ -34,7 +34,6 @@ from dotenv import load_dotenv
 from pypdf import PdfReader
 
 from backend.modeles.pleaide_embedding import PleiadesEmbeddings
-
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_core.documents import Document
 from langchain_chroma import Chroma

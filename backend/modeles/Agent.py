@@ -213,11 +213,6 @@ class Agent:
             max_tokens=self._max_token
         )
         return SimpleNamespace(content=result)
-
-
-
-
-    def ajouter_document(self, filepath):
         """
         Enrichit le contexte de l'agent avec le contenu d'un fichier externe.
 

@@ -1,134 +1,85 @@
 [
   {
-    "question": "Quelle est la condition obligatoire pour le raccordement d'une maison à un générateur selon les restrictions du projet ?",
-    "chunk_attendu": "Remarques et Restrictions\nConcernant les restrictions, il est important de noter que dans le cadre de la réalisation de ce projet :\n• Le réseau électrique contient toujours au moins une maison et un générateur, i.e., M ̸= ; et G ̸= ;. • La somme des charges de demande électrique des maisons doit être inférieure ou égale à la somme\ndes capacités maximales des générateurs. • Une maison doit obligatoirement être raccordée à un unique générateur. Et quelques remarques supplémentaires :\n• Pour certaines conﬁgurations de maisons et de générateurs, il sera impossible de trouver une affecta-\ntion avec un coût de 0. Dans ce cas, la solution optimale sera la (ou les) instance(s) qui minimisera ce\ncoût. • Il existe forcément une solution minimale (i.e., instances qui minimisera le coût) pour une conﬁgura-\ntion donnée. • Pour une conﬁguration de maisons et de générateurs donnée, le coût minimal peut être obtenu par\nune ou plusieurs instances. 3/5",
-    "chunk_index": 11,
-    "doc_id": 63,
-    "page": 3
-  },
-  {
-    "question": "Quelle formule représente la pénalisation des surcharges et que signifie-t-elle concrètement ?",
-    "chunk_attendu": "On compare le taux d’utilisation de chaque générateur (charge\n/ capacité) et on calcule l’écart entre ces taux. Plus les écarts sont faibles, plus le résultat est petit et\nsigniﬁe que la solution est équilibrée. • Sur char g e (S) = ∑\ng ∈G max\n(\n0,\nLg −Cg\nCg\n)\nqui représente la pénalisation des surcharges. Celle-ci consiste\nà ajouter un coût supplémentaire chaque fois qu’un générateur dépasse sa capacité maximale. Concrè-\ntement, on mesure de combien un générateur est surchargé (par exemple, s’il doit fournir 55 unités\nalors que sa capacité est de 50, il y a 5 unités de surcharge), et on additionne ces excès pour tous les\ngénérateurs. Plus la surcharge est grande, plus le coût est élevé.",
-    "chunk_index": 4,
-    "doc_id": 63,
-    "page": 2
-  },
-  {
-    "question": "Quelle formule est utilisée pour calculer le taux d’utilisation d’un générateur g selon l'extrait ?",
-    "chunk_attendu": "• respecte autant que possible les capacités maximales des générateurs ;\n• équilibre au maximum la charge normalisée entre les générateurs. Aﬁn de quantiﬁer ces critères, et ainsi pouvoir comparer plusieurs instances, il existe plusieurs formules. Dans le cadre de ce projet, les calculs effectués pour quantiﬁer ces critères seront basés sur le taux d’utilisa-\ntion de chaque générateur normalisé par sa capacité maximale. Étant donnée un générateurg ∈ G, son taux\nd’utilisation, noté ug , est calculé de la manière suivante :\nug =\nLg\nCg\navec :\n• Lg la charge actuelle du générateur g qui correspond à la somme des demandes électriques des mai-\nsons connectées à ce générateur ;\n• Cg la charge maximale du générateur g ;\nMaintenant que le taux d’utilisation d’un générateur est calculable, nous pouvons déﬁnir une formule per-\nmettant de mesurer l’efﬁcacité d’une instance en prenant en compte les deux critères décrits un peu plus\nhaut. Le coût d’une instance S = 〈M,G,C〉, noté Cout (S), est calculée comme suit :\nCout (S) = Di sp (S) + λ × Sur char g e (S)\navec :\n• Di sp (S) = ∑\ng ∈G |ug − u|qui représente la somme des écarts de chaque générateur par rapport à la\nmoyenne avec u = 1\n|G|\n∑\ng ∈G ug avec |G|correspondant au nombre de générateurs. En d’autres termes,\nc’est une mesure d’équilibre qui évalue dans quelle mesure les générateurs partagent la charge de\nfaçon proportionnelle à leur capacité.",
-    "chunk_index": 3,
-    "doc_id": 63,
-    "page": 2
-  },
-  {
-    "question": "Quel est le numéro du point abordé dans l'extrait ?",
-    "chunk_attendu": "2.",
-    "chunk_index": 10,
-    "doc_id": 63,
-    "page": 3
-  },
-  {
-    "question": "Quelle est la valeur de Cout(S2) calculée avec λ = 10?",
-    "chunk_attendu": "Cela nous donne donc\nDi sp (S2) = |uG1 − u| + |uG2 − u| ≃ |0.333 − 0.917| + |1.5 − 0.917| ≃\n0.584 + 0.583 ≃ 1.167 ;\nAvec λ = 10, nous obtenons Cout (S2) ≃ 1.167 + 10 × 0.5 ≃ 6.167. Nous pouvons maintenant comparer les deux instances S1 et S2. Vu que\nCout (S1) = 0.167 < 6.167 = Cout (S2), nous pouvons dire que S1 est une meilleure instance que S2.",
-    "chunk_index": 9,
-    "doc_id": 63,
-    "page": 3
-  },
-  {
-    "question": "Quelle action l'utilisateur doit-il entreprendre pour modifier la connexion d'une maison à un générateur différent selon le texte ?",
-    "chunk_attendu": "exemple, si l’utilisateur souhaite connecter la maison M1 au générateur G2 plutôt qu’au générateur G1 alors\nil pourra le faire de la manière suivante :\nVeuillez saisir la connexion que vous souhaitez modiﬁer : M1 G1\nVeuillez saisir la nouvelle connexion : M1 G2\nSi l’utilisateur avait saisi « G1 M1 » puis « G2 M1 », le résultat aurait été identique. Bien entendu, il faut vériﬁer\nque les informations données soient correctes et, si ce n’est pas le cas, le programme doit préciser l’erreur à\nl’utilisateur et revenir au menu. Quand l’option 3 est sélectionnée, le programme afﬁche l’ensemble du réseau (générateurs, maisons et\nconnexions) de façon claire et lisible. Vous êtes libre de l’afﬁchage mais il faut qu’une personne n’ayant ja-\nmais fait d’informatique puisse comprendre le réseau électrique actuel. Enﬁn, si l’option 4 est sélectionnée, le programme s’arrête. Pour le moment, il n’est pas demandé (du moins pour cette première partie) de gérer les erreurs dues à\nl’entrée d’une information de mauvais type (par exemple si l’utilisateur entre le nombre 1,5 au lieu d’un\nnombre entier). Ce type d’erreur sera à gérer dans la seconde partie.",
-    "chunk_index": 17,
-    "doc_id": 63,
-    "page": 5
-  },
-  {
-    "question": "Quelle est la date limite pour remettre l'archive jar ou zip du code source de la première partie du projet sur Moodle ?",
-    "chunk_attendu": "2. Remise du projet\nCe projet est à réaliser par groupes de deux ou trois étudiants à constituer vous-mêmes, issus du même\ngroupe de TD. Votre code source de cette première partie (et uniquement de cette partie), correctement do-\ncumenté, sera à remettre sur Moodle au plus tard le14 novembre 2024, sous forme d’une archive jar ou zip\n(un seul dépôt par binôme/trinôme). Cette partie ne sera pas évaluée mais chaque groupe devra faire une\ndémonstration de son programme à son chargé de TD durant la séance de TP la semaine du 17 novembre. Celui-ci vous donnera des conseils, si nécessaire, aussi bien sur le rendu du programme mais aussi sur les\nchoix de conception faits et le code réalisé.",
-    "chunk_index": 18,
-    "doc_id": 63,
-    "page": 5
-  },
-  {
-    "question": "Quelle est l'étape préalable à la saisie d'une nouvelle connexion selon le document ?",
-    "chunk_attendu": "Pour\ncela, l’utilisateur doit d’abord saisir une connexion existante avant de saisir la nouvelle connexion. Par\n4/5",
-    "chunk_index": 16,
-    "doc_id": 63,
-    "page": 4
-  },
-  {
-    "question": "Quelles sont les sources de production distribuées mentionnées pour les réseaux électriques modernes ?",
-    "chunk_attendu": "Université Paris Cité\nProgrammation avancée et application\nLicence 3 Informatique\nProjet : Réseau de distribution d’électricité (partie 1)\nI Problématique\nLes réseaux électriques modernes intègrent de plus en plus de sources de production distribuées (panneaux\nsolaires, éoliennes locales, générateurs). Ces sources ont des capacités différentes et doivent alimenter un\nensemble de consommateurs (maisons, bâtiments, petites usines).",
-    "chunk_index": 0,
-    "doc_id": 63,
-    "page": 1
-  },
-  {
-    "question": "Quelle est la valeur de l'indice de surcharge (Sur charge) pour l'instance S2 ?",
-    "chunk_attendu": "Donc, avec λ = 10 par exemple, nous obtenons Cout (S) = 1\n6 + 10 × 0 =\n1\n6 . G160kW\nG260kW M2 40kW\nM1 40kW\nM3 20kW\nM4 10kW\nFIGURE 3 – Instance 2\nAﬁn de pouvoir comparer deux instances possibles, nous gardons les\nmêmes maisons et les mêmes générateurs mais nous allons changer les\nconnections entre eux. Nous obtenons ainsi le réseau électrique S2 =\n〈M,G,C2〉 illustré par la Figure 3 où la maison M1 n’est plus connectée à\nG1 mais à G2 (ce qui provoquera une surcharge du générateurG2. Calcu-\nlons le coût de cette instance :\n• Taux d’utilisation de G1 et G2 : uG1 = 20\n60 ≃ 0.333 et uG2 = 40+40+10\n60 =\n1.5 ;\n• Sur char g e (S2) = max\n(\n0, 20−60\n60\n)\n+ max\n(\n0, 90−60\n60\n)\n= 0 + 0.5 = 0.5 ;\n• Di sp (S2) ≃ 6.16 avec u = uG1+uG2\n2 ≃ 0.917.",
-    "chunk_index": 8,
-    "doc_id": 63,
-    "page": 3
-  },
-  {
-    "question": "Quelles sont les trois options de consommation pour une maison lorsqu'on l'ajoute au réseau électrique ?",
-    "chunk_attendu": "III Instructions\n1. Tâches à réaliser\nPour la première étape du projet, vous devez développer un programme qui permet à un utilisateur de\nconﬁgurer manuellement le réseau électrique (i.e., maisons, générateurs et connexions). Au démarrage du programme, un menu s’afﬁche avec 4 options possibles :\n1) ajouter un générateur ;\n2) ajouter une maison ;\n3) ajouter une connexion entre une maison et un générateur existants ;\n4) ﬁn. Dans le cas où l’option 1 est retenue, le programme demande à l’utilisateur le nom du générateur et sa ca-\npacité maximale sur la même ligne (e.g., « G1 60 » pour créer le générateur nommé G1 ayant une capacité\nmaximale de 60kW), puis on revient au menu principal. Si le générateur a déjà été créé plus tôt, alors sa\nconsommation maximale est mise à jour (en avertissant l’utilisateur de cette MAJ). Dans le cas où l’option 2 est retenue, le principe est le même que pour la création d’un générateur. Cepen-\ndant, comme la consommation d’une maison est prédéﬁnie, il sufﬁt de mettre le nom de la maison suivi de\n« BASSE », « NORMAL » ou « FORTE » pour préciser qu’il s’agit d’une maison à consommation basse, normale\nou forte respectivement. Par exemple, « M1 NORMAL » permet de créer une maison nommée M1 ayant une\nconsommation normale. Si la maison a déjà été créée plus tôt, alors sa consommation est mise à jour (en\navertissant l’utilisateur de cette MAJ).",
-    "chunk_index": 12,
-    "doc_id": 63,
-    "page": 4
-  },
-  {
-    "question": "Quelle est la valeur fixée pour la sévérité de la pénalisation λ lors de la première phase du calcul du coût du réseau électrique ?",
-    "chunk_attendu": "Une fois la connexion\ncréée, on revient au menu principal. Dans le cas où l’option 4 est retenue, cela signiﬁe que l’utilisateur a terminé de créer son réseau électrique. Dans ce cas, vous devez vériﬁer que chaque maison est connectée à un unique générateur. Si ce n’est pas le\ncas, vous donnerez le nom des maisons pour lesquelles il y a un problème (i.e., pas de connexion ou trop de\nconnexions) avant de revenir au menu principal. L ’utilisateur peut maintenant calculer le coût du réseau qu’il ou elle vient de créer, modiﬁer les connexions\nexistantes aﬁn d’éventuellement obtenir une meilleure instance ou afﬁcher le réseau actuel. Pour cela, il fait\nface à un menu qui propose les 4 options suivantes :\n1) calculer le coût du réseau électrique actuel ;\n2) modiﬁer une connexion ;\n3) afﬁcher le réseau ;\n4) ﬁn. Quand l’option 1 est sélectionnée, le programme calcule le coût du réseau électrique actuel S = 〈M,G,C〉 en\nprécisant également la somme des écarts de chaque générateur par rapport à la moyenne ( Di sp (S)) et la\npénalisation des surcharges (Sur char g e (S)). Pour cette première phase, la valeur de la sévérité de la pé-\nnalisation λ sera ﬁxée à 10.",
-    "chunk_index": 14,
-    "doc_id": 63,
-    "page": 4
-  },
-  {
-    "question": "Quelle est la puissance de M2 dans le réseau électrique décrit ?",
+    "question": "Quelle est la puissance assignée à M2 dans l'extrait concernant le réseau électrique ?",
     "chunk_attendu": "Bien entendu, il en existe beaucoup d’autres. G160kW\nG260kW M2 40kW\nM1 40kW\nM3 20kW\nM4 10kW\nFIGURE 1 – Exemple de réseau électrique\nComme expliqué dans l’introduction, le but est de réussir à trouver une instance « efﬁcace » pour un réseau\ndonné. Une instance est considérée comme efﬁcace si elle :\n1/5",
     "chunk_index": 2,
     "doc_id": 63,
     "page": 1
   },
   {
-    "question": "Quelles sont les catégories de consommation des maisons et leurs demandes électriques respectives en kW ?",
-    "chunk_attendu": "Une répartition efﬁcace des consom-\nmateurs sur les sources électriques est cruciale pour éviter les surcharges, améliorer l’équilibre global et\nminimiser les pertes. Une entreprise chargée de construire ces réseaux électriques nous demande de l’ai-\nder, en développant un logiciel qui permet de :\n1) représenter un réseau simpliﬁé avec uniquement des générateurs et des maisons ;\n2) simuler les connections possibles entre les générateurs et les maisons ;\n3) calculer le coût d’une solution et le minimiser. Nous réaliserons ces tâches de façon incrémentale, aﬁn d’avoir à la ﬁn du semestre un logiciel fonctionnel. II Modélisation\nUne instance du problème est composée d’un triplet S = 〈M,G,C〉 où :\n• M représente l’ensemble des maisons (ou consommateurs), chacune avec une demande électrique\ndonnée (en kW). Une maison fera forcément partie d’une de ces trois catégories : basse consomma-\ntion (10 kW), normale (20 kW) ou forte consommation (40 kW) ;\n• G représente l’ensemble des générateurs avec leurs capacités maximales (en kW) ;\n• C → M × G représente l’ensemble des connections entre une maison et un générateur. Chaque maison\ndoit obligatoirement être alimentée par un unique générateur. Aucune contrainte par contre sur les\ngénérateurs, i.e., un générateur peut n’être connecté à aucune maison, une maison, deux maisons ou\ntoutes les maisons. Le réseau S = 〈{(M1,40),(M2,40),(M3,20),(M4,10)},{(G1,60),(G2,60)},{( M1,G1),(M2,G2),(M3,G1),(M4,G2)}〉\nest un exemple comprenant 4 maisons (2 à forte consommation, 1 normale et 1 faible consommation) et 2\ngénérateurs de 60kW . Les connections peuvent être représentés graphiquement (voir par exemple la Figure\n1). Cette ﬁgure est une instance possible d’allocations, i.e., de connections entre maisons et générateurs.",
-    "chunk_index": 1,
-    "doc_id": 63,
-    "page": 1
-  },
-  {
-    "question": "Quelle est la note maximale attribuée à ce document ?",
-    "chunk_attendu": "5/5",
-    "chunk_index": 19,
-    "doc_id": 63,
-    "page": 5
-  },
-  {
-    "question": "Quel est le taux d’utilisation du générateur G2 dans l'instance S ?",
-    "chunk_attendu": "1. Exemples\nDans cette section, nous allons calculer le coût de plusieurs instances de réseaux électriques. G160kW\nG260kW M2 40kW\nM1 40kW\nM3 20kW\nM4 10kW\nFIGURE 2 – Instance 1\nReprenons l’instance S = 〈M,G,C〉 vue au début de la section (voir Figure 2\npour un rappel). Commençons par calculer le taux d’utilisation des deux générateursG1 et\nG2 : uG1 = 40+20\n60 = 1 et uG2 = 40+10\n60 = 5\n6 ≃ 0.8333. Calculons maintenant les différents éléments nécessaires au calcul de la\ndispersion des taux d’utilisation :\n• Sur char g e (S) = 0 car aucun des générateurs n’est en surcharge. • Di sp (S) = 1\n6 ≃ 0.1666 car la moyenne des taux d’utilisation des gé-\nnérateurs est u = uG1+uG2\n2 =\n1+ 5\n6\n2 = 11\n12 ≃ 0.9166. De ce fait, nous\navons : Di sp (S) = |uG1−u|+|uG2−u| = |1− 11\n12 |+|5\n6 − 11\n12 | =1\n12 + 1\n12 = 1\n6 .",
-    "chunk_index": 7,
-    "doc_id": 63,
-    "page": 3
-  },
-  {
-    "question": "Quelle est la principale difficulté liée à l'augmentation de la taille du problème (nombre de maisons et de générateurs) dans le contexte de la recherche d'une instance coût minimal ?",
+    "question": "Quel est le principal défi lié à l'identification de la meilleure solution lorsqu'on évalue plusieurs instances en termes de coût minimal ?",
     "chunk_attendu": "Cela implique la possibilité de pouvoir\ncomparer plusieurs instances et, ainsi, de pouvoir trouver la (ou les) plus efﬁcace en sélectionnant celle(s)\nayant obtenu le coût le plus faible. Trouver une instance ayant un coût minimal est une tâche complexe car\nl’espace des solutions possibles peut être immense et croît de façon exponentielle avec la taille du problème\n(i.e., le nombre de maisons et de générateurs). Chaque choix local inﬂuence l’ensemble du système, ce qui\nrend difﬁcile l’évaluation immédiate des conséquences globales. De plus, plusieurs critères de coût entrent\nsouvent en compétition (par exemple minimiser une surcharge tout en maintenant un bon équilibre), ce\nqui crée des compromis difﬁciles à gérer. Enﬁn, la présence de nombreuses solutions proches les unes des\nautres complique l’identiﬁcation de la meilleure : il faut ainsi explorer intelligemment l’espace de recherche\npour éviter de se bloquer dans des solutions locales sous-optimales. 2/5",
     "chunk_index": 6,
     "doc_id": 63,
     "page": 2
   },
   {
-    "question": "Quelle action peut être effectuée sur une connexion existante lorsque l'option 2 est sélectionnée ?",
-    "chunk_attendu": "Quand l’option 2 est sélectionnée, l’utilisateur à la possibilité de modiﬁer une connexion existante.",
-    "chunk_index": 15,
+    "question": "Quels sont les exemples de sources de production distribuées mentionnés dans le texte ?",
+    "chunk_attendu": "Université Paris Cité\nProgrammation avancée et application\nLicence 3 Informatique\nProjet : Réseau de distribution d’électricité (partie 1)\nI Problématique\nLes réseaux électriques modernes intègrent de plus en plus de sources de production distribuées (panneaux\nsolaires, éoliennes locales, générateurs). Ces sources ont des capacités différentes et doivent alimenter un\nensemble de consommateurs (maisons, bâtiments, petites usines).",
+    "chunk_index": 0,
+    "doc_id": 63,
+    "page": 1
+  },
+  {
+    "question": "Quelle valeur est fixée pour la sévérité de la pénalisation λ lors de la première phase de calcul du coût du réseau électrique ?",
+    "chunk_attendu": "Une fois la connexion\ncréée, on revient au menu principal. Dans le cas où l’option 4 est retenue, cela signiﬁe que l’utilisateur a terminé de créer son réseau électrique. Dans ce cas, vous devez vériﬁer que chaque maison est connectée à un unique générateur. Si ce n’est pas le\ncas, vous donnerez le nom des maisons pour lesquelles il y a un problème (i.e., pas de connexion ou trop de\nconnexions) avant de revenir au menu principal. L ’utilisateur peut maintenant calculer le coût du réseau qu’il ou elle vient de créer, modiﬁer les connexions\nexistantes aﬁn d’éventuellement obtenir une meilleure instance ou afﬁcher le réseau actuel. Pour cela, il fait\nface à un menu qui propose les 4 options suivantes :\n1) calculer le coût du réseau électrique actuel ;\n2) modiﬁer une connexion ;\n3) afﬁcher le réseau ;\n4) ﬁn. Quand l’option 1 est sélectionnée, le programme calcule le coût du réseau électrique actuel S = 〈M,G,C〉 en\nprécisant également la somme des écarts de chaque générateur par rapport à la moyenne ( Di sp (S)) et la\npénalisation des surcharges (Sur char g e (S)). Pour cette première phase, la valeur de la sévérité de la pé-\nnalisation λ sera ﬁxée à 10.",
+    "chunk_index": 14,
     "doc_id": 63,
     "page": 4
   },
   {
-    "question": "Quelle commande permet de créer une connexion entre la maison M1 et le générateur G1, et quelle est l'importance de l'ordre des noms dans cette commande ?",
-    "chunk_attendu": "Une fois la maison créée, on revient au menu principal. Dans le cas où l’ option 3 est retenue, l’utilisateur peut créer une connexion entre un générateur et une\nmaison. Pour ce faire, l’utilisateur doit préciser sur une même ligne le nom du générateur et celui de la mai-\nson (ou inversement) séparés par un espace. Par exemple, « M1 G1 » (ou « G1 M1 ») permet de créer une\nconnexion entre la maison M1 et le générateur G1. Il faut bien entendu que le générateur et la maison aient\nété créés au préalable (message d’erreur si ce n’est pas le cas et on revient au menu).",
-    "chunk_index": 13,
+    "question": "Quelle formule est utilisée pour représenter la pénalisation des surcharges et que signifie-t-elle concrètement ?",
+    "chunk_attendu": "On compare le taux d’utilisation de chaque générateur (charge\n/ capacité) et on calcule l’écart entre ces taux. Plus les écarts sont faibles, plus le résultat est petit et\nsigniﬁe que la solution est équilibrée. • Sur char g e (S) = ∑\ng ∈G max\n(\n0,\nLg −Cg\nCg\n)\nqui représente la pénalisation des surcharges. Celle-ci consiste\nà ajouter un coût supplémentaire chaque fois qu’un générateur dépasse sa capacité maximale. Concrè-\ntement, on mesure de combien un générateur est surchargé (par exemple, s’il doit fournir 55 unités\nalors que sa capacité est de 50, il y a 5 unités de surcharge), et on additionne ces excès pour tous les\ngénérateurs. Plus la surcharge est grande, plus le coût est élevé.",
+    "chunk_index": 4,
+    "doc_id": 63,
+    "page": 2
+  },
+  {
+    "question": "Quelle est la note donnée à ce système RAG selon l'extrait ?",
+    "chunk_attendu": "5/5",
+    "chunk_index": 19,
+    "doc_id": 63,
+    "page": 5
+  },
+  {
+    "question": "Quelle est la date limite pour remettre le code source de la première partie du projet sur Moodle ?",
+    "chunk_attendu": "2. Remise du projet\nCe projet est à réaliser par groupes de deux ou trois étudiants à constituer vous-mêmes, issus du même\ngroupe de TD. Votre code source de cette première partie (et uniquement de cette partie), correctement do-\ncumenté, sera à remettre sur Moodle au plus tard le14 novembre 2024, sous forme d’une archive jar ou zip\n(un seul dépôt par binôme/trinôme). Cette partie ne sera pas évaluée mais chaque groupe devra faire une\ndémonstration de son programme à son chargé de TD durant la séance de TP la semaine du 17 novembre. Celui-ci vous donnera des conseils, si nécessaire, aussi bien sur le rendu du programme mais aussi sur les\nchoix de conception faits et le code réalisé.",
+    "chunk_index": 18,
+    "doc_id": 63,
+    "page": 5
+  },
+  {
+    "question": "Quel est le taux d'utilisation de G2 dans l'instance S2 ?",
+    "chunk_attendu": "Donc, avec λ = 10 par exemple, nous obtenons Cout (S) = 1\n6 + 10 × 0 =\n1\n6 . G160kW\nG260kW M2 40kW\nM1 40kW\nM3 20kW\nM4 10kW\nFIGURE 3 – Instance 2\nAﬁn de pouvoir comparer deux instances possibles, nous gardons les\nmêmes maisons et les mêmes générateurs mais nous allons changer les\nconnections entre eux. Nous obtenons ainsi le réseau électrique S2 =\n〈M,G,C2〉 illustré par la Figure 3 où la maison M1 n’est plus connectée à\nG1 mais à G2 (ce qui provoquera une surcharge du générateurG2. Calcu-\nlons le coût de cette instance :\n• Taux d’utilisation de G1 et G2 : uG1 = 20\n60 ≃ 0.333 et uG2 = 40+40+10\n60 =\n1.5 ;\n• Sur char g e (S2) = max\n(\n0, 20−60\n60\n)\n+ max\n(\n0, 90−60\n60\n)\n= 0 + 0.5 = 0.5 ;\n• Di sp (S2) ≃ 6.16 avec u = uG1+uG2\n2 ≃ 0.917.",
+    "chunk_index": 8,
+    "doc_id": 63,
+    "page": 3
+  },
+  {
+    "question": "Quelles sont les trois options disponibles pour ajouter un élément au réseau électrique lors du démarrage du programme, avant l'option de fin ?",
+    "chunk_attendu": "III Instructions\n1. Tâches à réaliser\nPour la première étape du projet, vous devez développer un programme qui permet à un utilisateur de\nconﬁgurer manuellement le réseau électrique (i.e., maisons, générateurs et connexions). Au démarrage du programme, un menu s’afﬁche avec 4 options possibles :\n1) ajouter un générateur ;\n2) ajouter une maison ;\n3) ajouter une connexion entre une maison et un générateur existants ;\n4) ﬁn. Dans le cas où l’option 1 est retenue, le programme demande à l’utilisateur le nom du générateur et sa ca-\npacité maximale sur la même ligne (e.g., « G1 60 » pour créer le générateur nommé G1 ayant une capacité\nmaximale de 60kW), puis on revient au menu principal. Si le générateur a déjà été créé plus tôt, alors sa\nconsommation maximale est mise à jour (en avertissant l’utilisateur de cette MAJ). Dans le cas où l’option 2 est retenue, le principe est le même que pour la création d’un générateur. Cepen-\ndant, comme la consommation d’une maison est prédéﬁnie, il sufﬁt de mettre le nom de la maison suivi de\n« BASSE », « NORMAL » ou « FORTE » pour préciser qu’il s’agit d’une maison à consommation basse, normale\nou forte respectivement. Par exemple, « M1 NORMAL » permet de créer une maison nommée M1 ayant une\nconsommation normale. Si la maison a déjà été créée plus tôt, alors sa consommation est mise à jour (en\navertissant l’utilisateur de cette MAJ).",
+    "chunk_index": 12,
+    "doc_id": 63,
+    "page": 4
+  },
+  {
+    "question": "Quel est le numéro de section ou de point abordé dans l'extrait fourni ?",
+    "chunk_attendu": "2.",
+    "chunk_index": 10,
+    "doc_id": 63,
+    "page": 3
+  },
+  {
+    "question": "Quelle formule est utilisée pour calculer le coût d'une instance S en tenant compte de l'équilibrage et du surchargement des générateurs ?",
+    "chunk_attendu": "• respecte autant que possible les capacités maximales des générateurs ;\n• équilibre au maximum la charge normalisée entre les générateurs. Aﬁn de quantiﬁer ces critères, et ainsi pouvoir comparer plusieurs instances, il existe plusieurs formules. Dans le cadre de ce projet, les calculs effectués pour quantiﬁer ces critères seront basés sur le taux d’utilisa-\ntion de chaque générateur normalisé par sa capacité maximale. Étant donnée un générateurg ∈ G, son taux\nd’utilisation, noté ug , est calculé de la manière suivante :\nug =\nLg\nCg\navec :\n• Lg la charge actuelle du générateur g qui correspond à la somme des demandes électriques des mai-\nsons connectées à ce générateur ;\n• Cg la charge maximale du générateur g ;\nMaintenant que le taux d’utilisation d’un générateur est calculable, nous pouvons déﬁnir une formule per-\nmettant de mesurer l’efﬁcacité d’une instance en prenant en compte les deux critères décrits un peu plus\nhaut. Le coût d’une instance S = 〈M,G,C〉, noté Cout (S), est calculée comme suit :\nCout (S) = Di sp (S) + λ × Sur char g e (S)\navec :\n• Di sp (S) = ∑\ng ∈G |ug − u|qui représente la somme des écarts de chaque générateur par rapport à la\nmoyenne avec u = 1\n|G|\n∑\ng ∈G ug avec |G|correspondant au nombre de générateurs. En d’autres termes,\nc’est une mesure d’équilibre qui évalue dans quelle mesure les générateurs partagent la charge de\nfaçon proportionnelle à leur capacité.",
+    "chunk_index": 3,
+    "doc_id": 63,
+    "page": 2
+  },
+  {
+    "question": "Quelle action peut effectuer l'utilisateur quand l'option 2 est sélectionnée ?",
+    "chunk_attendu": "Quand l’option 2 est sélectionnée, l’utilisateur à la possibilité de modiﬁer une connexion existante.",
+    "chunk_index": 15,
     "doc_id": 63,
     "page": 4
   },
@@ -138,5 +89,54 @@
     "chunk_index": 5,
     "doc_id": 63,
     "page": 2
+  },
+  {
+    "question": "Quel est le taux d’utilisation de G2 pour l'instance présentée ?",
+    "chunk_attendu": "1. Exemples\nDans cette section, nous allons calculer le coût de plusieurs instances de réseaux électriques. G160kW\nG260kW M2 40kW\nM1 40kW\nM3 20kW\nM4 10kW\nFIGURE 2 – Instance 1\nReprenons l’instance S = 〈M,G,C〉 vue au début de la section (voir Figure 2\npour un rappel). Commençons par calculer le taux d’utilisation des deux générateursG1 et\nG2 : uG1 = 40+20\n60 = 1 et uG2 = 40+10\n60 = 5\n6 ≃ 0.8333. Calculons maintenant les différents éléments nécessaires au calcul de la\ndispersion des taux d’utilisation :\n• Sur char g e (S) = 0 car aucun des générateurs n’est en surcharge. • Di sp (S) = 1\n6 ≃ 0.1666 car la moyenne des taux d’utilisation des gé-\nnérateurs est u = uG1+uG2\n2 =\n1+ 5\n6\n2 = 11\n12 ≃ 0.9166. De ce fait, nous\navons : Di sp (S) = |uG1−u|+|uG2−u| = |1− 11\n12 |+|5\n6 − 11\n12 | =1\n12 + 1\n12 = 1\n6 .",
+    "chunk_index": 7,
+    "doc_id": 63,
+    "page": 3
+  },
+  {
+    "question": "Quelle commande permet de créer une connexion entre une maison M1 et un générateur G1 ?",
+    "chunk_attendu": "Une fois la maison créée, on revient au menu principal. Dans le cas où l’ option 3 est retenue, l’utilisateur peut créer une connexion entre un générateur et une\nmaison. Pour ce faire, l’utilisateur doit préciser sur une même ligne le nom du générateur et celui de la mai-\nson (ou inversement) séparés par un espace. Par exemple, « M1 G1 » (ou « G1 M1 ») permet de créer une\nconnexion entre la maison M1 et le générateur G1. Il faut bien entendu que le générateur et la maison aient\nété créés au préalable (message d’erreur si ce n’est pas le cas et on revient au menu).",
+    "chunk_index": 13,
+    "doc_id": 63,
+    "page": 4
+  },
+  {
+    "question": "Quelle est la valeur de Cout(S2) lorsqu'on utilise λ = 10?",
+    "chunk_attendu": "Cela nous donne donc\nDi sp (S2) = |uG1 − u| + |uG2 − u| ≃ |0.333 − 0.917| + |1.5 − 0.917| ≃\n0.584 + 0.583 ≃ 1.167 ;\nAvec λ = 10, nous obtenons Cout (S2) ≃ 1.167 + 10 × 0.5 ≃ 6.167. Nous pouvons maintenant comparer les deux instances S1 et S2. Vu que\nCout (S1) = 0.167 < 6.167 = Cout (S2), nous pouvons dire que S1 est une meilleure instance que S2.",
+    "chunk_index": 9,
+    "doc_id": 63,
+    "page": 3
+  },
+  {
+    "question": "Quelle est la condition obligatoire pour le raccordement d'une maison au réseau électrique selon l'extrait ?",
+    "chunk_attendu": "Remarques et Restrictions\nConcernant les restrictions, il est important de noter que dans le cadre de la réalisation de ce projet :\n• Le réseau électrique contient toujours au moins une maison et un générateur, i.e., M ̸= ; et G ̸= ;. • La somme des charges de demande électrique des maisons doit être inférieure ou égale à la somme\ndes capacités maximales des générateurs. • Une maison doit obligatoirement être raccordée à un unique générateur. Et quelques remarques supplémentaires :\n• Pour certaines conﬁgurations de maisons et de générateurs, il sera impossible de trouver une affecta-\ntion avec un coût de 0. Dans ce cas, la solution optimale sera la (ou les) instance(s) qui minimisera ce\ncoût. • Il existe forcément une solution minimale (i.e., instances qui minimisera le coût) pour une conﬁgura-\ntion donnée. • Pour une conﬁguration de maisons et de générateurs donnée, le coût minimal peut être obtenu par\nune ou plusieurs instances. 3/5",
+    "chunk_index": 11,
+    "doc_id": 63,
+    "page": 3
+  },
+  {
+    "question": "Quelle est la première étape que l'utilisateur doit effectuer avant de saisir une nouvelle connexion ?",
+    "chunk_attendu": "Pour\ncela, l’utilisateur doit d’abord saisir une connexion existante avant de saisir la nouvelle connexion. Par\n4/5",
+    "chunk_index": 16,
+    "doc_id": 63,
+    "page": 4
+  },
+  {
+    "question": "Quelles sont les catégories de consommation des maisons mentionnées dans l'extrait, et quelles sont leurs demandes électriques respectives en kW ?",
+    "chunk_attendu": "Une répartition efﬁcace des consom-\nmateurs sur les sources électriques est cruciale pour éviter les surcharges, améliorer l’équilibre global et\nminimiser les pertes. Une entreprise chargée de construire ces réseaux électriques nous demande de l’ai-\nder, en développant un logiciel qui permet de :\n1) représenter un réseau simpliﬁé avec uniquement des générateurs et des maisons ;\n2) simuler les connections possibles entre les générateurs et les maisons ;\n3) calculer le coût d’une solution et le minimiser. Nous réaliserons ces tâches de façon incrémentale, aﬁn d’avoir à la ﬁn du semestre un logiciel fonctionnel. II Modélisation\nUne instance du problème est composée d’un triplet S = 〈M,G,C〉 où :\n• M représente l’ensemble des maisons (ou consommateurs), chacune avec une demande électrique\ndonnée (en kW). Une maison fera forcément partie d’une de ces trois catégories : basse consomma-\ntion (10 kW), normale (20 kW) ou forte consommation (40 kW) ;\n• G représente l’ensemble des générateurs avec leurs capacités maximales (en kW) ;\n• C → M × G représente l’ensemble des connections entre une maison et un générateur. Chaque maison\ndoit obligatoirement être alimentée par un unique générateur. Aucune contrainte par contre sur les\ngénérateurs, i.e., un générateur peut n’être connecté à aucune maison, une maison, deux maisons ou\ntoutes les maisons. Le réseau S = 〈{(M1,40),(M2,40),(M3,20),(M4,10)},{(G1,60),(G2,60)},{( M1,G1),(M2,G2),(M3,G1),(M4,G2)}〉\nest un exemple comprenant 4 maisons (2 à forte consommation, 1 normale et 1 faible consommation) et 2\ngénérateurs de 60kW . Les connections peuvent être représentés graphiquement (voir par exemple la Figure\n1). Cette ﬁgure est une instance possible d’allocations, i.e., de connections entre maisons et générateurs.",
+    "chunk_index": 1,
+    "doc_id": 63,
+    "page": 1
+  },
+  {
+    "question": "Quelle action est réalisée lorsque l'utilisateur sélectionne l'option 3 du programme ?",
+    "chunk_attendu": "exemple, si l’utilisateur souhaite connecter la maison M1 au générateur G2 plutôt qu’au générateur G1 alors\nil pourra le faire de la manière suivante :\nVeuillez saisir la connexion que vous souhaitez modiﬁer : M1 G1\nVeuillez saisir la nouvelle connexion : M1 G2\nSi l’utilisateur avait saisi « G1 M1 » puis « G2 M1 », le résultat aurait été identique. Bien entendu, il faut vériﬁer\nque les informations données soient correctes et, si ce n’est pas le cas, le programme doit préciser l’erreur à\nl’utilisateur et revenir au menu. Quand l’option 3 est sélectionnée, le programme afﬁche l’ensemble du réseau (générateurs, maisons et\nconnexions) de façon claire et lisible. Vous êtes libre de l’afﬁchage mais il faut qu’une personne n’ayant ja-\nmais fait d’informatique puisse comprendre le réseau électrique actuel. Enﬁn, si l’option 4 est sélectionnée, le programme s’arrête. Pour le moment, il n’est pas demandé (du moins pour cette première partie) de gérer les erreurs dues à\nl’entrée d’une information de mauvais type (par exemple si l’utilisateur entre le nombre 1,5 au lieu d’un\nnombre entier). Ce type d’erreur sera à gérer dans la seconde partie.",
+    "chunk_index": 17,
+    "doc_id": 63,
+    "page": 5
   }
 ]

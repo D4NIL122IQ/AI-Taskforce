@@ -27,6 +27,8 @@ langgraph-prebuilt==1.0.8
 # RAG / Vecteurs
 chromadb
 pypdf==6.9.2
+langchain-experimental==0.1.0
+
 
 # HTTP
 requests==2.32.5
@@ -35,3 +37,6 @@ httpx==0.28.1
 # Pydantic
 pydantic==2.12.5
 pydantic-settings==2.13.1
+
+#langfuse
+langfuse==4.5.0
