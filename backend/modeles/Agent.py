@@ -30,9 +30,7 @@ class Agent:
         déclenche automatiquement une réinitialisation du modèle LLM sous-jacent.
     """
 
-    ctr = 0  # Compteur global pour générer des identifiants uniques
-
-    def __init__(self, nom, modele, prompt, max_token,  temperature, use_web: bool =False, utilise_mcp: bool = False):
+    def __init__(self, nom, modele, prompt, max_token,  temperature, ID:int = 0, use_web: bool =False, utilise_mcp: bool = False):
         """
         Initialise un agent avec ses paramètres principaux.
 
@@ -60,7 +58,7 @@ class Agent:
 
         self.valider_parametres(nom, modele, prompt, max_token, temperature)
 
-        self.ID = Agent.ctr
+        self.ID = ID # sera défini lors de l'insertion en base de données
         self.nom = nom
         self._modele = modele
         self._temperature = temperature
@@ -71,8 +69,6 @@ class Agent:
         self.date_creation = dt.now()
         self.documents = []
         self._mcp: MCPConnection | None = None
-
-        self.ctr += 1
 
     def valider_parametres(self, nom, modele, prompt, max_token, temperature):
         """
@@ -148,26 +144,20 @@ class Agent:
 
         model = self._modele
 
-        # ── Enrichissement RAG (optionnel) ───────────────────────────────────────
-        """
+        # ── Enrichissement RAG ──────────────────────────────────────
         contexte_rag = ""
         try:
             from backend.services.rag_service import RAGService
-            rag = RAGService()
-            contexte_rag = rag.contexte_pour_prompt(
+            contexte_rag = RAGService().contexte_pour_prompt(
                 agent_id=self.ID,
-                question=message,
+                question=user_input_context,
                 top_k=5
             )
+            print(f"************Question reel de user : {user_input_context}")
+            print(f"\n***********contexte_rag: {contexte_rag}")
         except Exception as e:
-            print(f"[Agent] ⚠ RAG indisponible : {e}")
-
-        """
-
-        
-        # ── Enrichissement RAG (désactivé) ──────────────────────────────────────
-        contexte_rag = ""
-
+            print(f"[Agent] RAG indisponible : {e}")
+            
         # ── Enrichissement MCP ────────────────────────────────────────
         contexte_mcp = ""
         print(f"[Agent:{self.nom}] mcp_actif={self.mcp_actif}")

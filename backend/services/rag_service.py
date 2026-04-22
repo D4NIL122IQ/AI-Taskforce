@@ -19,7 +19,7 @@ CONFIGURATION (.env) :
   CHROMA_DIR=chroma_db       ← dossier de persistance ChromaDB (défaut)
   CHUNK_SIZE=500              ← taille des chunks en mots (défaut)
   CHUNK_OVERLAP=50            ← overlap entre chunks (défaut)
-  EMBEDDING_MODEL=nomic-embed-text:latest  ← modèle Pléiade pour les embeddings
+  EMBEDDING_MODEL="qwen3-embedding:4b"  ← modèle Pléiade pour les embeddings
 
 PIPELINE COMPLET :
   Fichier → Chunks → Embeddings → Base vectorielle (Chroma)
@@ -33,10 +33,10 @@ from typing import List
 from dotenv import load_dotenv
 from pypdf import PdfReader
 
+from backend.modeles.pleaide_embedding import PleiadesEmbeddings
 
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_experimental.text_splitter import SemanticChunker
 from langchain_core.documents import Document
-from langchain_ollama import OllamaEmbeddings
 from langchain_chroma import Chroma
 
 load_dotenv()
@@ -46,8 +46,7 @@ load_dotenv()
 CHROMA_DIR = os.getenv("CHROMA_DIR", "chroma_db")
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "500"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "50"))
-
-EMBEDDING_MODEL = "nomic-embed-text"
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "nomic-embed-text-v2-moe:latest")
 
 
 class RAGService:
@@ -56,9 +55,10 @@ class RAGService:
 
     Implémentation basée sur Chroma + LangChain.
     """
+    
 
     def __init__(self):
-        self._vectordb = None  # lazy loading
+        self._vectordb = None  
 
     # ──────────────────────────────────────────────────────────────────────────
     # PROPRIÉTÉ : base vectorielle (lazy)
@@ -66,7 +66,7 @@ class RAGService:
     @property
     def vectordb(self):
         if self._vectordb is None:
-            embedding = OllamaEmbeddings(model=EMBEDDING_MODEL)
+            embedding = PleiadesEmbeddings(model=EMBEDDING_MODEL)
 
             self._vectordb = Chroma(
                 persist_directory=CHROMA_DIR,
@@ -78,78 +78,130 @@ class RAGService:
     # ──────────────────────────────────────────────────────────────────────────
     # ÉTAPE 1 : EXTRACTION DU TEXTE
     # ──────────────────────────────────────────────────────────────────────────
-    def _extraire_texte(self, chemin: str) -> str:
-        if not os.path.exists(chemin):
-            raise FileNotFoundError(f"Fichier introuvable : {chemin}")
+    
 
-        ext = os.path.splitext(chemin)[1].lower()
-
-        if ext in (".txt", ".md"):
-            return open(chemin, "r", encoding="utf-8").read()
-
-        elif ext == ".pdf":
-            reader = PdfReader(chemin)
-            return "\n".join(page.extract_text() or "" for page in reader.pages)
-
-        elif ext == ".docx":
-            from docx import Document as DocxDocument
-            doc = DocxDocument(chemin)
-            return "\n".join(p.text for p in doc.paragraphs)
-
-        else:
-            raise ValueError(f"Format non supporté pour le RAG : {ext}")
-
-    # ──────────────────────────────────────────────────────────────────────────
-    # ÉTAPE 2 : DÉCOUPAGE EN CHUNKS
-    # ──────────────────────────────────────────────────────────────────────────
-    def _decouper_en_chunks(self, texte: str) -> List[Document]:
-        """
-        Découpe le texte en segments avec overlap pour préserver le contexte.
-        """
-        splitter = RecursiveCharacterTextSplitter(
-            chunk_size=CHUNK_SIZE,
-            chunk_overlap=CHUNK_OVERLAP,
-            separators=["\n\n", "\n", ".", " ", ""]
+    def _decouper_en_chunks(self, documents: List[Document]) -> List[Document]:
+        """Chunking parallèle — 1 thread par page/section."""
+        splitter = SemanticChunker(
+            embeddings=PleiadesEmbeddings(),
+            breakpoint_threshold_type="percentile",
+            breakpoint_threshold_amount=85,
         )
 
-        return splitter.create_documents([texte])
+        def chunker_un_doc(doc: Document) -> List[Document]:
+            return splitter.create_documents(
+                [doc.page_content],
+                metadatas=[doc.metadata]
+            )
+
+        chunks = []
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = [executor.submit(chunker_un_doc, doc) for doc in documents]
+            for future in futures:
+                chunks.extend(future.result())
+
+        return chunks
+    # ──────────────────────────────────────────────────────────────────────────
+    # ÉTAPE 2 : Stratégie de découpage en chunks
+    # ──────────────────────────────────────────────────────────────────────────
+
+    def _extraire_en_documents_structures(self, chemin: str) -> List[Document]:
+        """
+        Extrait le texte EN CONSERVANT la structure comme métadonnées.
+        Chaque section/paragraphe devient un Document LangChain avec contexte.
+        """
+        ext = os.path.splitext(chemin)[1].lower()
+
+        if ext == ".pdf":
+            return self._extraire_pdf_structure(chemin)
+        elif ext == ".docx":
+            return self._extraire_docx_structure(chemin)
+        elif ext in (".txt", ".md"):
+            return self._extraire_txt_structure(chemin)
+
+    def _extraire_pdf_structure(self, chemin: str) -> List[Document]:
+        """Extrait page par page avec numéro de page en métadonnée."""
+        reader = PdfReader(chemin)
+        docs = []
+        for i, page in enumerate(reader.pages):
+            texte = page.extract_text() or ""
+            if texte.strip():
+                docs.append(Document(
+                    page_content=texte,
+                    metadata={"page": i + 1, "source": chemin}
+                ))
+        return docs  # 1 Document par page → chunking ensuite
+
+    def _extraire_docx_structure(self, chemin: str) -> List[Document]:
+        """Regroupe par section Word (Heading → paragraphes suivants)."""
+        from docx import Document as DocxDocument
+        doc = DocxDocument(chemin)
+        docs = []
+        section_courante = ""
+        titre_courant = "Introduction"
+
+        for para in doc.paragraphs:
+            if para.style.name.startswith("Heading"):
+                # Sauvegarde la section précédente
+                if section_courante.strip():
+                    docs.append(Document(
+                        page_content=section_courante.strip(),
+                        metadata={"titre_section": titre_courant, "source": chemin}
+                    ))
+                titre_courant = para.text
+                section_courante = ""
+            else:
+                section_courante += para.text + "\n"
+
+        # Dernière section
+        if section_courante.strip():
+            docs.append(Document(
+                page_content=section_courante.strip(),
+                metadata={"titre_section": titre_courant, "source": chemin}
+            ))
+        return docs
+
+    def _extraire_txt_structure(self, chemin: str) -> List[Document]:
+        """Découpe par double saut de ligne (paragraphes naturels)."""
+        texte = open(chemin, "r", encoding="utf-8").read()
+        paragraphes = [p.strip() for p in texte.split("\n\n") if p.strip()]
+        return [
+            Document(page_content=p, metadata={"source": chemin})
+            for p in paragraphes
+        ]
 
     # ──────────────────────────────────────────────────────────────────────────
     # ÉTAPE 3 : INDEXATION
     # ──────────────────────────────────────────────────────────────────────────
     def indexer_document(self, doc_id: int, agent_id: int, chemin_fichier: str) -> int:
-        print(f"[RAGService] Indexation doc_id={doc_id}, agent_id={agent_id}...")
+        documents = self._extraire_en_documents_structures(chemin_fichier)
+        chunks = self._decouper_en_chunks(documents)
 
-        # 1. Extraction
-        texte = self._extraire_texte(chemin_fichier)
-
-        if not texte.strip():
-            print("[RAGService] ⚠ Document vide.")
-            return 0
-
-        # 2. Découpage
-        documents = self._decouper_en_chunks(texte)
-
-        # 3. Ajout des métadonnées
-        for i, doc in enumerate(documents):
-            doc.metadata = {
-                "doc_id": doc_id,
-                "agent_id": agent_id,
+        for i, chunk in enumerate(chunks):
+            chunk.metadata.update({
+                "doc_id": int(doc_id),
+                "agent_id": int(agent_id),
                 "chunk_index": i,
                 "chemin": chemin_fichier
-            }
+            })
 
-        # 4. Stockage
-        self.vectordb.add_documents(documents)
+        # Stocker par lot
+        stock_size = 50
+        for i in range(0, len(chunks), stock_size):
+            stock = chunks[i:i + stock_size]
+            self.vectordb.add_documents(stock)
+            print(f"[RAGService] Batch {i//stock_size + 1} stocké ({len(stock)} chunks)")
 
-        print(f"[RAGService] {len(documents)} chunks indexés.")
-        return len(documents)
+        print(f"[RAGService] Document {doc_id} indexé : {len(chunks)} chunks total")
+        return len(chunks)
 
     # ──────────────────────────────────────────────────────────────────────────
     # RECHERCHE
     # ──────────────────────────────────────────────────────────────────────────
 
     def rechercher(self, agent_id: int, question: str, top_k: int = 5, use_post: bool = False) -> List[str]:
+
         if not question.strip():
             return []
 
@@ -159,8 +211,8 @@ class RAGService:
             search_kwargs={
                 "k": top_k,
                 "fetch_k": 30,
-                "lambda_mult": 0.5,
-                "filter": {"agent_id": agent_id}
+                "lambda_mult": 0.1,
+                "filter": {"agent_id": int(agent_id)}
             }
         )
 
@@ -213,16 +265,6 @@ class RAGService:
     # CONTEXTE POUR PROMPT
     # ──────────────────────────────────────────────────────────────────────────
     def contexte_pour_prompt(self, agent_id: int, question: str, top_k: int = 5) -> str:
-        
-        from backend.services.document_service import DocumentService
-        from backend.appDatabase.database import get_db
-
-        docService = DocumentService(next(get_db()))
-        list_docs = docService.lister(agent_id=agent_id)
-        for doc in list_docs:
-            self.indexer_document(doc_id= doc.id_document,
-                                   agent_id= agent_id,
-                                   chemin_fichier= doc.chemin)
             
         chunks = self.rechercher(agent_id, question, top_k)
 

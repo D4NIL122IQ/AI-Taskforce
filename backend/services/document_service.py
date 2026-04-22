@@ -27,11 +27,7 @@ import uuid
 from typing import List
 
 from sqlalchemy.orm import Session
-
 from backend.models.document_model import Document
-from backend.services.rag_service import RAGService
-from backend.services.rag_service import RAGService
-
 
 # ── Dossier de stockage des fichiers uploadés ─────────────────────────────────
 # Modifiable via variable d'environnement UPLOAD_DIR (ex: volume Docker)
@@ -88,10 +84,10 @@ class DocumentService:
             )
         
         # Vérifie l'unicité  de fichier pour agent
-        docs = self.db.query(Document).filter(Document.agent_id == agent_id).all()
+        """docs = self.db.query(Document).filter(Document.agent_id == agent_id).all()
         for doc in docs:
             if doc.nom_fichier == filename:
-                raise ValueError(f"Un document nommé '{filename}' existe déjà pour cet agent.") 
+                raise ValueError(f"Un document nommé '{filename}' existe déjà pour cet agent.") """
 
         # Nom unique sur le disque : uuid + extension d'origine
         nom_unique = f"{uuid.uuid4().hex}{extension}"

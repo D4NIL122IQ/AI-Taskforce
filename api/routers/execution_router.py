@@ -10,6 +10,7 @@ from backend.appDatabase.database import get_db, SessionLocal
 from backend.models.execution_model import Execution
 from backend.models.mcp_token_model import McpToken
 from backend.modeles.Agent import Agent as AgentLLM
+from backend.models.agent_model import Agent
 from backend.modeles.orchestration import Orchestration
 
 from backend.services.mcp_token_service import (
@@ -105,8 +106,19 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
                 f"Tu es {n.data.label}, un expert en : {n.data.role or n.data.label}. "
                 "Réponds de façon précise et structurée."
             )
+            try:
+                id = db.query(Agent).filter(
+                    Agent.nom == n.data.label and 
+                    Agent.system_prompt == n.data.system_prompt and 
+                    Agent.temperature == n.data.temperature and 
+                    Agent.utilisateur_id == body.utilisateur_id
+                ).first().id_agent
+            except:
+                id = -1
+
 
             agent = AgentLLM(
+                ID = id,
                 nom=n.data.label,
                 modele=_normalise_modele(n.data.model),
                 prompt=prompt_agent,

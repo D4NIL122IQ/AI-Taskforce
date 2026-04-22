@@ -76,3 +76,30 @@ def chat(message: str, model: str, conversation_history: list = None, web_search
     conversation_history.append({"role": "assistant", "content": full_response})
 
     return full_response
+
+
+def embed(text: str, model: str = "nomic-embed-text-v2-moe:latest") -> list[float]:
+    """Convertit un texte en vecteur d'embedding via Ollama."""
+    
+    payload = {
+        "model": model,
+        "input": text 
+    }
+
+    response = requests.post(
+        "https://pleiade.mi.parisdescartes.fr/ollama/api/embed",
+        json=payload,
+        headers=_get_headers(),
+        timeout=60
+    )
+
+    if response.status_code != 200:
+        raise RuntimeError(f"Embedding API error {response.status_code}: {response.text}")
+
+    result = response.json()
+    embeddings = result.get("embeddings")
+    
+    if not embeddings:
+        raise ValueError(f"Aucun embedding retourné. Réponse: {result}")
+    
+    return embeddings[0]  # Retourne le vecteur du premier (et unique) texte

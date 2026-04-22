@@ -43,6 +43,8 @@ class AgentService:
             self.db.commit()
             self.db.refresh(agent)
 
+            print(f"[AgentService] Agent créé avec ID {agent.id_agent}")
+
             return agent.id_agent
 
         except Exception as e:

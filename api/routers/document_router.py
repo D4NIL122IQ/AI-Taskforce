@@ -47,7 +47,8 @@ async def upload_document(
         raise HTTPException(status_code=400, detail=str(e))
 
     # Indexer dans ChromaDB
-    try:
+    try: 
+        print((f"[Agent {agent_id}] Lancement de l'indexation RAG  {doc.id_document} "))
         background_tasks.add_task(
             RAGService().indexer_document,
             doc_id=doc.id_document,
@@ -56,7 +57,7 @@ async def upload_document(
         
     except Exception as e:
         # Ne pas bloquer si ChromaDB échoue
-        print(f"[DocumentRouter] ⚠ Indexation RAG échouée : {e}")
+        print(f"[DocumentRouter] Indexation RAG échouée : {e}")
 
     return DocumentUploadResponse(
         message=f"Document '{doc.nom_fichier}' uploadé et indexé avec succès.",

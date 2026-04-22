@@ -5,6 +5,7 @@ venv/
 .env
 .pytest_cache/
 uploads/
+backend/main/test.py
 
 #Mac 
 ./env

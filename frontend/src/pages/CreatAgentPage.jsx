@@ -66,6 +66,7 @@ const AgentPage = () => {
   }, [id])
 
   const [form, setForm] = useState({
+    id: existing?.id || null,
     name: existing?.name || '',
     role: existing?.role || '',
     model: existing?.model || MODELS[0],
@@ -139,11 +140,23 @@ const AgentPage = () => {
       }
 
       if (id) {
-        await fetch(`http://localhost:8000/agents/${id}`, {
+        const res = await fetch(`http://localhost:8000/agents/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         })
+        
+        const data = await res.json()
+        if (files.length > 0) {
+          await Promise.all(files.map(file => {
+            const formData = new FormData()
+            formData.append('file', file)
+            return fetch(`http://localhost:8000/agents/${id}/documents`, {
+              method: 'POST',
+              body: formData,
+            })
+          }))
+        }
       } else {
         const res = await fetch('http://localhost:8000/agents/', {
           method: 'POST',
@@ -152,7 +165,7 @@ const AgentPage = () => {
         })
         if (!res.ok) {
           const err = await res.json()
-          alert('Erreur : ' + (typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail)))
+          alert('Erreur ici : ' + (typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail)))
           return
         }
         const data = await res.json()
