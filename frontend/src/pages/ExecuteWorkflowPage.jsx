@@ -302,6 +302,45 @@ const ChatMessage = ({ msg }) => {
     </div>
   )
 
+  if (msg.role === 'document') return (
+  <div className="flex flex-col gap-1.5">
+    <div className="flex items-center gap-2 px-1">
+      <FileText size={12} style={{ color: '#10b981' }} />
+      <span className="text-sm font-medium" style={{ color: '#10b981' }}>
+        Document généré par {msg.agent}
+      </span>
+    </div>
+
+    <a
+      href={`http://localhost:8000/executions/documents/download/${msg.filename}`}
+      download
+      className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:scale-[1.02]"
+      style={{
+        background: 'rgba(16,185,129,0.12)',
+        border: '1px solid rgba(16,185,129,0.3)'
+      }}
+    >
+      <div
+        className="w-10 h-10 rounded-lg flex items-center justify-center"
+        style={{
+          background: 'rgba(16,185,129,0.2)',
+          border: '1px solid rgba(16,185,129,0.4)'
+        }}
+      >
+        <FileText size={18} style={{ color: '#10b981' }} />
+      </div>
+
+      <div className="flex-1">
+        <p className="text-sm font-medium text-gray-800 dark:text-white">
+          {msg.filename}
+        </p>
+        <p className="text-xs text-gray-500 dark:text-white/40">
+          📥 Cliquer pour télécharger
+        </p>
+      </div>
+    </a>
+  </div>
+)   
   if (msg.role === 'warning') return (
     <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl"
       style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)' }}>
@@ -478,7 +517,22 @@ const handleSend = async () => {
 
             if (data.type === 'final') {
               setActiveNodeId(null)
-              addMsg({ role: 'result', content: data.response })
+               // Si un document a déjà été généré, le document EST le résultat final
+              // → on n'affiche pas le texte de synthèse du reconstructeur
+             setMessages(prev => {
+                const hasDocument = prev.some(m => m.role === 'document')
+                if (hasDocument) return prev
+                return [...prev, { role: 'result', content: data.response }]
+              })
+            }
+
+
+            if (data.type === 'document') {
+              addMsg({
+                role: 'document',
+                agent: data.agent,
+                filename: data.filename
+              })
             }
 
             if (data.type === 'error') {

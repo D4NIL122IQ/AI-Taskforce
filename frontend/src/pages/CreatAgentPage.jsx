@@ -43,6 +43,7 @@ const AgentPage = () => {
 
   const [roleType, setRoleType] = useState(existing?.role === 'Superviseur' ? 'superviseur' : 'autre')
   const [webSearch, setWebSearch] = useState(existing?.webSearch || false)
+  const [generateDocument, setGenerateDocument] = useState(existing?.generateDocument || false)
   const [mcpEnabled, setMcpEnabled] = useState(!!existing?.mcpType)
   const [mcpType, setMcpType] = useState(existing?.mcpType || 'github')
   const [isDragging, setIsDragging] = useState(false)
@@ -112,6 +113,7 @@ const AgentPage = () => {
           maxTokens: parseInt(form.maxTokens),
           systemPrompt: form.systemPrompt,
           webSearch,
+          generateDocument,
           mcpType: mcpEnabled ? mcpType : null,
         }
         if (id) {
@@ -135,6 +137,7 @@ const AgentPage = () => {
         system_prompt: form.systemPrompt,
         statut: 'ACTIF',
         web_search: webSearch,
+        generate_document: generateDocument,
         mcp_type: mcpEnabled ? mcpType : null,
         utilisateur_id: user.user_id || null,
       }
@@ -262,6 +265,21 @@ const AgentPage = () => {
                 </button>
               </div>
 
+              <div className="flex items-center justify-between bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm text-gray-900 dark:text-white">Générer des documents</span>
+                    <span className="text-xs text-gray-400 dark:text-white/40">L'agent génère un fichier Word (.docx) avec sa réponse</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setGenerateDocument((v) => !v)}
+                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 cursor-pointer flex-shrink-0 ${generateDocument ? 'bg-violet-600' : 'bg-gray-200 dark:bg-white/15'}`}
+                    aria-pressed={generateDocument}
+                    aria-label="Activer la génération de documents"
+                  >
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${generateDocument ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
+                </div>
               {roleType !== 'superviseur' && <div className={`flex flex-col gap-0 bg-gray-50 dark:bg-white/5 border rounded-xl overflow-hidden transition-colors duration-200 ${mcpEnabled ? 'border-violet-400 dark:border-violet-500' : 'border-gray-200 dark:border-white/10'}`}>
                 <div className="flex items-center justify-between px-4 py-3">
                   <div className="flex flex-col gap-0.5">

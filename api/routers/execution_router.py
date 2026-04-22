@@ -13,6 +13,9 @@ from backend.modeles.Agent import Agent as AgentLLM
 from backend.models.agent_model import Agent
 from backend.modeles.orchestration import Orchestration
 
+from fastapi.responses import FileResponse
+from backend.services.docx_generator_service import get_document_path, document_existe
+
 from backend.services.mcp_token_service import (
     McpTokenService,
     McpTokenNotFoundError,
@@ -35,6 +38,7 @@ class NodeData(BaseModel):
     web_search: bool = False
     utilise_mcp: bool = False   # L'agent doit-il se connecter à un MCP ?
     mcp_type: str = ""          # "github" | "gmail" — ignoré si utilise_mcp=False
+    generate_document: bool = False
 
 class WorkflowNode(BaseModel):
     id: str
@@ -126,6 +130,7 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
                 temperature=_clamp(n.data.temperature),
                 use_web=n.data.web_search,
                 utilise_mcp=n.data.utilise_mcp,
+                generate_document=n.data.generate_document,
             )
 
             # ── Connexion MCP si demandée ─────────────────────────────────────
@@ -202,6 +207,13 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
                                 "type": "supervisor",
                                 "content": log
                             }) + "\n"
+                    if "documents_generated" in state_update:
+                        for doc in state_update["documents_generated"]:
+                            yield json.dumps({
+                                "type": "document",
+                                "agent": doc["agent"],
+                                "filename": doc["filename"]
+                            }) + "\n"
 
                     # Réponse finale
                     if "final_response" in state_update:
@@ -211,6 +223,8 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
                             "response": final_response
                         }) + "\n"
             orche.stop_execution = False
+
+
             
             # Sauvegarde en base après exécution
             try:
@@ -347,6 +361,18 @@ def delete_execution(execution_id: int, db: Session = Depends(get_db)):
     db.delete(e); db.commit()
     return {"message": f"Exécution {execution_id} supprimée"}
 
+
+
+
+@router.get("/documents/download/{filename}")
+def download_document(filename: str):
+    if not document_existe(filename):
+        raise HTTPException(status_code=404, detail="Document non trouvé")
+    return FileResponse(
+        path=str(get_document_path(filename)),
+        filename=filename,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
