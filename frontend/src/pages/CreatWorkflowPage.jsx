@@ -17,12 +17,24 @@ import '@xyflow/react/dist/style.css'
 import NavBar from '../components/layout/NavBar'
 import { useTheme } from '../context/ThemeContext'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Bot, Crown, Trash2, Plus, Save, AlertCircle, Play, Workflow, ArrowLeft } from 'lucide-react'
+import { Bot, Crown, Trash2, Plus, Save, AlertCircle, Play, Workflow, ArrowLeft, Mail } from 'lucide-react'
+
+const GithubGlyph = ({ size = 12, color = 'currentColor' }) => (
+  <svg viewBox="0 0 24 24" fill={color} width={size} height={size}>
+    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+  </svg>
+)
 
 /* ─────────────────────────── helpers ────────────────────────────── */
 
 
 const SUPERVISOR_ID = 'supervisor-0'
+
+const isSupervisorRole = (role) => {
+  if (typeof role !== 'string') return false
+  const r = role.toLowerCase().trim()
+  return r === 'superviseur' || r === 'supervisor'
+}
 
 /* ─────────────────────────── custom nodes ───────────────────────── */
 
@@ -51,7 +63,6 @@ const SupervisorNode = ({ data, selected }) => (
       </span>
     )}
     <Handle type="source" position={Position.Bottom} style={{ background: '#8b5cf6', border: '2px solid transparent', width: 10, height: 10 }} />
-    <Handle type="target" position={Position.Top} style={{ background: '#8b5cf6', border: '2px solid transparent', width: 10, height: 10 }} />
   </div>
 )
 
@@ -77,8 +88,8 @@ const AgentNode = ({ data, selected }) => (
         {data.model}
       </span>
     )}
-    <Handle type="source" position={Position.Top} style={{ background: 'rgba(0,0,0,0.4)', border: '2px solid transparent', width: 10, height: 10 }} />
-    <Handle type="target" position={Position.Bottom} style={{ background: 'rgba(0,0,0,0.4)', border: '2px solid transparent', width: 10, height: 10 }} />
+    <Handle type="target" position={Position.Top} style={{ background: 'rgba(0,0,0,0.4)', border: '2px solid transparent', width: 10, height: 10 }} />
+    <Handle type="source" id="mcp" position={Position.Right} style={{ background: 'transparent', border: 'none', width: 1, height: 1, top: '50%' }} />
   </div>
 )
 
@@ -106,7 +117,6 @@ const SupervisorNodeDark = ({ data, selected }) => (
       </span>
     )}
     <Handle type="source" position={Position.Bottom} style={{ background: '#8b5cf6', border: '2px solid #080808', width: 10, height: 10 }} />
-    <Handle type="target" position={Position.Top} style={{ background: '#8b5cf6', border: '2px solid #080808', width: 10, height: 10 }} />
   </div>
 )
 
@@ -132,13 +142,65 @@ const AgentNodeDark = ({ data, selected }) => (
         {data.model}
       </span>
     )}
-    <Handle type="source" position={Position.Top} style={{ background: 'rgba(255,255,255,0.5)', border: '2px solid #080808', width: 10, height: 10 }} />
-    <Handle type="target" position={Position.Bottom} style={{ background: 'rgba(255,255,255,0.5)', border: '2px solid #080808', width: 10, height: 10 }} />
+    <Handle type="target" position={Position.Top} style={{ background: 'rgba(255,255,255,0.5)', border: '2px solid #080808', width: 10, height: 10 }} />
+    <Handle type="source" id="mcp" position={Position.Right} style={{ background: 'transparent', border: 'none', width: 1, height: 1, top: '50%' }} />
   </div>
 )
 
-const lightNodeTypes = { supervisor: SupervisorNode, agent: AgentNode }
-const darkNodeTypes  = { supervisor: SupervisorNodeDark, agent: AgentNodeDark }
+const renderMcpGlyph = (mcpType, color, size = 12) => {
+  if (mcpType === 'gmail') return <Mail size={size} style={{ color }} />
+  return <GithubGlyph size={size} color={color} />
+}
+
+const MCP_META = {
+  github: { label: 'GitHub', accent: '#24292f', accentDark: '#f0f6fc' },
+  gmail:  { label: 'Gmail',  accent: '#ea4335', accentDark: '#f28b82' },
+}
+
+const McpNode = ({ data, selected }) => {
+  const key = data.mcp_type in MCP_META ? data.mcp_type : 'github'
+  const meta = MCP_META[key]
+  return (
+    <div
+      className="flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border transition-all duration-200"
+      style={{
+        background: 'rgba(0,0,0,0.03)',
+        borderColor: selected ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.12)',
+        minWidth: 90,
+      }}
+    >
+      <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.05)' }}>
+        {renderMcpGlyph(key, meta.accent)}
+      </div>
+      <span className="text-xs font-medium" style={{ color: 'rgba(0,0,0,0.7)' }}>{meta.label}</span>
+      <Handle type="target" position={Position.Left} style={{ background: meta.accent, border: '2px solid transparent', width: 8, height: 8 }} />
+    </div>
+  )
+}
+
+const McpNodeDark = ({ data, selected }) => {
+  const key = data.mcp_type in MCP_META ? data.mcp_type : 'github'
+  const meta = MCP_META[key]
+  return (
+    <div
+      className="flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border transition-all duration-200"
+      style={{
+        background: 'rgba(255,255,255,0.04)',
+        borderColor: selected ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.12)',
+        minWidth: 90,
+      }}
+    >
+      <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)' }}>
+        {renderMcpGlyph(key, meta.accentDark)}
+      </div>
+      <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>{meta.label}</span>
+      <Handle type="target" position={Position.Left} style={{ background: meta.accentDark, border: '2px solid #080808', width: 8, height: 8 }} />
+    </div>
+  )
+}
+
+const lightNodeTypes = { supervisor: SupervisorNode, agent: AgentNode, mcp: McpNode }
+const darkNodeTypes  = { supervisor: SupervisorNodeDark, agent: AgentNodeDark, mcp: McpNodeDark }
 
 /* ─────────────────────────── toolbox item ───────────────────────── */
 
@@ -199,16 +261,53 @@ function FlowCanvas({ agents, dark, workflowName, workflowId = null, initialNode
   const nodeTypes = dark ? darkNodeTypes : lightNodeTypes
   const navigate = useNavigate()
 
-  // En mode création seulement : auto-remplir le superviseur depuis la toolbox
+  // Synchronise les badges MCP avec les agents présents (hydratation + nettoyage des orphelins)
+  useEffect(() => {
+    const agentIds = new Set(nodes.filter(n => n.type === 'agent').map(n => n.id))
+    const missing = nodes.filter(n =>
+      n.type === 'agent' &&
+      (n.data?.mcp_type || n.data?.mcpType) &&
+      !nodes.some(m => m.id === `mcp-${n.id}`)
+    )
+    const orphans = nodes.filter(n => n.type === 'mcp' && !agentIds.has(n.id.replace(/^mcp-/, '')))
+    if (missing.length === 0 && orphans.length === 0) return
+
+    const newMcpNodes = missing.map(n => ({
+      id: `mcp-${n.id}`,
+      type: 'mcp',
+      position: { x: (n.position?.x || 0) + 180, y: (n.position?.y || 0) + 10 },
+      data: { mcp_type: n.data.mcp_type || n.data.mcpType },
+      selectable: false,
+      deletable: false,
+    }))
+    const newMcpEdges = missing.map(n => ({
+      id: `e-${n.id}-mcp`,
+      source: n.id,
+      sourceHandle: 'mcp',
+      target: `mcp-${n.id}`,
+      animated: false,
+      style: { stroke: 'rgba(120,120,120,0.45)', strokeWidth: 1.5, strokeDasharray: '4 4' },
+      selectable: false,
+      deletable: false,
+    }))
+    const orphanIds = new Set(orphans.map(n => n.id))
+    setNodes(ns => [...ns.filter(n => !orphanIds.has(n.id)), ...newMcpNodes])
+    setEdges(es => [
+      ...es.filter(e => !orphanIds.has(e.source) && !orphanIds.has(e.target)),
+      ...newMcpEdges,
+    ])
+  }, [nodes, setNodes, setEdges])
+
+  // En mode création seulement : auto-remplir le superviseur tant qu'il n'a pas été personnalisé
   useEffect(() => {
     if (isEditMode) return
-    const sup = agents.find(a => a.role === 'Superviseur' || a.role === 'supervisor')
-    if (sup) {
-      setNodes(ns => ns.map(n => n.id === SUPERVISOR_ID
-        ? { ...n, data: { ...n.data, label: sup.name, model: sup.model } }
-        : n
-      ))
-    }
+    const sup = agents.find(a => isSupervisorRole(a.role))
+    if (!sup) return
+    setNodes(ns => ns.map(n => {
+      if (n.id !== SUPERVISOR_ID) return n
+      if (n.data.label && n.data.label !== 'Superviseur') return n
+      return { ...n, data: { ...n.data, label: sup.name, model: sup.model, role: 'Superviseur', system_prompt: sup.systemPrompt || '' } }
+    }))
   }, [agents, isEditMode, setNodes])
 
   const showToast = (msg) => {
@@ -217,6 +316,11 @@ function FlowCanvas({ agents, dark, workflowName, workflowId = null, initialNode
   }
 
   const onConnect = useCallback((params) => {
+    const touchesMcp = params.source?.startsWith('mcp-') || params.target?.startsWith('mcp-')
+    if (touchesMcp) {
+      showToast('Le nœud MCP est attaché automatiquement à son agent.')
+      return
+    }
     const involvesSupervisor = params.source === SUPERVISOR_ID || params.target === SUPERVISOR_ID
     if (!involvesSupervisor) {
       showToast('Les agents ne peuvent se connecter qu\'au superviseur.')
@@ -241,18 +345,66 @@ function FlowCanvas({ agents, dark, workflowName, workflowId = null, initialNode
     if (!raw) return
     const agent = JSON.parse(raw)
     const position = screenToFlowPosition({ x: e.clientX, y: e.clientY })
-    setNodes(ns => [...ns, {
-      id: `agent-${nodeCounter.current++}`,
+    const isSupervisor = isSupervisorRole(agent.role)
+
+    // Drop d'un agent "Superviseur" → remplace le superviseur central (pas un nouvel agent)
+    if (isSupervisor) {
+      setNodes(ns => ns.map(n => n.id === SUPERVISOR_ID
+        ? { ...n, data: { ...n.data, label: agent.name, model: agent.model, role: 'Superviseur', system_prompt: agent.systemPrompt || '' } }
+        : n
+      ))
+      showToast(`Superviseur mis à jour : ${agent.name}`)
+      return
+    }
+
+    const mcpType = agent.mcpType || agent.mcp_type || ''
+    const agentId = `agent-${nodeCounter.current++}`
+    const agentNode = {
+      id: agentId,
       type: 'agent',
       position,
-      data: { label: agent.name, role: agent.role, model: agent.model, system_prompt: agent.systemPrompt || '', web_search: agent.webSearch || false, utilise_mcp: !!(agent.mcpType || agent.mcp_type), mcp_type: agent.mcpType || agent.mcp_type || '' },
-    }])
-  }, [screenToFlowPosition, setNodes])
+      data: { label: agent.name, role: agent.role, model: agent.model, system_prompt: agent.systemPrompt || '', web_search: agent.webSearch || false, utilise_mcp: !!mcpType, mcp_type: mcpType },
+    }
+    if (!mcpType) {
+      setNodes(ns => [...ns, agentNode])
+      return
+    }
+    const mcpId = `mcp-${agentId}`
+    const mcpNode = {
+      id: mcpId,
+      type: 'mcp',
+      position: { x: position.x + 180, y: position.y + 10 },
+      data: { mcp_type: mcpType },
+      selectable: false,
+      deletable: false,
+    }
+    const mcpEdge = {
+      id: `e-${agentId}-mcp`,
+      source: agentId,
+      sourceHandle: 'mcp',
+      target: mcpId,
+      animated: false,
+      style: { stroke: 'rgba(120,120,120,0.45)', strokeWidth: 1.5, strokeDasharray: '4 4' },
+      selectable: false,
+      deletable: false,
+    }
+    setNodes(ns => [...ns, agentNode, mcpNode])
+    setEdges(es => [...es, mcpEdge])
+  }, [screenToFlowPosition, setNodes, setEdges])
 
   const deleteSelected = useCallback(() => {
-    setNodes(ns => ns.filter(n => !n.selected || n.id === SUPERVISOR_ID))
-    setEdges(es => es.filter(e => !e.selected))
-  }, [setNodes, setEdges])
+    const removed = new Set(
+      nodes.filter(n => n.selected && n.id !== SUPERVISOR_ID).map(n => n.id)
+    )
+    const mcpDrops = new Set()
+    removed.forEach(id => { if (id.startsWith('agent-')) mcpDrops.add(`mcp-${id}`) })
+    const allRemoved = new Set([...removed, ...mcpDrops])
+
+    setNodes(ns => ns.filter(n => !allRemoved.has(n.id)))
+    setEdges(es => es.filter(e =>
+      !e.selected && !allRemoved.has(e.source) && !allRemoved.has(e.target)
+    ))
+  }, [nodes, setNodes, setEdges])
 
   const saveWorkflow = async () => {
     const user = JSON.parse(localStorage.getItem('user') || 'null')
@@ -306,6 +458,19 @@ function FlowCanvas({ agents, dark, workflowName, workflowId = null, initialNode
   const canvasBg = dark ? '#080808' : '#f3f4f6'
   const bgColor = dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'
 
+  const specialistAgents = agents.filter(a => !isSupervisorRole(a.role))
+  const currentSupervisorLabel = nodes.find(n => n.id === SUPERVISOR_ID)?.data?.label || ''
+  const currentSupervisorAgent = agents.find(a => a.name === currentSupervisorLabel)
+
+  const handleSupervisorChange = (agentName) => {
+    const agent = agents.find(a => a.name === agentName)
+    if (!agent) return
+    setNodes(ns => ns.map(n => n.id === SUPERVISOR_ID
+      ? { ...n, data: { ...n.data, label: agent.name, model: agent.model, role: 'Superviseur', system_prompt: agent.systemPrompt || '' } }
+      : n
+    ))
+  }
+
   return (
     <div className="flex h-full" style={{ height: 'calc(100vh - 68px)' }}>
 
@@ -317,25 +482,57 @@ function FlowCanvas({ agents, dark, workflowName, workflowId = null, initialNode
         <div className="px-4 py-4 border-b" style={{ borderColor: sidebarBorder }}>
           <h2 className={`text-sm font-semibold ${dark ? 'text-white' : 'text-gray-900'}`}>Boîte à outils</h2>
           <p className={`text-xs mt-0.5 ${dark ? 'text-white/35' : 'text-gray-400'}`}>
-            Glissez un agent sur le canvas
+            Glissez un spécialiste sur le canvas
           </p>
         </div>
 
-        <div className="flex-1 px-3 py-3 flex flex-col gap-2">
+        {/* ── Sélecteur de superviseur ── */}
+        <div className="px-4 py-3 border-b" style={{ borderColor: sidebarBorder }}>
+          <div className="flex items-center gap-2 mb-2">
+            <Crown size={12} style={{ color: '#8b5cf6' }} />
+            <span className={`text-xs font-medium ${dark ? 'text-white/70' : 'text-gray-700'}`}>Superviseur</span>
+          </div>
           {agents.length === 0 ? (
+            <p className={`text-xs ${dark ? 'text-white/35' : 'text-gray-400'}`}>
+              Aucun agent disponible. <a href="/agents/create" className="text-violet-500">Créer un agent</a>.
+            </p>
+          ) : (
+            <select
+              value={currentSupervisorAgent?.name || ''}
+              onChange={(e) => handleSupervisorChange(e.target.value)}
+              className="w-full text-xs rounded-lg px-2 py-2 cursor-pointer"
+              style={{
+                background: dark ? 'rgba(255,255,255,0.04)' : '#f9fafb',
+                border: `1px solid ${dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'}`,
+                color: dark ? 'white' : '#111827',
+                outline: 'none',
+              }}
+            >
+              <option value="" disabled>Choisir un superviseur…</option>
+              {agents.map((a) => (
+                <option key={a.id || a.name} value={a.name}>
+                  {isSupervisorRole(a.role) ? '👑 ' : ''}{a.name}{a.model ? ` · ${a.model}` : ''}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        <div className="flex-1 px-3 py-3 flex flex-col gap-2">
+          {specialistAgents.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${dark ? 'bg-white/4 border border-dashed border-white/12' : 'bg-gray-100 border border-dashed border-gray-300'}`}>
                 <Bot size={18} className={dark ? 'text-white/25' : 'text-gray-300'} />
               </div>
               <div>
-                <p className={`text-xs ${dark ? 'text-white/35' : 'text-gray-400'}`}>Aucun agent disponible</p>
+                <p className={`text-xs ${dark ? 'text-white/35' : 'text-gray-400'}`}>Aucun spécialiste disponible</p>
                 <a href="/agents/create" className="text-xs mt-1 inline-flex items-center gap-1 text-violet-500">
                   <Plus size={11} /> Créer un agent
                 </a>
               </div>
             </div>
           ) : (
-            agents.map((a, i) => <ToolboxItem key={i} agent={a} dark={dark} />)
+            specialistAgents.map((a, i) => <ToolboxItem key={i} agent={a} dark={dark} />)
           )}
         </div>
 
@@ -346,11 +543,17 @@ function FlowCanvas({ agents, dark, workflowName, workflowId = null, initialNode
             </div>
             <span className={`text-xs ${dark ? 'text-white/40' : 'text-gray-400'}`}>Superviseur (nœud central)</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-2">
             <div className={`w-5 h-5 rounded flex items-center justify-center ${dark ? 'bg-white/5 border border-white/15' : 'bg-gray-100 border border-gray-200'}`}>
               <Bot size={11} className={dark ? 'text-white/50' : 'text-gray-400'} />
             </div>
             <span className={`text-xs ${dark ? 'text-white/40' : 'text-gray-400'}`}>Agent spécialisé</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className={`w-5 h-5 rounded flex items-center justify-center ${dark ? 'bg-white/5 border border-white/15' : 'bg-gray-100 border border-gray-200'}`}>
+              <GithubGlyph size={10} color={dark ? 'rgba(255,255,255,0.5)' : 'rgba(107,114,128,1)'} />
+            </div>
+            <span className={`text-xs ${dark ? 'text-white/40' : 'text-gray-400'}`}>Connexion MCP (auto)</span>
           </div>
         </div>
       </aside>
@@ -594,7 +797,7 @@ export default function CreatWorkflowPage() {
         .then(data => {
           if (Array.isArray(data)) {
             setAgents(data.map(a => ({
-              id: String(a.id),
+              id: String(a.id_agent ?? a.id ?? ''),
               name: a.nom,
               role: a.role || '',
               model: a.modele,
