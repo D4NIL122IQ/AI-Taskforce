@@ -60,8 +60,27 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
     workflow = StateGraph(OrchestrationState)
 
     # --- Nœud du Superviseur ---
+    def _decrire_specialistes(agents):
+        """Construit une description enrichie : nom + rôle + MCP si connecté."""
+        lignes = []
+        for a in agents:
+            desc = f"- {a.nom}"
+            role = getattr(a, "prompt", "") or ""
+            if role:
+                desc += f" (rôle : {role[:120]})"
+            mcp = getattr(a, "mcp", None)
+            if mcp is not None:
+                caps = ", ".join(mcp.capabilities) or "aucune"
+                desc += (
+                    f" — CONNECTÉ au MCP « {mcp.name} » ({mcp.mcp}) avec le token "
+                    f"personnel de l'utilisateur. Capacités : {caps}."
+                )
+            lignes.append(desc)
+        return "\n".join(lignes)
+
     def superviseur_node(state: OrchestrationState):
         noms_specialistes = [a.nom for a in agents_specialistes]
+        desc_specialistes = _decrire_specialistes(agents_specialistes)
         resultats_actuels = state.get('results', {})
         niveau = state.get('niveau_recherche', niveau_recherche)
         task_calls = state.get('current_task_calls', 0)
@@ -79,7 +98,8 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
             prompt_sup = (
                 f"Tâche initiale de l'utilisateur : {state['user_input']}\n"
                 f"Résultats obtenus jusqu'à présent : {resultats_actuels}\n"
-                f"Agents disponibles : {noms_specialistes}\n\n"
+                f"Agents disponibles (noms exacts à utiliser dans next_agent) : {noms_specialistes}\n"
+                f"Détails des agents :\n{desc_specialistes}\n\n"
                 f"CONTEXTE DE RAFFINEMENT — agent actuel : {task_agent}\n"
                 f"Appels utilisés pour cette sous-tâche : {task_calls}/{niveau}\n"
                 f"Si le résultat de '{task_agent}' est satisfaisant, passe à la prochaine sous-tâche ou route vers 'reconstructeur'. "
@@ -91,7 +111,11 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
             prompt_sup = (
                 f"Tâche initiale de l'utilisateur : {state['user_input']}\n"
                 f"Résultats obtenus jusqu'à présent : {resultats_actuels}\n"
-                f"Agents disponibles : {noms_specialistes}\n\n"
+                f"Agents disponibles (noms exacts à utiliser dans next_agent) : {noms_specialistes}\n"
+                f"Détails des agents :\n{desc_specialistes}\n\n"
+                "Quand un agent est CONNECTÉ à un MCP avec le token personnel de l'utilisateur, "
+                "toute demande relevant de ce service concerne le compte de l'utilisateur courant : "
+                "ne demande JAMAIS son identifiant/username, donne directement la sous-tâche à l'agent.\n\n"
                 "Analyse ce qui manque. Si tu as besoin d'un spécialiste, réponds STRICTEMENT avec un JSON : "
                 '{"next_agent": "nom_du_specialiste", "prompt": "instructions_pour_lui"}. '
                 "Si toutes les sous-tâches sont finies, réponds : "
