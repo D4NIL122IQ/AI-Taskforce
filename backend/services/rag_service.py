@@ -203,14 +203,22 @@ class RAGService:
 
         if not question.strip():
             return []
+        
+        #parametrage en fonction de la quantité de donnés
+        agent_count = self.vectordb._collection.count(
+            where={"agent_id": int(agent_id)}
+        )
 
-        # Retriever MMR
+        fetch_k = min(30, agent_count)
+        if agent_count > 30:
+            fetch_k = agent_count // 3
+
         base_retriever = self.vectordb.as_retriever(
             search_type="mmr",
             search_kwargs={
                 "k": top_k,
-                "fetch_k": 30,
-                "lambda_mult": 0.1,
+                "fetch_k": fetch_k,
+                "lambda_mult": 0.5,
                 "filter": {"agent_id": int(agent_id)}
             }
         )
