@@ -5,6 +5,9 @@ from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 import json
 import requests as http_requests
+import threading
+import queue as queue_module
+import time
 
 from backend.appDatabase.database import get_db, SessionLocal
 from backend.models.execution_model import Execution
@@ -23,7 +26,9 @@ from backend.services.mcp_token_service import (
 )
 
 router = APIRouter(prefix="/executions", tags=["Executions"])
-all_executions = {} # dict des executions en cours.
+all_executions = {}      # execution_id → True/False (actif ou stoppé)
+execution_queues = {}    # execution_id → queue.Queue (événements produits)
+execution_status = {}    # execution_id → "running" | "done" | "error"
 
 
 # ── Schéma de la requête /execute ─────────────────────────────────────────────
@@ -164,11 +169,17 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
     except ValueError as e:
         raise HTTPException(status_code=422, detail=f"Configuration agent invalide : {e}")
 
-    def generate():
+    # ── Initialisation de la queue pour cet execution_id ──────────────────────
+    q = queue_module.Queue()
+    execution_queues[execution_id] = q
+    execution_status[execution_id] = "running"
+
+    # ── Thread d’arrière-plan : tourne indépendamment de la connexion HTTP ────
+    def run_orchestration():
         try:
-            # Émettre les warnings MCP en tête de stream
+            # Émettre les warnings MCP en tête
             for w in mcp_warnings:
-                yield json.dumps({"type": "warning", "message": w}) + "\n"
+                q.put(json.dumps({"type": "warning", "message": w}) + "\n")
 
             niveau = body.niveau_recherche if body.niveau_recherche in (1, 2, 3) else 1
 
@@ -182,50 +193,32 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
             all_echanges = {}
 
             for event in orche.executer_stream(body.prompt):
-                 # Arrête l'orchestration en cours
                 if not all_executions.get(execution_id, False):
                     orche.stop()
                     break
 
-
                 for node_name, state_update in event.items():
-
-                    # Résultat d’un agent spécialiste
                     if "results" in state_update:
                         for agent_nom, content in state_update["results"].items():
                             all_echanges[agent_nom] = content
-                            yield json.dumps({
-                                "type": "echange",
-                                "agent": agent_nom,
-                                "content": content
-                            }) + "\n"
+                            q.put(json.dumps({"type": "echange", "agent": agent_nom, "content": content}) + "\n")
 
-                    # Logs du superviseur
                     if "supervisor_logs" in state_update:
                         for log in state_update["supervisor_logs"]:
-                            yield json.dumps({
-                                "type": "supervisor",
-                                "content": log
-                            }) + "\n"
+                            q.put(json.dumps({"type": "supervisor", "content": log}) + "\n")
+
                     if "documents_generated" in state_update:
                         for doc in state_update["documents_generated"]:
-                            yield json.dumps({
-                                "type": "document",
-                                "agent": doc["agent"],
-                                "filename": doc["filename"]
-                            }) + "\n"
+                            q.put(json.dumps({"type": "document", "agent": doc["agent"], "filename": doc["filename"]}) + "\n")
 
-                    # Réponse finale
                     if "final_response" in state_update:
                         final_response = state_update["final_response"]
-                        yield json.dumps({
-                            "type": "final",
-                            "response": final_response
-                        }) + "\n"
+                        q.put(json.dumps({"type": "final", "response": final_response}) + "\n")
+
             orche.stop_execution = False
+            execution_status[execution_id] = "done"
+            q.put(None)  # signal de fin
 
-
-            
             # Sauvegarde en base après exécution
             try:
                 db_save = SessionLocal()
@@ -234,7 +227,7 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
                     status="TERMINE",
                     prompt=body.prompt,
                     outputs_json={"final_response": final_response},
-                    history_json = all_echanges
+                    history_json=all_echanges
                 )
                 db_save.add(execution)
                 db_save.commit()
@@ -243,14 +236,16 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
                 print("Erreur sauvegarde :", e)
 
         except Exception as e:
-            yield json.dumps({
-                "type": "error",
-                "message": str(e)
-            }) + "\n"
+            execution_status[execution_id] = "error"
+            q.put(json.dumps({"type": "error", "message": str(e)}) + "\n")
+            q.put(None)
 
-    response = StreamingResponse(generate(), media_type="application/x-ndjson")
-    response.headers["execution_id"] = execution_id 
+    thread = threading.Thread(target=run_orchestration, daemon=True)
+    thread.start()
 
+    # ── Retourne l’execution_id immédiatement ──────────────────────────────────
+    from fastapi.responses import JSONResponse
+    response = JSONResponse(content={"execution_id": execution_id})
     return response
 
 #---------------------mettre fin à l'exécution en cours-------------------------#
@@ -262,6 +257,46 @@ def stop_execution(execution_id: str):
         print("STOP demandé dans route", flush=True)
         return {"message": "Execution stoppée"}
     return {"message": "Execution non trouvée"}
+
+
+# Stream reconnectable : le frontend, le changement de page lors de l'execution garde l'execution en back
+
+@router.get("/stream/{execution_id}")
+def stream_execution(execution_id: str):
+    """
+    Endpoint SSE reconnectable.
+    Le frontend se connecte ici après avoir reçu l'execution_id.
+    Si l'utilisateur change de page et revient, il se reconnecte ici
+    et reçoit tous les événements accumulés dans la queue.
+    """
+    q = execution_queues.get(execution_id)
+    if q is None:
+        raise HTTPException(status_code=404, detail="Exécution non trouvée ou expirée")
+
+    def generate():
+        while True:
+            try:
+                # timeout=1s pour ne pas bloquer indéfiniment si le thread est mort
+                item = q.get(timeout=1)
+                if item is None:  # signal de fin
+                    # Nettoyer la mémoire après un délai (garder 3 min pour reconnexions tardives)
+                    def cleanup():
+                        time.sleep(180)
+                        execution_queues.pop(execution_id, None)
+                        execution_status.pop(execution_id, None)
+                        all_executions.pop(execution_id, None)
+                    threading.Thread(target=cleanup, daemon=True).start()
+                    break
+                yield item
+            except queue_module.Empty:
+                # Si le thread est terminé et la queue vide → on sort
+                status = execution_status.get(execution_id)
+                if status in ("done", "error"):
+                    break
+                # Sinon on continue d'attendre (exécution encore en cours)
+                continue
+
+    return StreamingResponse(generate(), media_type="application/x-ndjson")
 
 
 # ── Endpoints MCP tokens (niveau utilisateur) ─────────────────────────────────

@@ -1,6 +1,7 @@
 import { NavLink, Link, useNavigate } from 'react-router-dom'
-import { Sun, Moon } from 'lucide-react'
+import { Sun, Moon, Loader2, Play } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
+import { useExecution } from '../../context/ExecutionContext'
 import { useState } from 'react'
 
 
@@ -51,6 +52,7 @@ const UserIcon = () => (
 const NavBar = () => {
   const navigate = useNavigate()
   const { dark, toggle } = useTheme()
+  const { isRunning } = useExecution()
   const [showMenu, setShowMenu] = useState(false)
   const user = JSON.parse(localStorage.getItem("user") || "null")
 
@@ -85,6 +87,25 @@ const NavBar = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-3 flex-shrink-0">
+
+            {/* Bouton exécution en cours — visible uniquement si un workflow tourne */}
+            {isRunning && (
+              <button
+                type="button"
+                onClick={() => navigate('/workflow/execute')}
+                className="flex items-center gap-2 px-4 py-[7px] rounded-full text-sm font-semibold transition-all duration-200 focus-visible:outline-none"
+                style={{
+                  background: 'rgba(139,92,246,0.15)',
+                  border: '1px solid rgba(139,92,246,0.5)',
+                  color: '#a78bfa',
+                  boxShadow: '0 0 12px rgba(139,92,246,0.25)',
+                }}
+                aria-label="Revenir à l'exécution en cours"
+              >
+                <Loader2 size={14} className="animate-spin" />
+                <span>Exécution en cours</span>
+              </button>
+            )}
 
             {/* Toggle dark/light */}
             <button

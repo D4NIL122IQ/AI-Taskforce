@@ -2,7 +2,7 @@ import { useState, useEffect  } from 'react'
 import { Link } from 'react-router-dom'
 import NavBar from '../components/layout/NavBar'
 import PageBackground from '../components/layout/PageBackground'
-import { Plus, Bot, Pencil, Trash2, Globe, Thermometer, Hash } from 'lucide-react'
+import { Plus, Bot, Pencil, Trash2, Globe, Thermometer, Hash, Settings2 } from 'lucide-react'
 
 const useAgents = () => {
   const [agents, setAgents] = useState([])
@@ -97,6 +97,14 @@ const AgentCard = ({ agent, onDelete }) => (
         <Pencil size={13} />
         Modifier
       </Link>
+      <Link
+        to={`/rag-config/${agent.id}`}
+        className="flex items-center gap-2 flex-1 justify-center py-2 rounded-xl text-xs font-medium transition-all duration-200"
+        style={{ color: '#a78bfa', background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}
+      >
+        <Settings2 size={13} />
+        Config RAG
+      </Link>
       <button
         type="button"
         onClick={() => onDelete(agent.id)}
@@ -136,12 +144,6 @@ const GestionAgentPage = () => {
               <Plus size={16} />
               Créer un agent
             </Link >
-            <Link
-              to="/rag-config"
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-black text-sm font-medium transition-colors duration-200"
-            >
-              Config RAG
-            </Link>
           </div>
         </div>
 

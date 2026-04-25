@@ -1,142 +1,142 @@
 [
   {
-    "question": "Quelle commande permet de créer une connexion entre un générateur et une maison, et quelle est l'importance de l'ordre des noms dans cette commande ?",
-    "chunk_attendu": "Une fois la maison créée, on revient au menu principal. Dans le cas où l’ option 3 est retenue, l’utilisateur peut créer une connexion entre un générateur et une\nmaison. Pour ce faire, l’utilisateur doit préciser sur une même ligne le nom du générateur et celui de la mai-\nson (ou inversement) séparés par un espace. Par exemple, « M1 G1 » (ou « G1 M1 ») permet de créer une\nconnexion entre la maison M1 et le générateur G1. Il faut bien entendu que le générateur et la maison aient\nété créés au préalable (message d’erreur si ce n’est pas le cas et on revient au menu).",
-    "chunk_index": 13,
-    "doc_id": 70,
-    "page": 4
+    "question": "Quelle est la quantité totale produite par les entreprises 1 et 2 après fusion selon l'extrait ?",
+    "chunk_attendu": "Concrètement la fusion conduit à fermer les usines (ce fait est aussi observé emprique-\nment). Dans le résultat on a :\nQ1 + Q2 = 100\n4 + 100\n4 = 100\n2 avant fusion\nQ1+2 = 100\n3 après fusion\n100\n2 > 100\n3 :\nMais on l a aussi dans la situation de monopole: les entreprises 1 , 2 ,3 dans le jeu sans\nfusion produisent ensemble une quantité plus grande que le monopole:\nQ1 + Q2 + Q3 = 100\n4 + 100\n4 + 100\n4 = 3 100\n4 > Q m = 100\n2 :",
+    "chunk_index": 142,
+    "doc_id": 75,
+    "page": 30
   },
   {
-    "question": "Quelle est la date limite pour la remise du code source sur Moodle ?",
-    "chunk_attendu": "2. Remise du projet\nCe projet est à réaliser par groupes de deux ou trois étudiants à constituer vous-mêmes, issus du même\ngroupe de TD. Votre code source de cette première partie (et uniquement de cette partie), correctement do-\ncumenté, sera à remettre sur Moodle au plus tard le14 novembre 2024, sous forme d’une archive jar ou zip\n(un seul dépôt par binôme/trinôme). Cette partie ne sera pas évaluée mais chaque groupe devra faire une\ndémonstration de son programme à son chargé de TD durant la séance de TP la semaine du 17 novembre. Celui-ci vous donnera des conseils, si nécessaire, aussi bien sur le rendu du programme mais aussi sur les\nchoix de conception faits et le code réalisé.",
-    "chunk_index": 18,
-    "doc_id": 70,
-    "page": 5
+    "question": "Quel est l'effet de la fusion sur les profits joints des deux entreprises selon l'extrait ?",
+    "chunk_attendu": "Par ailleurs les pro ts joints des deux entreprises sont plus élevés en cas de fusion (ou\nintégration verticale).\nsans fusion avec fusion\nprix de revente 3A + c\n4\nA + c\n2 (-)\nventes A \u0000 c\n4\nA \u0000 c\n2 (+)\npro t joint 3(A \u0000 c)2\n42\n(A \u0000 c)2\n4 (+)\nLes relations verticales résultent de l interaction de deux monopoles en chaîne : la\nfusion augmente l e¢ cacité du marché.... elle favorise la \"concurrence\", réduit le prix",
+    "chunk_index": 87,
+    "doc_id": 75,
+    "page": 19
   },
   {
-    "question": "Quelle action l'utilisateur peut-il effectuer sur une connexion existante quand l'option 2 est sélectionnée ?",
-    "chunk_attendu": "Quand l’option 2 est sélectionnée, l’utilisateur à la possibilité de modiﬁer une connexion existante.",
-    "chunk_index": 15,
-    "doc_id": 70,
-    "page": 4
-  },
-  {
-    "question": "Quelle est l'étape que doit suivre un utilisateur avant de saisir une nouvelle connexion selon le texte ?",
-    "chunk_attendu": "Pour\ncela, l’utilisateur doit d’abord saisir une connexion existante avant de saisir la nouvelle connexion. Par\n4/5",
-    "chunk_index": 16,
-    "doc_id": 70,
-    "page": 4
-  },
-  {
-    "question": "Quelle formule est utilisée pour calculer le taux d’utilisation ug d’un générateur g ?",
-    "chunk_attendu": "• respecte autant que possible les capacités maximales des générateurs ;\n• équilibre au maximum la charge normalisée entre les générateurs. Aﬁn de quantiﬁer ces critères, et ainsi pouvoir comparer plusieurs instances, il existe plusieurs formules. Dans le cadre de ce projet, les calculs effectués pour quantiﬁer ces critères seront basés sur le taux d’utilisa-\ntion de chaque générateur normalisé par sa capacité maximale. Étant donnée un générateurg ∈ G, son taux\nd’utilisation, noté ug , est calculé de la manière suivante :\nug =\nLg\nCg\navec :\n• Lg la charge actuelle du générateur g qui correspond à la somme des demandes électriques des mai-\nsons connectées à ce générateur ;\n• Cg la charge maximale du générateur g ;\nMaintenant que le taux d’utilisation d’un générateur est calculable, nous pouvons déﬁnir une formule per-\nmettant de mesurer l’efﬁcacité d’une instance en prenant en compte les deux critères décrits un peu plus\nhaut. Le coût d’une instance S = 〈M,G,C〉, noté Cout (S), est calculée comme suit :\nCout (S) = Di sp (S) + λ × Sur char g e (S)\navec :\n• Di sp (S) = ∑\ng ∈G |ug − u|qui représente la somme des écarts de chaque générateur par rapport à la\nmoyenne avec u = 1\n|G|\n∑\ng ∈G ug avec |G|correspondant au nombre de générateurs. En d’autres termes,\nc’est une mesure d’équilibre qui évalue dans quelle mesure les générateurs partagent la charge de\nfaçon proportionnelle à leur capacité.",
-    "chunk_index": 3,
-    "doc_id": 70,
-    "page": 2
-  },
-  {
-    "question": "Quel est le rôle du paramètre λ dans le contexte décrit ?",
-    "chunk_attendu": "À l’inverse, si aucun générateur n’est\nen surcharge alors Sur char g e (S) = 0. • λ ∈ N∗ est un paramètre qui contrôle la sévérité de la pénalisation en cas de dépassement de la\ncapacité maximale d’au moins un des générateurs ;\nPlusieurs exemples de calculs vous sont donnés dans la sous-section suivante. Nous sommes maintenant capable de calculer le coût d’une instance.",
-    "chunk_index": 5,
-    "doc_id": 70,
-    "page": 2
-  },
-  {
-    "question": "Quel est le taux de dispersion (Di sp) pour l'instance S décrite ?",
-    "chunk_attendu": "1. Exemples\nDans cette section, nous allons calculer le coût de plusieurs instances de réseaux électriques. G160kW\nG260kW M2 40kW\nM1 40kW\nM3 20kW\nM4 10kW\nFIGURE 2 – Instance 1\nReprenons l’instance S = 〈M,G,C〉 vue au début de la section (voir Figure 2\npour un rappel). Commençons par calculer le taux d’utilisation des deux générateursG1 et\nG2 : uG1 = 40+20\n60 = 1 et uG2 = 40+10\n60 = 5\n6 ≃ 0.8333. Calculons maintenant les différents éléments nécessaires au calcul de la\ndispersion des taux d’utilisation :\n• Sur char g e (S) = 0 car aucun des générateurs n’est en surcharge. • Di sp (S) = 1\n6 ≃ 0.1666 car la moyenne des taux d’utilisation des gé-\nnérateurs est u = uG1+uG2\n2 =\n1+ 5\n6\n2 = 11\n12 ≃ 0.9166. De ce fait, nous\navons : Di sp (S) = |uG1−u|+|uG2−u| = |1− 11\n12 |+|5\n6 − 11\n12 | =1\n12 + 1\n12 = 1\n6 .",
-    "chunk_index": 7,
-    "doc_id": 70,
-    "page": 3
-  },
-  {
-    "question": "Quelles sont les sources de production distribuées mentionnées dans le réseau électrique moderne décrit dans l'extrait ?",
-    "chunk_attendu": "Université Paris Cité\nProgrammation avancée et application\nLicence 3 Informatique\nProjet : Réseau de distribution d’électricité (partie 1)\nI Problématique\nLes réseaux électriques modernes intègrent de plus en plus de sources de production distribuées (panneaux\nsolaires, éoliennes locales, générateurs). Ces sources ont des capacités différentes et doivent alimenter un\nensemble de consommateurs (maisons, bâtiments, petites usines).",
-    "chunk_index": 0,
-    "doc_id": 70,
-    "page": 1
-  },
-  {
-    "question": "Quelle est la valeur fixée pour la sévérité de la pénalisation λ lors de la première phase du calcul du coût du réseau électrique?",
-    "chunk_attendu": "Une fois la connexion\ncréée, on revient au menu principal. Dans le cas où l’option 4 est retenue, cela signiﬁe que l’utilisateur a terminé de créer son réseau électrique. Dans ce cas, vous devez vériﬁer que chaque maison est connectée à un unique générateur. Si ce n’est pas le\ncas, vous donnerez le nom des maisons pour lesquelles il y a un problème (i.e., pas de connexion ou trop de\nconnexions) avant de revenir au menu principal. L ’utilisateur peut maintenant calculer le coût du réseau qu’il ou elle vient de créer, modiﬁer les connexions\nexistantes aﬁn d’éventuellement obtenir une meilleure instance ou afﬁcher le réseau actuel. Pour cela, il fait\nface à un menu qui propose les 4 options suivantes :\n1) calculer le coût du réseau électrique actuel ;\n2) modiﬁer une connexion ;\n3) afﬁcher le réseau ;\n4) ﬁn. Quand l’option 1 est sélectionnée, le programme calcule le coût du réseau électrique actuel S = 〈M,G,C〉 en\nprécisant également la somme des écarts de chaque générateur par rapport à la moyenne ( Di sp (S)) et la\npénalisation des surcharges (Sur char g e (S)). Pour cette première phase, la valeur de la sévérité de la pé-\nnalisation λ sera ﬁxée à 10.",
+    "question": "Quel est l'équilibre du jeu selon le raisonnement décrit dans l'extrait ?",
+    "chunk_attendu": "\u000f Une stratégie dominée ne sera jamais jouée dans un jeu. Or les joueurs sont capables\nde l anticiper. Dans le jeu ci-dessus, J2 sait que J1 ne jouera pas D. Mais s il considère\nque D n est pas possible, alors pour lui L devient dominée.\nBien sûr, J1 peut faire le même raisonnement : J2 sait que J1 ne joue jamais D, par\nconséquent, il ne joue pas L..... ce qui  nalement fait que U ne sera pas jouée non plus,\nl équilibre est (M,R).",
     "chunk_index": 14,
-    "doc_id": 70,
+    "doc_id": 76,
     "page": 4
   },
   {
-    "question": "Quelles sont les catégories de consommation pour les maisons et leurs demandes électriques respectives en kW selon l'extrait ?",
-    "chunk_attendu": "Une répartition efﬁcace des consom-\nmateurs sur les sources électriques est cruciale pour éviter les surcharges, améliorer l’équilibre global et\nminimiser les pertes. Une entreprise chargée de construire ces réseaux électriques nous demande de l’ai-\nder, en développant un logiciel qui permet de :\n1) représenter un réseau simpliﬁé avec uniquement des générateurs et des maisons ;\n2) simuler les connections possibles entre les générateurs et les maisons ;\n3) calculer le coût d’une solution et le minimiser. Nous réaliserons ces tâches de façon incrémentale, aﬁn d’avoir à la ﬁn du semestre un logiciel fonctionnel. II Modélisation\nUne instance du problème est composée d’un triplet S = 〈M,G,C〉 où :\n• M représente l’ensemble des maisons (ou consommateurs), chacune avec une demande électrique\ndonnée (en kW). Une maison fera forcément partie d’une de ces trois catégories : basse consomma-\ntion (10 kW), normale (20 kW) ou forte consommation (40 kW) ;\n• G représente l’ensemble des générateurs avec leurs capacités maximales (en kW) ;\n• C → M × G représente l’ensemble des connections entre une maison et un générateur. Chaque maison\ndoit obligatoirement être alimentée par un unique générateur. Aucune contrainte par contre sur les\ngénérateurs, i.e., un générateur peut n’être connecté à aucune maison, une maison, deux maisons ou\ntoutes les maisons. Le réseau S = 〈{(M1,40),(M2,40),(M3,20),(M4,10)},{(G1,60),(G2,60)},{( M1,G1),(M2,G2),(M3,G1),(M4,G2)}〉\nest un exemple comprenant 4 maisons (2 à forte consommation, 1 normale et 1 faible consommation) et 2\ngénérateurs de 60kW . Les connections peuvent être représentés graphiquement (voir par exemple la Figure\n1). Cette ﬁgure est une instance possible d’allocations, i.e., de connections entre maisons et générateurs.",
-    "chunk_index": 1,
-    "doc_id": 70,
-    "page": 1
-  },
-  {
-    "question": "Quelles sont les trois options disponibles pour configurer le réseau électrique après avoir choisi d'ajouter un générateur ou une maison ?",
-    "chunk_attendu": "III Instructions\n1. Tâches à réaliser\nPour la première étape du projet, vous devez développer un programme qui permet à un utilisateur de\nconﬁgurer manuellement le réseau électrique (i.e., maisons, générateurs et connexions). Au démarrage du programme, un menu s’afﬁche avec 4 options possibles :\n1) ajouter un générateur ;\n2) ajouter une maison ;\n3) ajouter une connexion entre une maison et un générateur existants ;\n4) ﬁn. Dans le cas où l’option 1 est retenue, le programme demande à l’utilisateur le nom du générateur et sa ca-\npacité maximale sur la même ligne (e.g., « G1 60 » pour créer le générateur nommé G1 ayant une capacité\nmaximale de 60kW), puis on revient au menu principal. Si le générateur a déjà été créé plus tôt, alors sa\nconsommation maximale est mise à jour (en avertissant l’utilisateur de cette MAJ). Dans le cas où l’option 2 est retenue, le principe est le même que pour la création d’un générateur. Cepen-\ndant, comme la consommation d’une maison est prédéﬁnie, il sufﬁt de mettre le nom de la maison suivi de\n« BASSE », « NORMAL » ou « FORTE » pour préciser qu’il s’agit d’une maison à consommation basse, normale\nou forte respectivement. Par exemple, « M1 NORMAL » permet de créer une maison nommée M1 ayant une\nconsommation normale. Si la maison a déjà été créée plus tôt, alors sa consommation est mise à jour (en\navertissant l’utilisateur de cette MAJ).",
-    "chunk_index": 12,
-    "doc_id": 70,
+    "question": "Quel est l'exemple donné d'un processus qui converge vers un équilibre unique selon le concept mentionné ?",
+    "chunk_attendu": "l équilibre est (M,R).\nOn appelle ce raisonnement \" processus itératif d élimination des stratégies dominées\".\nQuand un tel processus converge vers une unique issue, cette issue doit être un équilibre.\nCe concept est très intéressant, simple et robuste....mais il ne converge pas toujours.\n\u000f Autre exemple de convergence\nJ1/J2 C D E\nA 7,3 3,1 0,5\nB 5,1 5,3 2,2\n1.2.2 Elimination des stratégies qui ne sont pas des meilleures réponses\n\u000f Dé nition des meilleures réponses",
+    "chunk_index": 15,
+    "doc_id": 76,
     "page": 4
   },
   {
-    "question": "Quelle est la note donnée à ce système RAG ?",
-    "chunk_attendu": "5/5",
-    "chunk_index": 19,
-    "doc_id": 70,
+    "question": "Quel est l'intérêt de deux entreprises à se rapprocher ou à fusionner selon le modèle de Cournot ?",
+    "chunk_attendu": "> n(2n \u0000 1)\n(n \u0000 2)(n + 1)2 + n2\n(n + 1)2 :\nL entreprise 1 fait trop de recherche et dévelopement à l équibre.\u0004\n9 Les fusions dans le modèle de Cournot\n9.1 Le rapprochement de deux entreprises\nDeux entreprises ont-elles intérêt à se rapprocher (fusion, collusion) ? Quels sont les e¤ ets\nen jeu ?\n\u0003Exercice 16 - Le paradoxe des fusions\n3 entreprises se font concurrence en quantités sur le marché d un bien homogène pour",
+    "chunk_index": 127,
+    "doc_id": 76,
+    "page": 27
+  },
+  {
+    "question": "Quelle est la notion d'équilibre utilisée dans l'oligopole statique selon le texte ?",
+    "chunk_attendu": "l o¤reur aurait eu le bien en disant la vérité et aurait une utilité \u0012 \u0000 x > 0 alors qu il a\n0 en mentant. \u0003\n3 Concurrence en quantités : l oligopole à la Cournot\nL olipole (statique) : Modélisation des interactions entre entreprises. Vision la plus anci-\nenne : opposition concurrence parfaite et monopole. Notion d équilibre utilisée : chaque\nacteur prévoit le comportement des autres et agit au mieux de ses intérêtsc est à dire que",
+    "chunk_index": 26,
+    "doc_id": 76,
+    "page": 6
+  },
+  {
+    "question": "Quelle équation représente le profit de l'entreprise 3 qui choisit \\(Q3\\) selon le modèle décrit ?",
+    "chunk_attendu": "Q2, le pro t de l entreprise fusionné qui choisitQ1+2 est \u0005F = (100 \u0000 (Q1+2 + Q3)) Q1+2\net le pro t de l entreprise 3 qui choisitQ3 est \u00052 = (100 \u0000 (Q1+2 + Q3)) Q3: Les meilleures\nréponses sont données par\n100 \u0000 (Q1+2 + Q3) \u0000 Q1+2 = 0 pour l entreprise fusionnée\n100 \u0000 (Q1+2 + Q3) \u0000 Q3 = 0 pour l entreprise 3.\nTout se passe comme si une entreprise avait disparu. C est d ailleurs exactement ce\nqu il s est passé puisqu une entreprise dans le jeu de Cournot est un centre de décision",
+    "chunk_index": 136,
+    "doc_id": 75,
+    "page": 29
+  },
+  {
+    "question": "Quelle formule est utilisée pour calculer la franchise redistribuée entre le producteur et le distributeur dans le contrat de fusion ?",
+    "chunk_attendu": "de revente \"e¢ cace\" (c est à dire celui de la structure fusionnée). La franchise redistribue\nle pro t entre le producteur et le distributeur, prise égale à F = (A \u0000 c)2\n4 , le distributeur\nest indi¤ érent entre commercialiser ou ne pas commercialiser le bien. Ce contrat est le\nmeilleur du point de vue du producteur, il maximise son pro t sous contrainte que le\ndistributeur, qui  xe le prix de revente, obtienne au moins un pro t nul, c est à dire qu il\nest la solution de\nmax\nF;w;p",
+    "chunk_index": 95,
+    "doc_id": 75,
+    "page": 21
+  },
+  {
+    "question": "Quelle condition garantit l'existence d'un équilibre dans un jeu lorsque les ensembles de stratégies sont convexes et compacts ?",
+    "chunk_attendu": "\u000f Propriétés\n- pas d existence (jeu pile /face)\n- pas d e¢ cacité (dilemme du prisonnier)\n- pas d unicité (le jeu de rencontre).\n\u000f Existence :\n- pour les jeux  nis : il existe un équilibre en stratégies mixtes\n- quand les ensembles de stratégies sont convexes et compacts, et si la fonctions de\ngain d un joueur est quasi-concave par rapport à sa stratégie, alors l existence est garanti\n.\n- Exemple de l équilibre en stratégie mixtes (Jeu Pile/F ace)\n\u000f Unicité :",
+    "chunk_index": 21,
+    "doc_id": 75,
     "page": 5
   },
   {
-    "question": "Quelle est la valeur de Cout (S2) approximativement calculée avec λ = 10 ?",
-    "chunk_attendu": "Cela nous donne donc\nDi sp (S2) = |uG1 − u| + |uG2 − u| ≃ |0.333 − 0.917| + |1.5 − 0.917| ≃\n0.584 + 0.583 ≃ 1.167 ;\nAvec λ = 10, nous obtenons Cout (S2) ≃ 1.167 + 10 × 0.5 ≃ 6.167. Nous pouvons maintenant comparer les deux instances S1 et S2. Vu que\nCout (S1) = 0.167 < 6.167 = Cout (S2), nous pouvons dire que S1 est une meilleure instance que S2.",
-    "chunk_index": 9,
-    "doc_id": 70,
-    "page": 3
+    "question": "Quelle est la séquence des décisions prise par les entreprises selon le modèle de concurrence décrit ?",
+    "chunk_attendu": "le coût marginal de l entreprise 1 dissuade l entrée de l entreprise concurrente.\n2d) On a modélisé la concurrence de la façon suivante : en première étape, l entreprise\n1 choisit entre les deux technlogies, puis en étape 2, l entreprise 2 entrante décide d entrer\nou non, puis en troisième étape, les entreprises choisissent leurs quantités, l entreprise 1\nétant en monopole si l entrée n a pas eu lieu et étant en concurrence si l entrée a eu lieu.",
+    "chunk_index": 77,
+    "doc_id": 76,
+    "page": 17
   },
   {
-    "question": "Quelle action est réalisée lorsque l'utilisateur sélectionne l'option 3 du programme ?",
-    "chunk_attendu": "exemple, si l’utilisateur souhaite connecter la maison M1 au générateur G2 plutôt qu’au générateur G1 alors\nil pourra le faire de la manière suivante :\nVeuillez saisir la connexion que vous souhaitez modiﬁer : M1 G1\nVeuillez saisir la nouvelle connexion : M1 G2\nSi l’utilisateur avait saisi « G1 M1 » puis « G2 M1 », le résultat aurait été identique. Bien entendu, il faut vériﬁer\nque les informations données soient correctes et, si ce n’est pas le cas, le programme doit préciser l’erreur à\nl’utilisateur et revenir au menu. Quand l’option 3 est sélectionnée, le programme afﬁche l’ensemble du réseau (générateurs, maisons et\nconnexions) de façon claire et lisible. Vous êtes libre de l’afﬁchage mais il faut qu’une personne n’ayant ja-\nmais fait d’informatique puisse comprendre le réseau électrique actuel. Enﬁn, si l’option 4 est sélectionnée, le programme s’arrête. Pour le moment, il n’est pas demandé (du moins pour cette première partie) de gérer les erreurs dues à\nl’entrée d’une information de mauvais type (par exemple si l’utilisateur entre le nombre 1,5 au lieu d’un\nnombre entier). Ce type d’erreur sera à gérer dans la seconde partie.",
-    "chunk_index": 17,
-    "doc_id": 70,
-    "page": 5
+    "question": "Quels sont les gains si le joueur 2 arrête le jeu en date 6 ?",
+    "chunk_attendu": "se termine et les gains sont (2; 2):\nS il continue, en date 4, le joueur 2 décide d arrêter ou de continuer. S il arrête, le jeu\nse termine et les gains sont (1; 4):\nS il continue, en date 5, le joueur 1 décide d arrêter ou de continuer. S il arrête, le jeu\nse termine et les gains sont (3; 3):\nS il continue, en date 6, le joueur 2 décide d arrêter ou de continuer. S il arrête, le jeu\nse termine et les gains sont (2; 5):\nS il continue les gains sont(4; 4) et le jeu se termine.",
+    "chunk_index": 63,
+    "doc_id": 75,
+    "page": 14
   },
   {
-    "question": "Quelle est la principale difficulté mentionnée pour trouver une instance ayant un coût minimal en termes d'espace de solutions ?",
-    "chunk_attendu": "Cela implique la possibilité de pouvoir\ncomparer plusieurs instances et, ainsi, de pouvoir trouver la (ou les) plus efﬁcace en sélectionnant celle(s)\nayant obtenu le coût le plus faible. Trouver une instance ayant un coût minimal est une tâche complexe car\nl’espace des solutions possibles peut être immense et croît de façon exponentielle avec la taille du problème\n(i.e., le nombre de maisons et de générateurs). Chaque choix local inﬂuence l’ensemble du système, ce qui\nrend difﬁcile l’évaluation immédiate des conséquences globales. De plus, plusieurs critères de coût entrent\nsouvent en compétition (par exemple minimiser une surcharge tout en maintenant un bon équilibre), ce\nqui crée des compromis difﬁciles à gérer. Enﬁn, la présence de nombreuses solutions proches les unes des\nautres complique l’identiﬁcation de la meilleure : il faut ainsi explorer intelligemment l’espace de recherche\npour éviter de se bloquer dans des solutions locales sous-optimales. 2/5",
-    "chunk_index": 6,
-    "doc_id": 70,
+    "question": "Quelle est la condition pour que (p1; p2) = (c; c) soit un équilibre de Nash symétrique dans le jeu décrit ?",
+    "chunk_attendu": "donnés par\n\u00051(p1; p2) = ( p1 \u0000 c)D(p1) et \u00052(p1; p2) = 0 si p1 < p 2;\n\u00051(p1; p2) = \u0005 2(p1; p2) = (p1 \u0000 c)D(p1)\n2 si p1 = p2;\n\u00051(p1; p2) = 0 et \u00052(p1; p2) = ( p2 \u0000 c)D(p2) si p1 > p 2:\nOn étudie l équilibre de Bertrand en supposant que les deux entreprises choisissent leurs\nprix de façon simultanée. La notion d équilibre retenu est alors celle de l équilibre de\nNash.\nOn montre que\n(i) (p1; p2) = ( c; c) est un équilibre de Nash symétrique du jeu;",
+    "chunk_index": 39,
+    "doc_id": 75,
+    "page": 9
+  },
+  {
+    "question": "Quel est l'effet d'une décision sur la courbe de meilleure réponse de l'entreprise 1 et comment cela impacte l'équilibre ?",
+    "chunk_attendu": "l entreprise 1 a¤ ecte seulement la meilleure réponse de l entreprise 1. La décision\" change\ndonc uniquement le comportement (en réaction ) de l entreprise 1. Si on représente les\nmeilleures réponses dans un plan, on assiste à un changement de la courbe de meilleure\nréponse de l entreprise 1 (prenez un exemple);\nPar conséquent l équilibre (point d intersection des meilleures réponses) change\n(puisque seule la courbe de meilleure réponse de l entreprise 1 dépend de la valeur de \" :",
+    "chunk_index": 100,
+    "doc_id": 75,
+    "page": 22
+  },
+  {
+    "question": "Quelle est l'expression du profit agrégé (F) pour les entreprises 1 et 2 après leur fusion, en fonction de Q1, Q2 et Q3?",
+    "chunk_attendu": "3 - L entreprise 1 et 2 fusionnent. Elles doivent donc choisir Q1 et Q2 qui maximisent\nle pro t agrégé\n\u0005F = \u0005 1 + \u00052 = (100 \u0000 (Q1 + Q2 + Q3)) (Q1 + Q2)\nComme les entreprises sont identiques, choisir Q1 et Q2 est équivalent à choisir la produc-\ntion agrégée de la nouvelle entité Q1+2 = Q1 + Q2 . En e¤ et, si Q1+2 maximise le pro t\nécrit comme dans l équation ci dessous, toutes les les combinaisons (Q1; Q2) qui véri ent",
+    "chunk_index": 134,
+    "doc_id": 75,
+    "page": 29
+  },
+  {
+    "question": "Quelle condition doit être satisfaite pour que le prix soit égal au coût marginal de production et que l'offre soit égale à la demande?",
+    "chunk_attendu": "Comme la demande en cas de prix strictement inférieur au coût marginal de production\nest strictement positive, et qu elle n est pas in nie si le prix est  ni, le seul équilibre\n(situation dans laquelle l o¤ re est égale à la demande) est obtenu si le prix est égal au\ncoût marginal de production. Dans ce cas, on peut véri er que produire la demande est\nune solution qui maximise le pro t des entreprises.\nStatique comparative de l équilibre\n7",
+    "chunk_index": 31,
+    "doc_id": 76,
+    "page": 7
+  },
+  {
+    "question": "Quelle condition doit être remplie pour que la fusion soit bénéfique pour le consommateur selon l'extrait ?",
+    "chunk_attendu": "4 )2 = 15(100)2\n2(4)2 ( )\n\" > 50\np\n5 \u0000 100:\nOn peut donc en conclure que si la réduction de coût est su¢ samment importante, la\nfusion peut augmenter le surplus agrégé et donc être béné que pour le consommateur\n....l économiste dirait que la fusion est concurrentielle....\nIl est est de même si deux sur trois fusionnent. Supposons que suite à la fusion le pro t\nde l entité fusionnée est \u00051+2 = (100 + \" \u0000 Q1+2 \u0000 Q3)Q1+2 et celui de l entreprise 3 est",
+    "chunk_index": 147,
+    "doc_id": 76,
+    "page": 31
+  },
+  {
+    "question": "Dans quel type de jeu la stratégie peut-elle être confondue avec l'action ?",
+    "chunk_attendu": "qu un seul point..... on les oublie souvent.\n\u000f Les jeux sous forme stratégique (normale)\nUne stratégie est un plan complet d actions. Exemple du jeu Pile F ace.\n\u000f Une stratégie pour un joueur lui dicte son comportement dans le jeu (ses décisions)\nchaque fois qu il doit jouer dans un jeu.\n- Si le joueur ne joue qu une fois, stratégie et action peuvent être confondues (jeu\ndu centime, car il est simultané).\n- Mais, dès lors qu un joueur joue après avoir observé le choix d un autre joueur,",
+    "chunk_index": 7,
+    "doc_id": 75,
     "page": 2
   },
   {
-    "question": "Quelle formule est utilisée pour calculer la pénalisation des surcharges (Surcharge) dans le système de générateurs décrit ?",
-    "chunk_attendu": "On compare le taux d’utilisation de chaque générateur (charge\n/ capacité) et on calcule l’écart entre ces taux. Plus les écarts sont faibles, plus le résultat est petit et\nsigniﬁe que la solution est équilibrée. • Sur char g e (S) = ∑\ng ∈G max\n(\n0,\nLg −Cg\nCg\n)\nqui représente la pénalisation des surcharges. Celle-ci consiste\nà ajouter un coût supplémentaire chaque fois qu’un générateur dépasse sa capacité maximale. Concrè-\ntement, on mesure de combien un générateur est surchargé (par exemple, s’il doit fournir 55 unités\nalors que sa capacité est de 50, il y a 5 unités de surcharge), et on additionne ces excès pour tous les\ngénérateurs. Plus la surcharge est grande, plus le coût est élevé.",
-    "chunk_index": 4,
-    "doc_id": 70,
-    "page": 2
+    "question": "Quelle est l'offre des entreprises en situation de concurrence parfaite si le prix est strictement inférieur au coût marginal de production ?",
+    "chunk_attendu": "n + 1 et \u0005c = ( A \u0000 c\nn + 1 )2:\nL équilibre de concurrence parfaite\nSi la concurrence était parfaite (situation dans laquelle les entreprises considèrent que\nleur comportement de production n a pas d in uence sur le prix), L o¤ re des entreprises\nest nulle si le prix est strictement inférieur au coût marginal de production ( p < c )\net in nie si le prix est strictement supérieur au coût marginal de production ( p > c ):",
+    "chunk_index": 30,
+    "doc_id": 76,
+    "page": 7
   },
   {
-    "question": "Quelles sont les conditions pour qu'une maison soit raccordée à un générateur selon les restrictions du projet ?",
-    "chunk_attendu": "Remarques et Restrictions\nConcernant les restrictions, il est important de noter que dans le cadre de la réalisation de ce projet :\n• Le réseau électrique contient toujours au moins une maison et un générateur, i.e., M ̸= ; et G ̸= ;. • La somme des charges de demande électrique des maisons doit être inférieure ou égale à la somme\ndes capacités maximales des générateurs. • Une maison doit obligatoirement être raccordée à un unique générateur. Et quelques remarques supplémentaires :\n• Pour certaines conﬁgurations de maisons et de générateurs, il sera impossible de trouver une affecta-\ntion avec un coût de 0. Dans ce cas, la solution optimale sera la (ou les) instance(s) qui minimisera ce\ncoût. • Il existe forcément une solution minimale (i.e., instances qui minimisera le coût) pour une conﬁgura-\ntion donnée. • Pour une conﬁguration de maisons et de générateurs donnée, le coût minimal peut être obtenu par\nune ou plusieurs instances. 3/5",
-    "chunk_index": 11,
-    "doc_id": 70,
-    "page": 3
+    "question": "Quelle est la valeur de \\( x^* \\) à l'équilibre de Nash selon le système d'équations résolu ?",
+    "chunk_attendu": "@\u0019 1(p0; p1)\n@p1\n= 1 \u0000 x\u0003 \u0000 (p1 \u0000 c)@x\u0003\n@p1\n= 1 \u0000 x\u0003 \u0000 p1 \u0000 c\n2t = 0:\nL équilibre de Nash(pe\n0; pe\n1) est alors la solution de ce système de deux équations à deux\ninconnues. Pour résoudre simplement ce système, on peut résoudre le système suivant\nx\u0003 \u0000 p0 \u0000 c\n2t = 0\n1 \u0000 x\u0003 \u0000 p1 \u0000 c\n2t = 0\nx\u0003 = 1\n2 + p1 \u0000 p0\n2t :\nEt l on obtient\nx\u0003e = 1\n2 et pe\n0 \u0000 c = pe\n1 \u0000 c = t:\nOn peut remarquer que le marché est e¤ ectivement couvert à l équilibre dès lors que",
+    "chunk_index": 49,
+    "doc_id": 75,
+    "page": 11
   },
   {
-    "question": "Quels sont les critères pour qu'une instance soit considérée comme efficace selon le texte ?",
-    "chunk_attendu": "Bien entendu, il en existe beaucoup d’autres. G160kW\nG260kW M2 40kW\nM1 40kW\nM3 20kW\nM4 10kW\nFIGURE 1 – Exemple de réseau électrique\nComme expliqué dans l’introduction, le but est de réussir à trouver une instance « efﬁcace » pour un réseau\ndonné. Une instance est considérée comme efﬁcace si elle :\n1/5",
-    "chunk_index": 2,
-    "doc_id": 70,
-    "page": 1
-  },
-  {
-    "question": "Quel est le numéro du paragraphe ou section extrait ?",
-    "chunk_attendu": "2.",
-    "chunk_index": 10,
-    "doc_id": 70,
-    "page": 3
-  },
-  {
-    "question": "Quel est le taux d'utilisation de G2 dans l'instance S2 ?",
-    "chunk_attendu": "Donc, avec λ = 10 par exemple, nous obtenons Cout (S) = 1\n6 + 10 × 0 =\n1\n6 . G160kW\nG260kW M2 40kW\nM1 40kW\nM3 20kW\nM4 10kW\nFIGURE 3 – Instance 2\nAﬁn de pouvoir comparer deux instances possibles, nous gardons les\nmêmes maisons et les mêmes générateurs mais nous allons changer les\nconnections entre eux. Nous obtenons ainsi le réseau électrique S2 =\n〈M,G,C2〉 illustré par la Figure 3 où la maison M1 n’est plus connectée à\nG1 mais à G2 (ce qui provoquera une surcharge du générateurG2. Calcu-\nlons le coût de cette instance :\n• Taux d’utilisation de G1 et G2 : uG1 = 20\n60 ≃ 0.333 et uG2 = 40+40+10\n60 =\n1.5 ;\n• Sur char g e (S2) = max\n(\n0, 20−60\n60\n)\n+ max\n(\n0, 90−60\n60\n)\n= 0 + 0.5 = 0.5 ;\n• Di sp (S2) ≃ 6.16 avec u = uG1+uG2\n2 ≃ 0.917.",
-    "chunk_index": 8,
-    "doc_id": 70,
-    "page": 3
+    "question": "Comment peut choisir la mauvaise technologie influencer le profit de l'entreprise entrante selon le texte?",
+    "chunk_attendu": "et l entrée a lieu à l équilibre.\u0004\nCet exercice illustre comment en économie des choix technologiques peuvent se com-\nporter comme des menaces crédibles pour dissuader les entreprises concurrentes ici dans\ncet exemple d entrer sur le marché. Dans certains cas de  gure, choisir la mauvaise\ntechnologie permet de réduire le pro t de l entreprise entrante si elle entre, avec comme\nconséquence le fait que si cette technologie est utilisée, l entreprise entrante obtient des",
+    "chunk_index": 82,
+    "doc_id": 75,
+    "page": 18
   }
 ]

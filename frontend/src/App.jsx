@@ -69,8 +69,7 @@ export default function App() {
        <Route path="/workflow/edit/:id" element={<CreatWorkflowPage />} />
        <Route path="/workflow/execute" element={<ExecuteWorkflowPage />} />
        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage/></ProtectedRoute>} />
-       <Route path="/ragconfig" element={<ProtectedRoute><RagConfigPage /></ProtectedRoute>} />
-       <Route path="/rag-config" element={<ProtectedRoute><RagConfigPage /></ProtectedRoute>} />
+       <Route path="/rag-config/:id" element={<ProtectedRoute><RagConfigPage /></ProtectedRoute>} />
      </Routes>
   )
 }

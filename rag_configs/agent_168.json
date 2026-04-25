@@ -1,0 +1,7 @@
+{
+  "chunk_size": 500,
+  "chunk_overlap": 50,
+  "top_k": 5,
+  "lambda_mult": 0.5,
+  "use_post_processing": true
+}

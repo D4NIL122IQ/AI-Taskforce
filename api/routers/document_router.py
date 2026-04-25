@@ -6,17 +6,50 @@ ENDPOINTS :
   POST   /agents/{agent_id}/documents        → Upload et indexation d'un document
   GET    /agents/{agent_id}/documents        → Lister les documents d'un agent
   DELETE /documents/{doc_id}                 → Supprimer un document
+  GET    /agents/{agent_id}/rag-config       → Lire la config RAG d'un agent
+  POST   /agents/{agent_id}/rag-config       → Sauvegarder la config RAG d'un agent
 """
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi import BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
+from pydantic import BaseModel, Field
+import json
+from pathlib import Path
 
 from backend.appDatabase.database import get_db
 from backend.services.document_service import DocumentService
 from backend.services.rag_service import RAGService
 from api.schemas.document_schema import DocumentResponse, DocumentUploadResponse
+
+# ── Config RAG persistée par agent (fichier JSON) ─────────────────────────────
+RAG_CONFIG_DIR = Path("rag_configs")
+RAG_CONFIG_DIR.mkdir(exist_ok=True)
+
+RAG_CONFIG_DEFAULTS = {
+    "chunk_size": 500,
+    "chunk_overlap": 50,
+    "top_k": 5,
+    "lambda_mult": 0.5,
+    "use_post_processing": True,
+}
+
+class RagConfig(BaseModel):
+    chunk_size: int       = Field(default=500,  ge=100,  le=2000)
+    chunk_overlap: int    = Field(default=50,   ge=0,    le=500)
+    top_k: int            = Field(default=5,    ge=1,    le=30)
+    lambda_mult: float    = Field(default=0.5,  ge=0.0,  le=1.0)
+    use_post_processing: bool = False
+
+def _config_path(agent_id: int) -> Path:
+    return RAG_CONFIG_DIR / f"agent_{agent_id}.json"
+
+def _load_config(agent_id: int) -> dict:
+    path = _config_path(agent_id)
+    if path.exists():
+        return json.loads(path.read_text())
+    return RAG_CONFIG_DEFAULTS.copy()
 
 router = APIRouter(prefix="/agents", tags=["documents"])
 
@@ -98,3 +131,18 @@ def lister_documents_utilisateur(user_id: str, db: Session = Depends(get_db)):
         docs = svc.lister(agent_id=agent.id_agent)
         tous_les_docs.extend(docs)
     return tous_les_docs
+
+
+# ------- Endpoints config RAG ---------------------------
+
+@router.get("/{agent_id}/rag-config")
+def get_rag_config(agent_id: int):
+    """Retourne la config RAG de l'agent (défauts si jamais configuré)."""
+    return _load_config(agent_id)
+
+
+@router.post("/{agent_id}/rag-config")
+def save_rag_config(agent_id: int, config: RagConfig):
+    """Sauvegarde la config RAG de l'agent."""
+    _config_path(agent_id).write_text(json.dumps(config.model_dump(), indent=2))
+    return {"message": "Configuration RAG sauvegardée.", "config": config.model_dump()}

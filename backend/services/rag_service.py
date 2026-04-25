@@ -3,10 +3,6 @@
 RAGService — Retrieval-Augmented Generation pour AI Taskforce.
 
 PIPELINE COMPLET :
-┌──────────────┐ → ┌──────────────┐ → ┌──────────────┐ → ┌──────────────┐ → ┌──────────────┐
-│   Fichier    │   │ Extraction   │   │   Chunks     │   │ Embeddings   │   │  ChromaDB    │
-│ (pdf/txt…)   │   │   texte      │   │ (chunk_size) │   │  (Ollama)    │   │ + metadata   │
-└──────────────┘   └──────────────┘   └──────────────┘   └──────────────┘   └──────────────┘
 
   Lors d'une requête :
     Question utilisateur → Embedding (Ollama) → Retrieval (Similarity + MMR) → Top-K chunks → Post-traitement (filtrage + extraction + reranking) → LLM → Réponse
@@ -31,7 +27,8 @@ from dotenv import load_dotenv
 from pypdf import PdfReader
 
 from backend.modeles.pleaide_embedding import PleiadesEmbeddings
-from langchain_experimental.text_splitter import SemanticChunker
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+# ou d'autres splitters selon vos besoins
 from langchain_core.documents import Document
 from langchain_chroma import Chroma
 
@@ -76,26 +73,18 @@ class RAGService:
     # ──────────────────────────────────────────────────────────────────────────
     
 
-    def _decouper_en_chunks(self, documents: List[Document]) -> List[Document]:
-        """Chunking parallèle — 1 thread par page/section."""
-        splitter = SemanticChunker(
-            embeddings=PleiadesEmbeddings(),
-            breakpoint_threshold_type="percentile",
-            breakpoint_threshold_amount=85,
+    def _decouper_en_chunks(self, documents: List[Document], chunk_size: int = None, chunk_overlap: int = None) -> List[Document]:
+        """Découpe les documents en chunks de taille contrôlée via RecursiveCharacterTextSplitter."""
+        size    = chunk_size    if chunk_size    is not None else CHUNK_SIZE
+        overlap = chunk_overlap if chunk_overlap is not None else CHUNK_OVERLAP
+
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=size,
+            chunk_overlap=overlap,
+            separators=["\n\n", "\n", ".", " ", ""],
         )
 
-        def chunker_un_doc(doc: Document) -> List[Document]:
-            return splitter.create_documents(
-                [doc.page_content],
-                metadatas=[doc.metadata]
-            )
-
-        chunks = []
-        from concurrent.futures import ThreadPoolExecutor
-        with ThreadPoolExecutor(max_workers=5) as executor:
-            futures = [executor.submit(chunker_un_doc, doc) for doc in documents]
-            for future in futures:
-                chunks.extend(future.result())
+        chunks = splitter.split_documents(documents)
 
         return chunks
     # ──────────────────────────────────────────────────────────────────────────
@@ -171,8 +160,14 @@ class RAGService:
     # ÉTAPE 3 : INDEXATION
     # ──────────────────────────────────────────────────────────────────────────
     def indexer_document(self, doc_id: int, agent_id: int, chemin_fichier: str) -> int:
+        # Charger la config RAG de l'agent pour respecter chunk_size et chunk_overlap définis par l'utilisateur
+        cfg = self._charger_config(agent_id)
         documents = self._extraire_en_documents_structures(chemin_fichier)
-        chunks = self._decouper_en_chunks(documents)
+        chunks = self._decouper_en_chunks(
+            documents,
+            chunk_size=cfg.get("chunk_size", CHUNK_SIZE),
+            chunk_overlap=cfg.get("chunk_overlap", CHUNK_OVERLAP),
+        )
 
         for i, chunk in enumerate(chunks):
             chunk.metadata.update({
@@ -196,27 +191,47 @@ class RAGService:
     # RECHERCHE
     # ──────────────────────────────────────────────────────────────────────────
 
-    def rechercher(self, agent_id: int, question: str, top_k: int = 5, use_post: bool = False) -> List[str]:
+    def _charger_config(self, agent_id: int) -> dict:
+        """Charge la config RAG de l'agent depuis le fichier JSON (défauts sinon)."""
+        import json
+        from pathlib import Path
+        path = Path("rag_configs") / f"agent_{agent_id}.json"
+        if path.exists():
+            return json.loads(path.read_text())
+        return {
+            "chunk_size": CHUNK_SIZE,
+            "chunk_overlap": CHUNK_OVERLAP,
+            "top_k": 5,
+            "lambda_mult": 0.5,
+            "use_post_processing": True,
+        }
+
+    def rechercher(self, agent_id: int, question: str, top_k: int = None, use_post: bool = None) -> List[str]:
 
         if not question.strip():
             return []
-        
-        #parametrage en fonction de la quantité de donnés
-        results = self.vectordb.get(
-            where={"agent_id": int(agent_id)}
-        )
+
+        # Charger la config RAG de l'agent (paramètres utilisateur)
+        cfg = self._charger_config(agent_id)
+        if top_k is None:
+            top_k = cfg.get("top_k", 5)
+        if use_post is None:
+            use_post = cfg.get("use_post_processing", True)
+        lambda_mult = cfg.get("lambda_mult", 0.5)
+
+        # Adapter fetch_k à la densité de la base
+        results = self.vectordb.get(where={"agent_id": int(agent_id)})
         count_docs = len(results["ids"])
 
-        fetch_k = min(30, count_docs)
-        if count_docs > 30:
-            fetch_k = count_docs // 3
+        fetch_k = max(top_k * 3, 20)
+        fetch_k = min(fetch_k, count_docs) if count_docs > 0 else fetch_k
 
         base_retriever = self.vectordb.as_retriever(
             search_type="mmr",
             search_kwargs={
                 "k": top_k,
                 "fetch_k": fetch_k,
-                "lambda_mult": 0.5,
+                "lambda_mult": lambda_mult,
                 "filter": {"agent_id": int(agent_id)}
             }
         )

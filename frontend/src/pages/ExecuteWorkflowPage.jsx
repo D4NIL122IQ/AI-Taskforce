@@ -16,6 +16,7 @@ import remarkGfm from 'remark-gfm'
 import NavBar from '../components/layout/NavBar'
 import PageBackground from '../components/layout/PageBackground'
 import { useTheme } from '../context/ThemeContext'
+import { useExecution } from '../context/ExecutionContext'
 import { Bot, Crown, Send, CheckCircle, GitBranch, FileText, Globe, LogIn, LogOut, AlertTriangle, Square, Mail } from 'lucide-react'
 
 const GithubGlyph = ({ size = 12, color = 'currentColor' }) => (
@@ -364,13 +365,18 @@ const ExecuteWorkflowPage = () => {
   const workflow = loadWorkflow()
   const utilisateurId = loadUserId()
 
-  const [prompt, setPrompt]               = useState('')
-  const [messages, setMessages]           = useState([])
-  const [running, setRunning]             = useState(false)
-  const [activeNodeId, setActiveNodeId]   = useState(null)
-  const [executionId, setExecutionId] = useState(null)
-  const [nodeStatuses, setNodeStatuses]   = useState({})
-  const [chatWidth, setChatWidth]         = useState(520)
+  // État de l'exécution partagé via contexte global
+  const {
+    executionId, setExecutionId,
+    isRunning, setIsRunning,
+    messages, setMessages, addMsg,
+    activeNodeId, setActiveNodeId,
+    nodeStatuses, setNodeStatuses,
+    controllerRef,
+  } = useExecution()
+
+  const [prompt, setPrompt]           = useState('')
+  const [chatWidth, setChatWidth]     = useState(520)
   const [niveauRecherche, setNiveauRecherche] = useState(1)
   const chatBottomRef  = useRef(null)
   const isDragging     = useRef(false)
@@ -405,10 +411,8 @@ const ExecuteWorkflowPage = () => {
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
   }, [])
 
-  const agentNodes   = workflow?.nodes.filter(n => n.type === 'agent') || []
+  const agentNodes     = workflow?.nodes.filter(n => n.type === 'agent') || []
   const supervisorNode = workflow?.nodes.find(n => n.type === 'supervisor')
-
-  const addMsg = (msg) => setMessages(prev => [...prev, msg])
 
   // Charge le détail d'une exécution passée depuis le Dashboard
   useEffect(() => {
@@ -437,13 +441,65 @@ const ExecuteWorkflowPage = () => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const controllerRef = useRef(null)
+  // ── Lit le stream SSE et alimente les messages ───────────────────────────────
+  const listenToStream = async (execId, controller) => {
+    const res = await fetch(`http://localhost:8000/executions/stream/${execId}`, {
+      signal: controller.signal,
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }))
+      throw new Error(err.detail || 'Erreur stream')
+    }
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      const lines = decoder.decode(value).split('\n').filter(l => l.trim())
+      for (const line of lines) {
+        try {
+          const data = JSON.parse(line)
+          if (data.type === 'warning') {
+            addMsg({ role: 'warning', content: data.message })
+          }
+          if (data.type === 'supervisor') {
+            setActiveNodeId(supervisorNode?.id)
+            addMsg({ role: 'supervisor', name: 'Superviseur', content: data.content })
+          }
+          if (data.type === 'echange') {
+            const agentNode = agentNodes.find(n => n.data.label === data.agent)
+            if (agentNode) {
+              setActiveNodeId(agentNode.id)
+              setNodeStatuses(s => ({ ...s, [agentNode.id]: 'TERMINE' }))
+            }
+            addMsg({ role: 'agent', agent: data.agent, content: data.content })
+          }
+          if (data.type === 'final') {
+            setActiveNodeId(null)
+            setMessages(prev => {
+              const hasDocument = prev.some(m => m.role === 'document')
+              if (hasDocument) return prev
+              return [...prev, { role: 'result', content: data.response }]
+            })
+          }
+          if (data.type === 'document') {
+            addMsg({ role: 'document', agent: data.agent, filename: data.filename })
+          }
+          if (data.type === 'error') {
+            throw new Error(data.message)
+          }
+        } catch (e) {
+          console.error('Parse error:', e)
+        }
+      }
+    }
+  }
 
-const handleSend = async () => {
-    if (!prompt.trim() || running || !workflow) return
+  const handleSend = async () => {
+    if (!prompt.trim() || isRunning || !workflow) return
     const userPrompt = prompt
     setPrompt('')
-    setRunning(true)
+    setIsRunning(true)
     setMessages([])
     setNodeStatuses({})
 
@@ -452,10 +508,7 @@ const handleSend = async () => {
     setActiveNodeId(supervisorNode?.id)
 
     try {
-      // création controller pour annulation
-      const controller = new AbortController()
-      controllerRef.current = controller
-
+      // 1. Lancer l'exécution → le thread démarre en arrière-plan, retourne l'execution_id
       const res = await fetch('http://localhost:8000/executions/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -466,108 +519,41 @@ const handleSend = async () => {
           niveau_recherche: niveauRecherche,
           utilisateur_id: utilisateurId,
         }),
-        signal: controller.signal,
       })
-      const execId = res.headers.get("execution_id")
-      console.log("Response headers:", [...res.headers.entries()])
-      console.log("Execution ID:", execId)
-      setExecutionId(execId)
-      console.log(workflow.id_workflow)
-
       if (!res.ok) {
         const err = await res.json().catch(() => ({ detail: res.statusText }))
         throw new Error(err.detail || 'Erreur serveur')
       }
+      const { execution_id: execId } = await res.json()
+      setExecutionId(execId)
 
-      // Lecture ligne par ligne du stream
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        const lines = decoder.decode(value).split('\n').filter(l => l.trim())
-        for (const line of lines) {
-          try {
-            const data = JSON.parse(line)
-
-
-            if (data.type === 'warning') {
-                addMsg({ role: 'warning', content: data.message })
-                  await new Promise(r => setTimeout(r, 500))
-
-            }
-
-            if (data.type === 'supervisor') {
-              setActiveNodeId(supervisorNode?.id)
-              addMsg({ role: 'supervisor', name: 'Superviseur', content: data.content })
-               await new Promise(r => setTimeout(r, 500))
-            }
-
-            if (data.type === 'echange') {
-              const agentNode = agentNodes.find(n => n.data.label === data.agent)
-              if (agentNode) {
-                setActiveNodeId(agentNode.id)
-                setNodeStatuses(s => ({ ...s, [agentNode.id]: 'TERMINE' }))
-              }
-              addMsg({ role: 'agent', agent: data.agent, content: data.content })
-                await new Promise(r => setTimeout(r, 500))
-            }
-
-            if (data.type === 'final') {
-              setActiveNodeId(null)
-               // Si un document a déjà été généré, le document EST le résultat final
-              // → on n'affiche pas le texte de synthèse du reconstructeur
-             setMessages(prev => {
-                const hasDocument = prev.some(m => m.role === 'document')
-                if (hasDocument) return prev
-                return [...prev, { role: 'result', content: data.response }]
-              })
-            }
-
-
-            if (data.type === 'document') {
-              addMsg({
-                role: 'document',
-                agent: data.agent,
-                filename: data.filename
-              })
-            }
-
-            if (data.type === 'error') {
-              throw new Error(data.message)
-            }
-
-          } catch (e) {
-            console.error('Parse error:', e)
-          }
-        }
-      }
+      // 2. Se connecter au stream (le contexte garde isRunning=true → bouton NavBar visible)
+      const controller = new AbortController()
+      controllerRef.current = controller
+      await listenToStream(execId, controller)
 
     } catch (err) {
-      // gestion annulation propre
       if (err.name === 'AbortError') {
         addMsg({ role: 'system', content: "Exécution interrompue." })
+        setIsRunning(false)
         return
       }
       setActiveNodeId(null)
       addMsg({ role: 'result', content: `Erreur : ${err.message}` })
     }
 
-    setRunning(false)
+    setIsRunning(false)
   }
- /* la fonctionn d'arret du workflow */
+
+  /* Arrêt du workflow */
   const stopExecution = async () => {
     if (controllerRef.current) {
       controllerRef.current.abort()
     }
     if (executionId) {
-      await fetch(`http://localhost:8000/executions/stop/${executionId}`, {
-        method: 'POST'
-      })
+      await fetch(`http://localhost:8000/executions/stop/${executionId}`, { method: 'POST' })
     }
-    setRunning(false)
+    setIsRunning(false)
     setActiveNodeId(null)
   }
 
@@ -683,11 +669,11 @@ const handleSend = async () => {
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
                   rows={5}
                   placeholder="Entrez votre demande..."
-                  disabled={running}
+                  disabled={isRunning}
                   className="flex-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:border-violet-400 transition-colors"
                   style={{ resize: 'vertical', minHeight: 96, maxHeight: 320 }}
                 />
-                {running ? (
+                {isRunning ? (
                   <button
                     onClick={stopExecution}
                     className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-600 hover:bg-red-500 transition-colors"
