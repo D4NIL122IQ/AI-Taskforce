@@ -451,6 +451,22 @@ const handleSend = async () => {
     addMsg({ role: 'system', content: "Workflow en cours d'exécution..." })
     setActiveNodeId(supervisorNode?.id)
 
+    // Enrichir les nodes avec les données fraîches de l'API (generate_document etc.)
+      let enrichedNodes = workflow.nodes
+      try {
+        const uid = JSON.parse(localStorage.getItem('user') || 'null')?.user_id
+        if (uid) {
+          const agentsRes = await fetch(`http://localhost:8000/agents/${uid}`)
+          const agentsData = await agentsRes.json()
+          enrichedNodes = workflow.nodes.map(n => {
+            if (n.type !== 'agent') return n
+            const fresh = agentsData.find(a => a.nom === n.data.label)
+            if (!fresh) return n
+            return { ...n, data: { ...n.data, generate_document: fresh.generate_document || false } }
+          })
+        }
+      } catch (e) { console.warn('Enrichissement agents échoué:', e) }
+
     try {
       // création controller pour annulation
       const controller = new AbortController()
@@ -462,7 +478,7 @@ const handleSend = async () => {
         body: JSON.stringify({
           workflow_id: workflow.id_workflow,
           prompt: userPrompt,
-          nodes: workflow.nodes,
+          nodes: enrichedNodes,
           niveau_recherche: niveauRecherche,
           utilisateur_id: utilisateurId,
         }),
@@ -501,7 +517,13 @@ const handleSend = async () => {
 
             if (data.type === 'supervisor') {
               setActiveNodeId(supervisorNode?.id)
-              addMsg({ role: 'supervisor', name: 'Superviseur', content: data.content })
+              setMessages(prev => {
+                const hasDocument = prev.some(m => m.role === 'document')
+                if (hasDocument) return prev
+                const isReconstruction = data.content.includes('Reconstruction') || data.content.includes('reconstructeur') || data.content.includes('reconstruction ignorée')
+                if (isReconstruction) return prev
+                return [...prev, { role: 'supervisor', name: 'Superviseur', content: data.content }]
+              })
                await new Promise(r => setTimeout(r, 500))
             }
 
