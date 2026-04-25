@@ -45,7 +45,7 @@ def init():
         return
 
     print("Création des tables...")
-    _run_migrations()                      # drop des tables obsolètes avant create_all
+    #_run_migrations()                      # drop des tables obsolètes avant create_all
     Base.metadata.create_all(bind=engine)  # crée les tables manquantes / nouvelles
     print("Tables créées avec succès !")
 

@@ -16,7 +16,8 @@ def extraire_json(texte: str) -> dict:
         return json.loads(match.group(1))
 
     # Cas 2 : JSON brut quelque part dans le texte
-    match = re.search(r"\{.*?\}", texte, re.DOTALL)
+    match = re.search(r"\{.*?\}"
+                      , texte, re.DOTALL)
     if match:
         return json.loads(match.group(0))
 
@@ -208,6 +209,17 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
     # --- Nœud du Reconstructeur ---
     def reconstructeur_node(state: OrchestrationState):
         print(f"\n[RECONSTRUCTEUR] Synthèse des résultats de : {list(state['results'].keys())}")
+
+        # Si un document a été généré, pas besoin de synthèse texte
+        docs = state.get("documents_generated", [])
+        if docs:
+            print(f"[RECONSTRUCTEUR] Document(s) déjà généré(s) → skip synthèse texte")
+            return {
+                "final_response": "",
+                "supervisor_logs": [
+                    "Document généré — reconstruction ignorée"
+                ]
+            }
         prompt_rec = (
             f"Demande initiale : {state['user_input']}\n"
             f"Données brutes des spécialistes : {state['results']}\n\n"

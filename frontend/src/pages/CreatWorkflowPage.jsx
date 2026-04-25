@@ -363,7 +363,7 @@ function FlowCanvas({ agents, dark, workflowName, workflowId = null, initialNode
       id: agentId,
       type: 'agent',
       position,
-      data: { label: agent.name, role: agent.role, model: agent.model, system_prompt: agent.systemPrompt || '', web_search: agent.webSearch || false, utilise_mcp: !!mcpType, mcp_type: mcpType },
+      data: { label: agent.name, role: agent.role, model: agent.model, system_prompt: agent.systemPrompt || '', web_search: agent.webSearch || false, generate_document: agent.generateDocument || agent.generate_document || false,utilise_mcp: !!mcpType, mcp_type: mcpType },
     }
     if (!mcpType) {
       setNodes(ns => [...ns, agentNode])
@@ -805,6 +805,7 @@ export default function CreatWorkflowPage() {
               temperature: a.temperature,
               maxTokens: a.max_tokens,
               webSearch: a.web_search || false,
+              generateDocument: a.generate_document || false,
               mcp_type: a.mcp_type || '',
             })))
           }

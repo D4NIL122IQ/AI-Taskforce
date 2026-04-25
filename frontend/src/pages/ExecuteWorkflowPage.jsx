@@ -507,6 +507,22 @@ const ExecuteWorkflowPage = () => {
     addMsg({ role: 'system', content: "Workflow en cours d'exécution..." })
     setActiveNodeId(supervisorNode?.id)
 
+    // Enrichir les nodes avec les données fraîches de l'API (generate_document etc.)
+      let enrichedNodes = workflow.nodes
+      try {
+        const uid = JSON.parse(localStorage.getItem('user') || 'null')?.user_id
+        if (uid) {
+          const agentsRes = await fetch(`http://localhost:8000/agents/${uid}`)
+          const agentsData = await agentsRes.json()
+          enrichedNodes = workflow.nodes.map(n => {
+            if (n.type !== 'agent') return n
+            const fresh = agentsData.find(a => a.nom === n.data.label)
+            if (!fresh) return n
+            return { ...n, data: { ...n.data, generate_document: fresh.generate_document || false } }
+          })
+        }
+      } catch (e) { console.warn('Enrichissement agents échoué:', e) }
+
     try {
       // 1. Lancer l'exécution → le thread démarre en arrière-plan, retourne l'execution_id
       const res = await fetch('http://localhost:8000/executions/execute', {
@@ -515,7 +531,7 @@ const ExecuteWorkflowPage = () => {
         body: JSON.stringify({
           workflow_id: workflow.id_workflow,
           prompt: userPrompt,
-          nodes: workflow.nodes,
+          nodes: enrichedNodes,
           niveau_recherche: niveauRecherche,
           utilisateur_id: utilisateurId,
         }),
