@@ -44,8 +44,7 @@ EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "nomic-embed-text-v2-moe:latest")
 
 class RAGService:
     """
-    Service RAG : indexation et recherche de documents via embeddings.
-
+    Service RAG : indexation et recherche de documents via embeddings
     Implémentation basée sur Chroma + LangChain.
     """
     
@@ -216,21 +215,49 @@ class RAGService:
         if top_k is None:
             top_k = cfg.get("top_k", 5)
         if use_post is None:
-            use_post = cfg.get("use_post_processing", True)
+            use_post = cfg.get("use_post_processing", False)
         lambda_mult = cfg.get("lambda_mult", 0.5)
+
+        # Seuil de similarité : en dessous, le chunk n'est pas pertinent
+        # ChromaDB retourne des distances L2 (plus petit = plus similaire)
+        # Un seuil de 1.2 correspond à une similarité en dessous de 40%
+        SEUIL_DISTANCE = 1.2
 
         # Adapter fetch_k à la densité de la base
         results = self.vectordb.get(where={"agent_id": int(agent_id)})
         count_docs = len(results["ids"])
 
-        fetch_k = max(top_k * 3, 20)
-        fetch_k = min(fetch_k, count_docs) if count_docs > 0 else fetch_k
+        if count_docs == 0:
+            return []
 
+        fetch_k = max(top_k * 3, 20)
+        fetch_k = min(fetch_k, count_docs)
+
+        # Étape 1 : recherche par score pour filtrer les chunks non pertinents
+        candidats_avec_score = self.vectordb.similarity_search_with_score(
+            question,
+            k=fetch_k,
+            filter={"agent_id": int(agent_id)}
+        )
+
+        # Filtrer les chunks trop éloignés sémantiquement
+        candidats_pertinents = [
+            doc for doc, score in candidats_avec_score
+            if score <= SEUIL_DISTANCE
+        ]
+
+        print(f"[RAGService] {len(candidats_avec_score)} candidats, {len(candidats_pertinents)} passent le seuil (distance ≤ {SEUIL_DISTANCE})")
+
+        # Aucun chunk pertinent pas de contexte injecté
+        if not candidats_pertinents:
+            return []
+
+        # Étape 2 : MMR sur les candidats pertinents uniquement
         base_retriever = self.vectordb.as_retriever(
             search_type="mmr",
             search_kwargs={
-                "k": top_k,
-                "fetch_k": fetch_k,
+                "k": min(top_k, len(candidats_pertinents)),
+                "fetch_k": len(candidats_pertinents),
                 "lambda_mult": lambda_mult,
                 "filter": {"agent_id": int(agent_id)}
             }
