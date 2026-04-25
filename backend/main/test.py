@@ -12,7 +12,7 @@ auth = requests.post(
 data = auth.json()
 import os
 os.environ["TOKEN_PLEIADE"] = data.get("access_token") or data.get("token", "")
-print(f"Token obtenu : {data.get('token', '')}...")  # Affiche les 10 premiers caractères du token
+print(f"Token obtenu : {data.get('token', '')}")  # Affiche les 10 premiers caractères du token
 
 # 2. Test embedding
 vector = embed("Bonjour, comment ça va ?")

@@ -20,7 +20,7 @@
 
   import {
     Bot,
-    Workflow,
+    GitMerge as Workflow,
     Activity,
     AlertCircle,
     Play,
@@ -186,10 +186,25 @@
 
     // FETCH DATA
     useEffect(() => {
+      const safeJson = async (res) => {
+        try {
+          const data = await res.json()
+          return Array.isArray(data) ? data : []
+        } catch {
+          return []
+        }
+      }
+
       const fetchData = async () => {
         try {
           const user = JSON.parse(localStorage.getItem("user") || "null")
           const userId = user?.user_id
+
+          if (!userId) {
+            console.warn("Dashboard: userId introuvable dans localStorage")
+            setLoading(false)
+            return
+          }
 
           const [
             agentsRes,
@@ -198,25 +213,26 @@
             erreursRes,
             executionsRes
           ] = await Promise.all([
-
-            fetch(`http://localhost:8000/agents/${userId}`),
-            fetch(`http://localhost:8000/workflows/user/${userId}`),
-            fetch(`http://localhost:8000/agents/user/${userId}/documents`),
-            fetch(`http://localhost:8000/executions/ERREUR`),
-            fetch(`http://localhost:8000/executions/`),
+            fetch(`http://localhost:8000/agents/${userId}`).catch(() => ({ json: () => [] })),
+            fetch(`http://localhost:8000/workflows/user/${userId}`).catch(() => ({ json: () => [] })),
+            fetch(`http://localhost:8000/agents/user/${userId}/documents`).catch(() => ({ json: () => [] })),
+            fetch(`http://localhost:8000/executions/ERREUR`).catch(() => ({ json: () => [] })),
+            fetch(`http://localhost:8000/executions/`).catch(() => ({ json: () => [] })),
           ])
 
-          const agentsData = await agentsRes.json()
-          const workflowsData = await workflowsRes.json()
-          const documentsData = await documentsRes.json()
-          const erreursData = await erreursRes.json()
-          const executionsData = await executionsRes.json()
+          const [agentsData, workflowsData, documentsData, erreursData, executionsData] = await Promise.all([
+            safeJson(agentsRes),
+            safeJson(workflowsRes),
+            safeJson(documentsRes),
+            safeJson(erreursRes),
+            safeJson(executionsRes),
+          ])
 
-          setAgents(Array.isArray(agentsData) ? agentsData : [])
-          setWorkflows(Array.isArray(workflowsData) ? workflowsData : [])
-          setDocuments(Array.isArray(documentsData) ? documentsData : [])
-          seterreurs(Array.isArray(erreursData) ? erreursData : [])
-          setExecutions(Array.isArray(executionsData) ? executionsData : [])
+          setAgents(agentsData)
+          setWorkflows(workflowsData)
+          setDocuments(documentsData)
+          seterreurs(erreursData)
+          setExecutions(executionsData)
 
         } catch (error) {
           console.error("ERREUR FETCH:", error)
@@ -399,9 +415,29 @@
                     ) : docs.map((doc) => {
                       const Icon = getDocIcon(doc.type)
                       return (
-                        <div key={doc.id} className="flex items-center justify-between bg-[#0d0d0d] px-3 py-2 rounded-lg hover:bg-[#1a1a1a] transition">
-                          <div className="flex items-center gap-3"><Icon className="text-blue-400" size={18} /><span className="truncate max-w-[180px] text-sm">{doc.name}</span></div>
-                          <span className="text-xs text-gray-500">{doc.date}</span>
+                        <div key={doc.id} className="flex items-center justify-between bg-[#0d0d0d] px-3 py-2 rounded-lg hover:bg-[#1a1a1a] transition group">
+                          <div className="flex items-center gap-3">
+                            <Icon className="text-blue-400" size={18} />
+                            <span className="truncate max-w-[180px] text-sm">{doc.name}</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-gray-500">{doc.date}</span>
+                            <button
+                              onClick={() => {
+                                if (!window.confirm(`Supprimer "${doc.name}" ?`)) return
+                                fetch(`http://localhost:8000/agents/documents/${doc.id}`, { method: 'DELETE' })
+                                  .then(r => {
+                                    if (r.ok) setDocuments(prev => prev.filter(d => d.id_document !== doc.id))
+                                    else alert('Erreur lors de la suppression.')
+                                  })
+                                  .catch(() => alert('Erreur réseau.'))
+                              }}
+                              className="opacity-0 group-hover:opacity-100 transition text-gray-500 hover:text-red-400"
+                              title="Supprimer le document"
+                            >
+                              <Trash size={14} />
+                            </button>
+                          </div>
                         </div>
                       )
                     })}

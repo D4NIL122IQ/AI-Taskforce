@@ -156,9 +156,9 @@ Tests d'intégration
 & 5 
 & pytest / TestClient \\
 
-Tests fonctionnels 
-& Création d'agents, configuration workflow, exécution collaborative, enrichissement RAG 
-& 9 
+Tests fonctionnels
+& Création d'agents, configuration workflow, exécution collaborative, enrichissement RAG, ergonomie, navigation, responsivité
+& 14
 & Navigateur web \\
 
 \end{tblr}
@@ -193,7 +193,7 @@ Outils de test & pytest, httpx, FastAPI TestClient, unittest.mock \\
 % ════════════════════════════════════════════════════════════════════════════
 
 Les tests fonctionnels valident les scénarios métier de bout en bout via le navigateur.
-Ils couvrent les exigences REQ-AGENT-01 et REQ-WKFW-01.
+Ils couvrent les exigences REQ-AGENT-01, REQ-WKFW-01 et REQ-IHM-01.
 
 % ---
 \subsection{TF-AGENT : Création et configuration d'un agent}
@@ -356,6 +356,136 @@ Procédure &
 \end{minipage} \\
 Critères d'acceptation & Configuration restituée intégralement. Workflow éditable après rechargement. \\
 Statut & Fonctionnel \\
+\end{tblr}
+
+% ---
+\subsection{TF-IHM : Ergonomie, navigation et responsivité}
+
+\textbf{Exigence :} REQ-IHM-01 \hfill \textbf{Priorité :} haute
+
+Ces tests valident la qualité de l'interface utilisateur : lisibilité, cohérence de la navigation,
+comportement sur différentes résolutions et accessibilité de base.
+Ils sont réalisés manuellement via le navigateur (Chrome / Firefox) avec les DevTools ouverts.
+
+\vspace{6pt}
+\noindent
+\begin{tblr}{
+  width = \linewidth,
+  colspec = {Q[l,4cm,bg=hdr,fg=white,font=\bfseries] X[l,bg=rowA]},
+  hlines = {white},
+  vlines = {white},
+  rows = {m, rowsep=3pt},
+}
+Identifiant & TF-IHM-01 \\
+Description & Vérifier la navigation entre les pages principales de l'application. \\
+Dépendances & Frontend démarré (\texttt{localhost:5173}). \\
+Procédure &
+\begin{minipage}[t]{\linewidth}\vspace{2pt}
+\begin{enumerate}\setlength\itemsep{1pt}
+  \item Depuis la page d'accueil, naviguer vers : Dashboard, Création d'agent, Workflow, Exécution.
+  \item Utiliser le bouton \textit{Retour} du navigateur sur chaque page.
+  \item Vérifier que la barre de navigation est présente et fonctionnelle sur toutes les pages.
+\end{enumerate}\vspace{2pt}
+\end{minipage} \\
+Critères d'acceptation & Toutes les pages sont accessibles sans erreur. Le bouton \textit{Retour} ne provoque pas de page blanche. La navbar est visible et cliquable sur chaque page. \\
+Statut & En attente de validation \\
+\end{tblr}
+
+\vspace{6pt}
+\noindent
+\begin{tblr}{
+  width = \linewidth,
+  colspec = {Q[l,4cm,bg=hdr,fg=white,font=\bfseries] X[l,bg=rowA]},
+  hlines = {white},
+  vlines = {white},
+  rows = {m, rowsep=3pt},
+}
+Identifiant & TF-IHM-02 \\
+Description & Vérifier le chargement et l'affichage du Dashboard sur écran standard (1920$\times$1080). \\
+Dépendances & TF-IHM-01 ; utilisateur connecté avec au moins un agent et un workflow. \\
+Procédure &
+\begin{minipage}[t]{\linewidth}\vspace{2pt}
+\begin{enumerate}\setlength\itemsep{1pt}
+  \item Ouvrir le Dashboard sur une résolution 1920$\times$1080.
+  \item Vérifier l'affichage des 4 tuiles de statistiques, de la liste des agents, des workflows et des documents.
+  \item Vérifier que les éléments ne se chevauchent pas et que les textes sont lisibles.
+\end{enumerate}\vspace{2pt}
+\end{minipage} \\
+Critères d'acceptation & Tous les blocs sont visibles et correctement alignés. Aucun débordement horizontal. Textes non tronqués. \\
+Statut & En attente de validation \\
+\end{tblr}
+
+\vspace{6pt}
+\noindent
+\begin{tblr}{
+  width = \linewidth,
+  colspec = {Q[l,4cm,bg=hdr,fg=white,font=\bfseries] X[l,bg=rowA]},
+  hlines = {white},
+  vlines = {white},
+  rows = {m, rowsep=3pt},
+}
+Identifiant & TF-IHM-03 \\
+Description & Vérifier la responsivité de l'interface sur une résolution réduite (768$\times$1024 --- tablette). \\
+Dépendances & TF-IHM-01 \\
+Procédure &
+\begin{minipage}[t]{\linewidth}\vspace{2pt}
+\begin{enumerate}\setlength\itemsep{1pt}
+  \item Ouvrir les DevTools (F12) et passer en mode responsive à 768$\times$1024.
+  \item Naviguer sur les pages : Dashboard, Création d'agent, Workflow.
+  \item Vérifier que la mise en page s'adapte (grilles, marges, tailles de texte).
+\end{enumerate}\vspace{2pt}
+\end{minipage} \\
+Critères d'acceptation & Aucun élément ne dépasse la largeur de l'écran. Les boutons restent cliquables. La navbar reste accessible. \\
+Statut & En attente de validation \\
+\end{tblr}
+
+\vspace{6pt}
+\noindent
+\begin{tblr}{
+  width = \linewidth,
+  colspec = {Q[l,4cm,bg=hdr,fg=white,font=\bfseries] X[l,bg=rowA]},
+  hlines = {white},
+  vlines = {white},
+  rows = {m, rowsep=3pt},
+}
+Identifiant & TF-IHM-04 \\
+Description & Vérifier les messages d'erreur et les états vides de l'interface. \\
+Dépendances & TF-IHM-01 \\
+Procédure &
+\begin{minipage}[t]{\linewidth}\vspace{2pt}
+\begin{enumerate}\setlength\itemsep{1pt}
+  \item Accéder au Dashboard sans aucun agent ni workflow créé.
+  \item Soumettre le formulaire de création d'agent avec des champs obligatoires vides.
+  \item Simuler une perte de connexion backend (arrêter \texttt{uvicorn}) et recharger le Dashboard.
+\end{enumerate}\vspace{2pt}
+\end{minipage} \\
+Critères d'acceptation & Les états vides affichent un message explicite (ex. : \textit{Aucun agent créé}). Les champs invalides sont signalés visuellement. L'interface ne plante pas en cas d'indisponibilité backend. \\
+Statut & En attente de validation \\
+\end{tblr}
+
+\vspace{6pt}
+\noindent
+\begin{tblr}{
+  width = \linewidth,
+  colspec = {Q[l,4cm,bg=hdr,fg=white,font=\bfseries] X[l,bg=rowA]},
+  hlines = {white},
+  vlines = {white},
+  rows = {m, rowsep=3pt},
+}
+Identifiant & TF-IHM-05 \\
+Description & Vérifier la suppression d'un document depuis le Dashboard. \\
+Dépendances & TF-WKFW-03 ; au moins un document indexé visible dans le Dashboard. \\
+Procédure &
+\begin{minipage}[t]{\linewidth}\vspace{2pt}
+\begin{enumerate}\setlength\itemsep{1pt}
+  \item Survoler un document dans la section Documents du Dashboard.
+  \item Cliquer sur l'icône de suppression et confirmer la boîte de dialogue.
+  \item Vérifier la disparition immédiate du document dans la liste.
+  \item Vérifier via GET \texttt{/agents/user/\{id\}/documents} que le document n'est plus en base.
+\end{enumerate}\vspace{2pt}
+\end{minipage} \\
+Critères d'acceptation & Le document disparaît de la liste sans rechargement de page. Il est absent en base et ses chunks sont supprimés de ChromaDB. \\
+Statut & En attente de validation \\
 \end{tblr}
 
 % ════════════════════════════════════════════════════════════════════════════
@@ -645,14 +775,26 @@ UT-WF04 & POST \texttt{/workflows} --- arêtes référençant des agents inexist
 \section{Références}
 % ════════════════════════════════════════════════════════════════════════════
 
-\begin{description}\setlength\itemsep{2pt}
-\item[Cahier des charges :] AI Taskforce --- Groupe-L3U1 --- Université Paris Cité.
-\item[Modèle plan de tests :] David Janiszek --- Université Paris Descartes --- ref. D7, v1.01.
-\item[Cahier de recettes v1.2.0 :] KEITA Fodé Laye, 22 février 2026 --- Université Paris Cité.
-\item[Documentation FastAPI :] \url{https://fastapi.tiangolo.com}
-\item[Documentation LangGraph :] \url{https://langchain-ai.github.io/langgraph/}
-\item[Documentation pytest :] \url{https://docs.pytest.org}
-\item[Documentation ReactFlow :] \url{https://reactflow.dev}
+\begin{description}
+
+    \item[Cahier des charges :] \textit{« AI Taskforce »} --- Document de spécification du projet, Groupe-L3U1 --- Université Paris Cité, 2026.
+
+    \item[Modèle plan de tests :] \textit{« Modèle de plan de tests »} --- David Janiszek, Université Paris Descartes, ref. D7, v1.01.
+
+    \item[Cahier de recettes :] \textit{« Cahier de recettes v1.2.0 »} --- KEITA Fodé Laye, 22 février 2026, Université Paris Cité.
+
+    \item[Documentation FastAPI :] \textit{« FastAPI --- Modern, fast web framework for building APIs »} --- Documentation officielle du framework backend utilisé. \\ \url{https://fastapi.tiangolo.com}
+
+    \item[Documentation LangGraph :] \textit{« LangGraph --- Build stateful, multi-actor applications with LLMs »} --- Documentation officielle du framework d'orchestration multi-agents. \\ \url{https://langchain-ai.github.io/langgraph/}
+
+    \item[Documentation pytest :] \textit{« pytest --- helps you write better programs »} --- Documentation officielle du framework de tests unitaires et d'intégration. \\ \url{https://docs.pytest.org}
+
+    \item[Documentation ReactFlow :] \textit{« React Flow --- Wire Your Ideas with React Flow »} --- Documentation officielle de la bibliothèque de visualisation de graphes utilisée pour l'interface workflow. \\ \url{https://reactflow.dev}
+
+    \item[Documentation ChromaDB :] \textit{« Chroma --- the AI-native open-source embedding database »} --- Documentation officielle de la base vectorielle utilisée pour le RAG. \\ \url{https://docs.trychroma.com}
+
+    \item[Documentation LangChain :] \textit{« LangChain --- Build context-aware reasoning applications »} --- Documentation officielle des composants LangChain utilisés (SemanticChunker, retrievers). \\ \url{https://python.langchain.com/docs}
+
 \end{description}
 
 \end{document}

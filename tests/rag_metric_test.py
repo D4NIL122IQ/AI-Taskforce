@@ -5,7 +5,7 @@ import os
 from backend.services.rag_service import RAGService
 from tests.rag_evaluation_service import RAGEvaluator
 
-AGENT_ID = 144  # ← ton agent avec des documents indexés
+AGENT_ID = 158 # ← ton agent avec des documents indexés
 
 rag = RAGService()
 evaluator = RAGEvaluator(rag)

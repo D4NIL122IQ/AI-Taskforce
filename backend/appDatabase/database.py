@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:passer@localhost:5432/ai_taskforce")
-# URL vers la base par défaut pour pouvoir créer ai_taskforce si besoin
 DEFAULT_URL = DATABASE_URL.rsplit("/", 1)[0] + "/postgres"
 
 def create_database_if_not_exists():
@@ -30,12 +29,23 @@ def create_database_if_not_exists():
 
 create_database_if_not_exists()
 
-engine = create_engine(
-    DATABASE_URL,
-    pool_size=5,
-    max_overflow=10,
-    pool_pre_ping=True,
-)
+# Supabase pooler (port 6543) utilise PgBouncer en mode transaction :
+# les connexions persistantes sont fermées côté serveur → utiliser NullPool
+# pour ne pas réutiliser de connexions entre les requêtes.
+if "pooler.supabase.com" in DATABASE_URL or ":6543" in DATABASE_URL:
+    from sqlalchemy.pool import NullPool
+    engine = create_engine(
+        DATABASE_URL,
+        poolclass=NullPool,
+    )
+else:
+    engine = create_engine(
+        DATABASE_URL,
+        pool_size=5,
+        max_overflow=10,
+        pool_pre_ping=True,
+        pool_recycle=300,  # recycler les connexions toutes les 5 min
+    )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

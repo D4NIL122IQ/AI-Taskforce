@@ -155,8 +155,6 @@ class Agent:
                 question=user_input_context,
                 top_k=5
             )
-            print(f"************Question reel de user : {user_input_context}")
-            print(f"\n***********contexte_rag: {contexte_rag}")
         except Exception as e:
             print(f"[Agent] RAG indisponible : {e}")
             

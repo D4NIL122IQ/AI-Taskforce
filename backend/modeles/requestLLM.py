@@ -78,28 +78,47 @@ def chat(message: str, model: str, conversation_history: list = None, web_search
     return full_response
 
 
-def embed(text: str, model: str = "nomic-embed-text-v2-moe:latest") -> list[float]:
-    """Convertit un texte en vecteur d'embedding via Ollama."""
-    
+def embed(text: str, model: str = "nomic-embed-text-v2-moe:latest", max_retries: int = 3) -> list[float]:
+    """Convertit un texte en vecteur d'embedding via Ollama.
+    Retry automatique avec backoff exponentiel en cas de timeout."""
+    import time
+
     payload = {
         "model": model,
-        "input": text 
+        "input": text
     }
 
-    response = requests.post(
-        "https://pleiade.mi.parisdescartes.fr/ollama/api/embed",
-        json=payload,
-        headers=_get_headers(),
-        timeout=60
-    )
+    last_error = None
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(
+                "https://pleiade.mi.parisdescartes.fr/ollama/api/embed",
+                json=payload,
+                headers=_get_headers(),
+                timeout=120 
+            )
 
-    if response.status_code != 200:
-        raise RuntimeError(f"Embedding API error {response.status_code}: {response.text}")
+            if response.status_code != 200:
+                raise RuntimeError(f"Embedding API error {response.status_code}: {response.text}")
 
-    result = response.json()
-    embeddings = result.get("embeddings")
-    
-    if not embeddings:
-        raise ValueError(f"Aucun embedding retourné. Réponse: {result}")
-    
-    return embeddings[0]  # Retourne le vecteur du premier (et unique) texte
+            result = response.json()
+            embeddings = result.get("embeddings")
+
+            if not embeddings:
+                raise ValueError(f"Aucun embedding retourné. Réponse: {result}")
+
+            return embeddings[0]
+
+        except requests.exceptions.Timeout as e:
+            last_error = e
+            wait = 2 ** attempt  # 1s, 2s, 4s
+            print(f"[Embed] Timeout (tentative {attempt + 1}/{max_retries}), retry dans {wait}s...")
+            time.sleep(wait)
+
+        except requests.exceptions.ConnectionError as e:
+            last_error = e
+            wait = 2 ** attempt
+            print(f"[Embed] Erreur connexion (tentative {attempt + 1}/{max_retries}), retry dans {wait}s...")
+            time.sleep(wait)
+
+    raise RuntimeError(f"[Embed] Échec après {max_retries} tentatives : {last_error}")

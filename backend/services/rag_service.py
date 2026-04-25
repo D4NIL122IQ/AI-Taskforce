@@ -10,9 +10,6 @@ PIPELINE COMPLET :
 
   Lors d'une requête :
     Question utilisateur → Embedding (Ollama) → Retrieval (Similarity + MMR) → Top-K chunks → Post-traitement (filtrage + extraction + reranking) → LLM → Réponse
-DÉPENDANCES EXTERNES :
-  pip install chromadb langchain-text-splitters PyPDF2 langchain-ollama
-  ollama pull nomic-embed-text # le moteur d'embedding
 
 CONFIGURATION (.env) :
   TOKEN_PLEIADE=<votre_token>
@@ -205,13 +202,14 @@ class RAGService:
             return []
         
         #parametrage en fonction de la quantité de donnés
-        agent_count = self.vectordb._collection.count(
+        results = self.vectordb.get(
             where={"agent_id": int(agent_id)}
         )
+        count_docs = len(results["ids"])
 
-        fetch_k = min(30, agent_count)
-        if agent_count > 30:
-            fetch_k = agent_count // 3
+        fetch_k = min(30, count_docs)
+        if count_docs > 30:
+            fetch_k = count_docs // 3
 
         base_retriever = self.vectordb.as_retriever(
             search_type="mmr",
@@ -230,44 +228,26 @@ class RAGService:
 
         return [doc.page_content for doc in docs]
 
-
-    def post_traitement(self, retriever, question: str) -> List:
-        """
-        Pipeline LangChain :
-        1. Filtrage (doublons)
-        2. Compression LLM = extraction + reranking
-        """
-
-        # recuperation
+    def post_traitement(self, retriever, question: str) -> list:
         docs = retriever.invoke(question)
 
-        # =============================
-        # 2. Filtrage doublons
+        # Dédoublonnage
         unique_docs = []
         seen = set()
-
         for doc in docs:
             content = doc.page_content.strip()
             if content not in seen:
                 seen.add(content)
                 unique_docs.append(doc)
 
-        if not unique_docs:
-            return []
+        # Reranking via Pléiade
+        chunks = [doc.page_content for doc in unique_docs]
+        chunks_rerankes = self._reranker_pleiade(question, chunks)
 
-        # =============================
-        # 3. Extraction + Reranking LLM
-        # =============================
-        #compressor = LLMChainExtractor.from_llm(self.llm)
-
-        #compression_retriever = ContextualCompressionRetriever(
-        #   base_retriever=lambda q: unique_docs,  # on injecte nos docs filtrés
-        #   compressor=compressor
-        #)
-
-        #compressed_docs = compression_retriever.invoke(question)
-
-        return unique_docs
+        # Reconstruire les docs dans le nouvel ordre
+        chunk_to_doc = {doc.page_content: doc for doc in unique_docs}
+        return [chunk_to_doc[c] for c in chunks_rerankes if c in chunk_to_doc]
+    
     # ──────────────────────────────────────────────────────────────────────────
     # CONTEXTE POUR PROMPT
     # ──────────────────────────────────────────────────────────────────────────
@@ -284,6 +264,30 @@ class RAGService:
         lignes.append("=" * 40)
 
         return "\n\n".join(lignes)
+    
+    # on utilise LLM pour trier par ordre le retour de l'algorithme retrieval du RAG
+    def _reranker_pleiade(self, question: str, chunks: list[str]) -> list[str]:
+        liste = "\n\n".join(
+            f"[{i+1}] {chunk}" for i, chunk in enumerate(chunks)
+        )
+        prompt = (
+            f"Question : {question}\n\n"
+            f"Voici {len(chunks)} extraits :\n{liste}\n\n"
+            f"Classe ces extraits du plus pertinent au moins pertinent "
+            f"pour répondre à la question. "
+            f"Réponds uniquement avec les numéros dans l'ordre, séparés par des virgules. "
+            f"Exemple : 3,1,4,2,5"
+            f"Rien de plus, pas de commentaire"
+        )
+        from backend.modeles.requestLLM import chat
+        reponse = chat(prompt, model="phi4:latest", max_tokens=20, temperature=0.0)
+        
+        # Parser l'ordre retourné
+        try:
+            ordre = [int(n.strip()) - 1 for n in reponse.split(",")]
+            return [chunks[i] for i in ordre if 0 <= i < len(chunks)]
+        except Exception:
+            return chunks  # fallback : ordre original
 
     # ──────────────────────────────────────────────────────────────────────────
     # SUPPRESSION
