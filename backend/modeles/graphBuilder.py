@@ -2,6 +2,7 @@ import json
 import re
 from typing import TypedDict, Annotated
 from langgraph.graph import StateGraph, END
+from backend.services.docx_generator_service import generer_docx
 
 
 def extraire_json(texte: str) -> dict:
@@ -49,6 +50,7 @@ class OrchestrationState(TypedDict):
     niveau_recherche: int   # 1, 2 ou 3 — nombre max d'appels LLM par sous-tâche
     current_task_calls: int # nombre d'appels faits pour la sous-tâche en cours
     current_task_agent: str # nom du spécialiste en cours de raffinement
+    documents_generated: Annotated[list, update_logs]
 
 
 # --- 2. Fonction de construction ---
@@ -175,10 +177,28 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
 
             print(f"[{agent.nom.upper()}] Réponse reçue ({len(response.content)} caractères)")
 
-            return {
+            result = {
                 "results": {agent.nom: response.content},
                 "supervisor_logs": [f"{agent.nom} a répondu"]
             }
+
+            # NOUVEAU : si l'agent doit générer un document
+            if getattr(agent, "generate_document", False):
+                try:
+                    nom_fichier = generer_docx(
+                        contenu_markdown=response.content,  # le texte de l'agent
+                        titre=f"Document généré par {agent.nom}",
+                        prefix=agent.nom.replace(" ", "_").lower()
+                    )
+                    result["documents_generated"] = [{
+                        "agent": agent.nom,
+                        "filename": nom_fichier
+                    }]
+                    result["supervisor_logs"].append(f"📄 {agent.nom} a généré le document : {nom_fichier}")
+                except Exception as e:
+                    print(f"Erreur génération document : {e}")
+
+            return result
 
         return node
 

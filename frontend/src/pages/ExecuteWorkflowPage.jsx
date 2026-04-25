@@ -16,7 +16,13 @@ import remarkGfm from 'remark-gfm'
 import NavBar from '../components/layout/NavBar'
 import PageBackground from '../components/layout/PageBackground'
 import { useTheme } from '../context/ThemeContext'
-import { Bot, Crown, Send, CheckCircle, GitBranch, FileText, Globe, LogIn, LogOut, AlertTriangle, Square } from 'lucide-react'
+import { Bot, Crown, Send, CheckCircle, GitBranch, FileText, Globe, LogIn, LogOut, AlertTriangle, Square, Mail } from 'lucide-react'
+
+const GithubGlyph = ({ size = 12, color = 'currentColor' }) => (
+  <svg viewBox="0 0 24 24" fill={color} width={size} height={size}>
+    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+  </svg>
+)
 
 /* ─────────────────────────── helpers localStorage ──────────────────── */
 
@@ -45,7 +51,6 @@ const SupervisorNodeExec = ({ data }) => (
     <p className="text-xs" style={{ color: 'rgba(139,92,246,0.9)' }}>Superviseur</p>
     {data.model && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(139,92,246,0.15)', color: 'rgba(167,139,250,0.8)', border: '1px solid rgba(139,92,246,0.2)' }}>{data.model}</span>}
     <Handle type="source" position={Position.Bottom} style={{ background: '#8b5cf6', border: '2px solid #080808', width: 10, height: 10 }} />
-    <Handle type="target" position={Position.Top} style={{ background: '#8b5cf6', border: '2px solid #080808', width: 10, height: 10 }} />
   </div>
 )
 
@@ -86,8 +91,8 @@ const AgentNodeExec = ({ data }) => {
           {data.status === 'TERMINE' ? '✓ Terminé' : '⟳ En cours'}
         </span>
       )}
-      <Handle type="source" position={Position.Top} style={{ background: '#8b5cf6', width: 10, height: 10 }} />
-      <Handle type="target" position={Position.Bottom} style={{ background: '#8b5cf6', width: 10, height: 10 }} />
+      <Handle type="target" position={Position.Top} style={{ background: '#8b5cf6', width: 10, height: 10 }} />
+      <Handle type="source" id="mcp" position={Position.Right} style={{ background: 'transparent', border: 'none', width: 1, height: 1, top: '50%' }} />
     </div>
   )
 }
@@ -135,6 +140,33 @@ const ExitNodeExec = ({ data }) => (
   </div>
 )
 
+const MCP_META_EXEC = {
+  github: { label: 'GitHub', accent: '#f0f6fc', accentLight: '#24292f' },
+  gmail:  { label: 'Gmail',  accent: '#f28b82', accentLight: '#ea4335' },
+}
+
+const McpNodeExec = ({ data }) => {
+  const key = data.mcp_type in MCP_META_EXEC ? data.mcp_type : 'github'
+  const meta = MCP_META_EXEC[key]
+  const d = data.dark
+  const glyphColor = d ? meta.accent : meta.accentLight
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 6,
+      padding: '6px 10px', borderRadius: 10,
+      border: `1px solid ${d ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'}`,
+      background: d ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+      minWidth: 90,
+    }}>
+      {key === 'gmail'
+        ? <Mail size={12} style={{ color: glyphColor }} />
+        : <GithubGlyph size={12} color={glyphColor} />}
+      <span style={{ fontSize: 11, fontWeight: 500, color: d ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.7)' }}>{meta.label}</span>
+      <Handle type="target" position={Position.Left} style={{ background: glyphColor, width: 8, height: 8 }} />
+    </div>
+  )
+}
+
 const nodeTypes = {
   supervisor: SupervisorNodeExec,
   agent:      AgentNodeExec,
@@ -143,6 +175,7 @@ const nodeTypes = {
   webSearch:  WebSearchNodeExec,
   entry:      EntryNodeExec,
   exit:       ExitNodeExec,
+  mcp:        McpNodeExec,
 }
 
 /* ─────────────────────────── canvas animé ──────────────────────────── */
@@ -269,6 +302,45 @@ const ChatMessage = ({ msg }) => {
     </div>
   )
 
+  if (msg.role === 'document') return (
+  <div className="flex flex-col gap-1.5">
+    <div className="flex items-center gap-2 px-1">
+      <FileText size={12} style={{ color: '#10b981' }} />
+      <span className="text-sm font-medium" style={{ color: '#10b981' }}>
+        Document généré par {msg.agent}
+      </span>
+    </div>
+
+    <a
+      href={`http://localhost:8000/executions/documents/download/${msg.filename}`}
+      download
+      className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:scale-[1.02]"
+      style={{
+        background: 'rgba(16,185,129,0.12)',
+        border: '1px solid rgba(16,185,129,0.3)'
+      }}
+    >
+      <div
+        className="w-10 h-10 rounded-lg flex items-center justify-center"
+        style={{
+          background: 'rgba(16,185,129,0.2)',
+          border: '1px solid rgba(16,185,129,0.4)'
+        }}
+      >
+        <FileText size={18} style={{ color: '#10b981' }} />
+      </div>
+
+      <div className="flex-1">
+        <p className="text-sm font-medium text-gray-800 dark:text-white">
+          {msg.filename}
+        </p>
+        <p className="text-xs text-gray-500 dark:text-white/40">
+          📥 Cliquer pour télécharger
+        </p>
+      </div>
+    </a>
+  </div>
+)   
   if (msg.role === 'warning') return (
     <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl"
       style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)' }}>
@@ -445,7 +517,22 @@ const handleSend = async () => {
 
             if (data.type === 'final') {
               setActiveNodeId(null)
-              addMsg({ role: 'result', content: data.response })
+               // Si un document a déjà été généré, le document EST le résultat final
+              // → on n'affiche pas le texte de synthèse du reconstructeur
+             setMessages(prev => {
+                const hasDocument = prev.some(m => m.role === 'document')
+                if (hasDocument) return prev
+                return [...prev, { role: 'result', content: data.response }]
+              })
+            }
+
+
+            if (data.type === 'document') {
+              addMsg({
+                role: 'document',
+                agent: data.agent,
+                filename: data.filename
+              })
             }
 
             if (data.type === 'error') {

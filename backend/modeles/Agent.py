@@ -31,7 +31,7 @@ class Agent:
         déclenche automatiquement une réinitialisation du modèle LLM sous-jacent.
     """
 
-    def __init__(self, nom, modele, prompt, max_token,  temperature, ID:int = 0, use_web: bool =False, utilise_mcp: bool = False):
+    def __init__(self, nom, modele, prompt, max_token,  temperature, ID: int = 0, use_web: bool =False, utilise_mcp: bool = False, generate_document: bool = False):
         """
         Initialise un agent avec ses paramètres principaux.
 
@@ -59,7 +59,7 @@ class Agent:
 
         self.valider_parametres(nom, modele, prompt, max_token, temperature)
 
-        self.ID = ID # sera défini lors de l'insertion en base de données
+        self.ID = ID  # sera défini lors de l'insertion en base de données
         self.nom = nom
         self._modele = modele
         self._temperature = temperature
@@ -67,6 +67,7 @@ class Agent:
         self.prompt = prompt
         self.use_web = use_web
         self.utilise_mcp = utilise_mcp
+        self.generate_document = generate_document
         self.date_creation = dt.now()
         self.documents = []
         self._mcp: MCPConnection | None = None
@@ -157,7 +158,7 @@ class Agent:
             )
         except Exception as e:
             print(f"[Agent] RAG indisponible : {e}")
-            
+
         # ── Enrichissement MCP ────────────────────────────────────────
         contexte_mcp = ""
         print(f"[Agent:{self.nom}] mcp_actif={self.mcp_actif}")
@@ -211,6 +212,11 @@ class Agent:
             max_tokens=self._max_token
         )
         return SimpleNamespace(content=result)
+
+
+
+
+    def ajouter_document(self, filepath):
         """
         Enrichit le contexte de l'agent avec le contenu d'un fichier externe.
 

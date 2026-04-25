@@ -32,6 +32,7 @@ def get_agents(user_id: str, db: Session = Depends(get_db)):
                 "temperature": a.temperature,
                 "statut": a.statut,
                 "web_search": bool(a.web_search),
+                "generate_document": bool(a.generate_document),
                 "mcp_type": a.mcp_type,
             }
             for a in agents
