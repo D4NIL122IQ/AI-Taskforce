@@ -532,7 +532,16 @@ const ExecuteWorkflowPage = () => {
             if (n.type !== 'agent') return n
             const fresh = agentsData.find(a => a.nom === n.data.label)
             if (!fresh) return n
-            return { ...n, data: { ...n.data, generate_document: fresh.generate_document || false } }
+            return { ...n, data: {
+              ...n.data,
+              generate_document: fresh.generate_document || false,
+              system_prompt: fresh.system_prompt || n.data.system_prompt || '',
+              model: fresh.modele || n.data.model || '',
+              temperature: fresh.temperature ?? n.data.temperature ?? 0.3,
+              max_tokens: fresh.max_tokens ?? n.data.max_tokens ?? 800,
+              web_search: fresh.web_search ?? n.data.web_search ?? false,
+              role: fresh.role || n.data.role || '',
+            } }
           })
         }
       } catch (e) { console.warn('Enrichissement agents échoué:', e) }
