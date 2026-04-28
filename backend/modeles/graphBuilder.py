@@ -2,6 +2,7 @@ import json
 import re
 from typing import TypedDict, Annotated
 from langgraph.graph import StateGraph, END
+from langgraph.constants import Send
 from backend.services.docx_generator_service import generer_docx
 
 
@@ -22,6 +23,18 @@ def extraire_json(texte: str) -> dict:
         return json.loads(match.group(0))
 
     raise json.JSONDecodeError("Aucun JSON trouvé", texte, 0)
+
+def extraire_json_souple(texte: str) -> dict:
+    match = re.search(r"```(?:json)?\s*(\{.*\})\s*```", texte, re.DOTALL)
+    if match:
+        return json.loads(match.group(1))
+    match = re.search(r"\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}", texte, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group(0))
+        except json.JSONDecodeError:
+            pass
+    return extraire_json(texte)
 
 
 # --- 1. Définition de l'état ---
@@ -52,7 +65,7 @@ class OrchestrationState(TypedDict):
     current_task_calls: int # nombre d'appels faits pour la sous-tâche en cours
     current_task_agent: str # nom du spécialiste en cours de raffinement
     documents_generated: Annotated[list, update_logs]
-
+    parallel_tasks: list
 
 # --- 2. Fonction de construction ---
 def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agent_reconstructeur, niveau_recherche: int = 1):
@@ -90,6 +103,18 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
         task_agent = state.get('current_task_agent', '')
         print(f"\n[SUPERVISEUR] Analyse en cours... résultats déjà obtenus : {list(resultats_actuels.keys())}")
 
+        # Anti-boucle : si tous les agents ont répondu et assez de cycles → reconstructeur
+        if len(resultats_actuels) >= len(noms_specialistes) and len(noms_specialistes) > 0:
+            print(f"[SUPERVISEUR] Tous les agents ont répondu → reconstructeur")
+            return {
+                "next_agent": "reconstructeur",
+                "task_for_agent": "",
+                "current_task_calls": 0,
+                "current_task_agent": "",
+                "parallel_tasks": [],
+                "supervisor_logs": [],
+            }
+
         en_mode_raffinement = (
             niveau > 1
             and task_calls >= 1
@@ -119,18 +144,46 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
                 "Quand un agent est CONNECTÉ à un MCP avec le token personnel de l'utilisateur, "
                 "toute demande relevant de ce service concerne le compte de l'utilisateur courant : "
                 "ne demande JAMAIS son identifiant/username, donne directement la sous-tâche à l'agent.\n\n"
-                "Analyse ce qui manque. Si tu as besoin d'un spécialiste, réponds STRICTEMENT avec un JSON : "
-                '{"next_agent": "nom_du_specialiste", "prompt": "instructions_pour_lui"}. '
+                "Analyse ce qui manque. Tu as deux options :\n\n"
+                "OPTION 1 — Un seul agent (séquentiel) :\n"
+                '{"next_agent": "nom_du_specialiste", "prompt": "instructions_pour_lui"}\n\n'
+                "OPTION 2 — Plusieurs agents en parallèle (UNIQUEMENT si les tâches sont "
+                "INDÉPENDANTES et ne dépendent pas l'une de l'autre) :\n"
+                '{"parallel": [{"agent": "nom_agent_1", "prompt": "instructions_1"}, '
+                '{"agent": "nom_agent_2", "prompt": "instructions_2"}]}\n\n'
                 "Si toutes les sous-tâches sont finies, réponds : "
                 '{"next_agent": "reconstructeur", "prompt": ""}.'
             )
 
         response = agent_superviseur.executer_prompt(prompt_sup)
-        print(f"[SUPERVISEUR] Décision brute : {response.content[:200]}")
+        print(f"[SUPERVISEUR] Décision brute : {response.content[:500]}")
 
         # Parse la réponse JSON du superviseur
         try:
             decision = extraire_json(response.content)
+            # Mode parallèle
+            if "parallel" in decision and isinstance(decision["parallel"], list) and len(decision["parallel"]) > 1:
+                parallel_tasks = decision["parallel"]
+                valid_tasks = [t for t in parallel_tasks if
+                               t.get("agent") in noms_specialistes and t.get("prompt", "").strip()]
+
+                if len(valid_tasks) > 1:
+                    agents_noms = [t["agent"] for t in valid_tasks]
+                    print(f"[SUPERVISEUR] → Mode PARALLÈLE : {agents_noms}")
+                    logs = []
+                    for t in valid_tasks:
+                        logs.append(f"→ {t['agent']} : {t['prompt']}")
+                    return {
+                        "next_agent": "__parallel__",
+                        "task_for_agent": "",
+                        "parallel_tasks": valid_tasks,
+                        "current_task_calls": 0,
+                        "current_task_agent": "",
+                        "supervisor_logs": logs,
+                    }
+                elif len(valid_tasks) == 1:
+                    decision = {"next_agent": valid_tasks[0]["agent"], "prompt": valid_tasks[0]["prompt"]}
+                    # Mode séquentiel
             chosen_agent = decision['next_agent']
 
             # Hard-cap : le LLM ignore le plafond → forcer reconstructeur
@@ -154,14 +207,15 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
             print(f"[SUPERVISEUR] → Route vers : {chosen_agent} (appels sous-tâche : {new_calls}/{niveau})")
             return {
                 "next_agent": chosen_agent,
-                "task_for_agent": decision["prompt"],
+                "task_for_agent": decision.get("prompt", ""),
                 "current_task_calls": new_calls,
                 "current_task_agent": new_agent,
+                "parallel_tasks": [],
                 "supervisor_logs": [f"→ {chosen_agent} : {decision['prompt']}"],
             }
         except (json.JSONDecodeError, KeyError) as e:
             print(f"[SUPERVISEUR] ⚠ Parsing JSON échoué ({e}) → fallback reconstructeur")
-            return {"next_agent": "reconstructeur", "task_for_agent": "", "current_task_calls": 0, "current_task_agent": ""}
+            return {"next_agent": "reconstructeur", "task_for_agent": "", "current_task_calls": 0, "current_task_agent": "", "parallel_tasks": []}
 
     workflow.add_node("superviseur", superviseur_node)
 
@@ -171,8 +225,14 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
         def node(state: OrchestrationState):
             print(f"\n[{agent.nom.upper()}] Exécution en cours...")
 
+            task = state.get("task_for_agent", "")
+            for pt in state.get("parallel_tasks", []):
+                if pt.get("agent") == agent.nom:
+                    task = pt["prompt"]
+                    break
+
             response = agent.executer_prompt(
-                state["task_for_agent"],
+                task,
                 user_input_context=state.get("user_input", ""),
             )
 
@@ -210,16 +270,35 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
     def reconstructeur_node(state: OrchestrationState):
         print(f"\n[RECONSTRUCTEUR] Synthèse des résultats de : {list(state['results'].keys())}")
 
-        # Si un document a été généré, pas besoin de synthèse texte
         docs = state.get("documents_generated", [])
         if docs:
-            print(f"[RECONSTRUCTEUR] Document(s) déjà généré(s) → skip synthèse texte")
-            return {
-                "final_response": "",
-                "supervisor_logs": [
-                    "Document généré — reconstruction ignorée"
-                ]
-            }
+            print(f"[RECONSTRUCTEUR] Document(s) généré(s) — synthèse courte")
+            agents_sans_doc = {nom: rep for nom, rep in state['results'].items()
+                               if not any(d['agent'] == nom for d in docs)}
+            agents_avec_doc = [d['agent'] for d in docs]
+
+            if agents_sans_doc:
+                prompt_rec = (
+                    f"Demande initiale : {state['user_input']}\n"
+                    f"Résultats des agents : {agents_sans_doc}\n\n"
+                    "Fais une synthèse UNIQUEMENT des résultats ci-dessus. "
+                    "Ne reproduis PAS le contenu des documents générés. "
+                    f"Mentionne simplement qu'un document Word a été généré par {', '.join(agents_avec_doc)} "
+                    "et est disponible en téléchargement. "
+                    "IMPORTANT : réponds dans la même langue que la demande initiale."
+                )
+                response = agent_reconstructeur.executer_prompt(prompt_rec)
+                print(f"[RECONSTRUCTEUR] Réponse finale générée ({len(response.content)} caractères)")
+                return {
+                    "final_response": response.content,
+                    "supervisor_logs": []
+                }
+            else:
+                print(f"[RECONSTRUCTEUR] Tous les agents ont généré des documents → pas de synthèse")
+                return {
+                    "final_response": "",
+                    "supervisor_logs": []
+                }
         prompt_rec = (
             f"Demande initiale : {state['user_input']}\n"
             f"Données brutes des spécialistes : {state['results']}\n\n"
@@ -243,6 +322,27 @@ def build_orchestration_graph(agent_superviseur, agents_specialistes: list, agen
 
     # Fonction de routage conditionnel
     def route_from_supervisor(state: OrchestrationState):
+        if state.get("next_agent") == "__parallel__":
+            parallel_tasks = state.get("parallel_tasks", [])
+            if parallel_tasks:
+                print(f"[ROUTING] Envoi parallèle vers : {[t['agent'] for t in parallel_tasks]}")
+                return [
+                    Send(task["agent"], {
+                        "user_input": state["user_input"],
+                        "task_for_agent": task["prompt"],
+                        "parallel_tasks": parallel_tasks,
+                        "results": state.get("results", {}),
+                        "supervisor_logs": [],
+                        "next_agent": "",
+                        "final_response": "",
+                        "niveau_recherche": state.get("niveau_recherche", 1),
+                        "current_task_calls": 0,
+                        "current_task_agent": "",
+                        "documents_generated": [],
+                        "parallel_tasks": [],
+                    })
+                    for task in parallel_tasks
+                ]
         return state["next_agent"]
 
     # Le superviseur route vers un spécialiste ou le reconstructeur

@@ -207,6 +207,11 @@ def execute_workflow(body: ExecuteRequest, db: Session = Depends(get_db)):
                         for log in state_update["supervisor_logs"]:
                             q.put(json.dumps({"type": "supervisor", "content": log}) + "\n")
 
+                    # Event parallèle : notifier le frontend
+                    if "parallel_tasks" in state_update and state_update["parallel_tasks"]:
+                        q.put(json.dumps({"type": "parallel_start", "agents": [t["agent"] for t in state_update[
+                            "parallel_tasks"]]}) + "\n")
+
                     if "documents_generated" in state_update:
                         for doc in state_update["documents_generated"]:
                             q.put(json.dumps({"type": "document", "agent": doc["agent"], "filename": doc["filename"]}) + "\n")

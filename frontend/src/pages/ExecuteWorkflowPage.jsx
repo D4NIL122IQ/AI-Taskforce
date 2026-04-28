@@ -462,10 +462,18 @@ const ExecuteWorkflowPage = () => {
           if (data.type === 'warning') {
             addMsg({ role: 'warning', content: data.message })
           }
+          if (data.type === 'parallel_start') {
+                setActiveNodeId(supervisorNode?.id)
+              }
           if (data.type === 'supervisor') {
             setActiveNodeId(supervisorNode?.id)
-            addMsg({ role: 'supervisor', name: 'Superviseur', content: data.content })
+            setMessages(prev => {
+              const isReconstruction = data.content.includes('Reconstruction') || data.content.includes('reconstructeur') || data.content.includes('reconstruction ignorée')
+              if (isReconstruction) return prev
+              return [...prev, { role: 'supervisor', name: 'Superviseur', content: data.content }]
+            })
           }
+
           if (data.type === 'echange') {
             const agentNode = agentNodes.find(n => n.data.label === data.agent)
             if (agentNode) {
@@ -476,10 +484,16 @@ const ExecuteWorkflowPage = () => {
           }
           if (data.type === 'final') {
             setActiveNodeId(null)
+            if (data.response) {
+              addMsg({ role: 'result', content: data.response })
+            }
             setMessages(prev => {
-              const hasDocument = prev.some(m => m.role === 'document')
-              if (hasDocument) return prev
-              return [...prev, { role: 'result', content: data.response }]
+              const docs = prev.filter(m => m.role === 'document')
+              if (docs.length > 0) {
+                const withoutDocs = prev.filter(m => m.role !== 'document')
+                return [...withoutDocs, ...docs]
+              }
+              return prev
             })
           }
           if (data.type === 'document') {
